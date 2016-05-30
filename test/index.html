@@ -1,0 +1,31 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Magery test suite</title>
+  <link href="mocha.css" rel="stylesheet" />
+</head>
+<body>
+  <div id="tmp"></div>
+  <div id="mocha"></div>
+
+  <script src="chai.js"></script>
+  <script src="mocha.js"></script>
+  <script src="../build/magery.js"></script>
+  <script src="../build/test/parsers.js"></script>
+  <script src="../build/test/render.js"></script>
+  <script src="../build/test/patch.js"></script>
+  <script src="../build/test/transforms.js"></script>
+
+  <script>mocha.setup('tdd')</script>
+  <script src="test-parsers.js"></script>
+  <script src="test-render.js"></script>
+  <script src="test-patch.js"></script>
+  <script src="test-events.js"></script>
+  <script>
+    mocha.checkLeaks();
+    mocha.globals(['Magery']);
+    mocha.run();
+  </script>
+
+  </body>
+</html>

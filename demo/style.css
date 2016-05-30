@@ -1,0 +1,92 @@
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+.editor-container {
+    width: 50%;
+    height: 100vh;
+    display: inline-flex;
+    flex-direction: column;
+}
+.editor {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    position: relative;
+}
+/*
+.editor.closed {
+    flex-grow: 0;
+}
+.editor > h2::before {
+    content: "\25BC";
+    margin-right: 5px;
+    position: relative;
+    top: -2px;
+}
+.editor.closed > h2::before {
+    content: "\25BA";
+    position: relative;
+    top: -2px;
+    margin-right: 5px;
+}
+*/
+.editor > h2 {
+    cursor: pointer;
+    text-transform: uppercase;
+    font-size: 14px;
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0.5em;
+    color: #002b36;
+    background-color: #839496;
+    color: #839496;
+    background-color: #eee8d5;
+}
+.editor > div {
+    width: 100%;
+    height: 100%;;
+    flex: 1 1 auto;
+}
+.result-container {
+    width: 50%;
+    height: 100vh;
+    padding: 0;
+    margin: 0;
+}
+#result {
+    margin: 20px;
+    padding: 0;
+}
+.editor-container .ace_editor {
+    font-size: 16px;
+}
+#history {
+    display: none;
+    position: absolute;
+    z-index: 9999;
+    top: 10px;
+    right: 10px;
+}
+#history.active {
+    display: block;
+}
+#undo, #redo {
+    font-size: 14px;
+    font-family: sans-serif;
+    opacity: 0.15;
+    margin: 5px;
+}
+#undo::before {
+    content: '\2BAA';
+    margin-right: 5px;
+}
+#redo::before {
+    content: '\2BAB';
+    margin-right: 5px;
+}
+#undo.active, #redo.active {
+    opacity: 1;
+}
