@@ -9,6 +9,10 @@
     "uglifyjs": "^2.4.10",
     "webpack": "^1.12.14"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/caolan/magery.git"
+  },
   "scripts": {
     "build-test": "mkdir -p build/test && webpack --config webpack.test.config.js",
     "build-dev": "mkdir -p build && webpack",
