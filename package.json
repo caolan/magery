@@ -1,6 +1,6 @@
 {
   "name": "magery",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Templates for progressive enhancement",
   "dependencies": {
     "parsimmon": "^0.7.0"
