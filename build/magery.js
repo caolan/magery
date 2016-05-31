@@ -1381,8 +1381,14 @@ var Magery =
 	        }
 	        var node = event.target;
 	        if (node.tagName === 'INPUT') {
-	            if (type == 'change' && node.getAttribute('type') === 'checkbox') {
-	                resetChecked(event);
+	            var nodeType = node.getAttribute('type');
+	            if (type == 'change') {
+	                if (nodeType === 'checkbox') {
+	                    resetCheckbox(event);
+	                }
+	                else if (nodeType === 'radio') {
+	                    resetRadio(event);
+	                }
 	            }
 	            else if (type == 'input' && node.hasAttribute('value')) {
 	                resetInput(event);
@@ -1396,8 +1402,28 @@ var Magery =
 	};
 
 	// force checkbox node checked property to match last rendered attribute
-	function resetChecked(event) {
+	function resetCheckbox(event) {
 	    event.target.checked = event.target.hasAttribute('checked');
+	}
+
+	function resetRadio(event) {
+	    var expected = event.target.hasAttribute('checked');
+	    if (event.target.checked != expected) {
+	        if (event.target.name) {
+	            // TODO: are radio buttons with the same name in different forms
+	            // considered part of the same group?
+	            var els = document.getElementsByName(event.target.name);
+	            for (var i = 0, len = els.length; i < len; i++) {
+	                var el = els[i];
+	                el.checked = el.hasAttribute('checked');
+	            }
+	        }
+	        else {
+	            // not part of a group
+	            event.target.checked = expected;
+	        }
+	    }
+	    //event.target.checked = event.target.hasAttribute('checked');
 	}
 
 	// force option node selected property to match last rendered attribute
@@ -1451,8 +1477,12 @@ var Magery =
 	    deleteUnvisitedAttributes(this.transforms, node);
 	    deleteUnvisitedEvents(this.transforms, node);
 	    if (node.tagName === 'INPUT') {
-	        if (node.getAttribute('type') === 'checkbox' && !getListener(node, 'change')) {
-	            setListener(this.transforms, node, 'change', resetChecked);
+	        var type = node.getAttribute('type');
+	        if (type === 'checkbox' && !getListener(node, 'change')) {
+	            setListener(this.transforms, node, 'change', resetCheckbox);
+	        }
+	        else if (type === 'radio' && !getListener(node, 'change')) {
+	            setListener(this.transforms, node, 'change', resetRadio);
 	        }
 	        else if (node.hasAttribute('value') && !getListener(node, 'input')) {
 	            setListener(this.transforms, node, 'input', resetInput);
