@@ -332,10 +332,6 @@ var patch =
 	Patcher.prototype.end = function (data) {
 	    deleteChildren(this.transforms, this.parent, this.current);
 	    this.parent = null;
-	    var event = document.createEvent('Event');
-	    event.initEvent('patch', true, true);
-	    event.data = data;
-	    this.container.dispatchEvent(event);
 	};
 
 
