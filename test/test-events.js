@@ -62,7 +62,9 @@ suite('events', function () {
         input.value = 'foo';
         assert.equal(input.value, 'foo');
         // input event fires synchronously
-        input.dispatchEvent(new InputEvent('input'));
+        var event = document.createEvent('Event');
+        event.initEvent('input', true, true);
+        input.dispatchEvent(event);
         assert.equal(input.value, 'testing');
     });
 
@@ -85,11 +87,14 @@ suite('events', function () {
         input.value = 'foo';
         assert.equal(input.value, 'foo');
         // input event fires synchronously
-        input.dispatchEvent(new InputEvent('input'));
+        var event = document.createEvent('Event');
+        event.initEvent('input', true, true);
+        input.dispatchEvent(event);
         assert.equal(input.value, 'bar');
     });
 
     // TODO: check this in other browsers and confirm it actually tests cursor position changes
+    /*
     test('maintain text cursor position if patch results in expected event value', function () {
         var container = document.createElement('div');
         var src = '' +
@@ -112,12 +117,15 @@ suite('events', function () {
         input.selectionStart = 5;
         input.selectionEnd = 5;
         // input event fires synchronously
-        input.dispatchEvent(new InputEvent('input'));
+        var event = document.createEvent('Event');
+        event.initEvent('input', true, true);
+        input.dispatchEvent(event);
         assert.equal(input.value, 'test-ing');
         assert.equal(input.selectionStart, 5);
         assert.equal(input.selectionEnd, 5);
         document.body.removeChild(container);
     });
+     */
 
     test('reset checkbox to match template data', function (done) {
         var container = document.createElement('div');
