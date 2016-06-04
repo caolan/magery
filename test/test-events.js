@@ -150,6 +150,38 @@ suite('events', function () {
             done();
         }, 0);
     });
+
+    test('update checkbox via dispatch', function (done) {
+        var container = document.createElement('div');
+        var src = '' +
+                '{{#define main}}' +
+                  '{{#if checked}}' +
+                    '<input type="checkbox" onclick="toggle" checked>' +
+                  '{{else}}' +
+                    '<input type="checkbox" onclick="toggle">' +
+                  '{{/if}}' +
+                '{{/define}}';
+        var templates = Magery.loadTemplates(src);
+        var data = {checked: true};
+        Magery.patch(templates, 'main', container, data);
+        container.dispatch = function (name, event, context, path) {
+            data.checked = !data.checked;
+            Magery.patch(templates, 'main', container, data);
+        };
+        var input = child(container, 0);
+        document.body.appendChild(container);
+        assert.ok(input.checked);
+        input.click();
+        setTimeout(function () {
+            assert.ok(!input.checked);
+            input.click();
+            setTimeout(function () {
+                assert.ok(input.checked);
+                document.body.removeChild(container);
+                done();
+            }, 0);
+        }, 0);
+    });
     
     test('reset radio to match template data', function (done) {
         var container = document.createElement('div');
@@ -186,6 +218,59 @@ suite('events', function () {
             assert.ok(!radioThree.checked, 'radio three (post)');
             document.body.removeChild(container);
             done();
+        }, 0);
+    });
+
+    test('update radio via dispatch', function (done) {
+        var container = document.createElement('div');
+        var src = '' +
+                '{{#define main}}' +
+                  '{{#each options}}' +
+                    '{{#if checked}}' +
+                      '<input type="radio" onclick="pick" name="example" value="{{value}}" checked>' +
+                    '{{else}}' +
+                      '<input type="radio" onclick="pick" name="example" value="{{value}}">' +
+                    '{{/if}}' +
+                  '{{/each}}' +
+                '{{/define}}';
+        var templates = Magery.loadTemplates(src);
+        var data = {
+            options: [
+                {value: 'one', checked: false},
+                {value: 'two', checked: true},
+                {value: 'three', checked: false}
+            ]
+        };
+        Magery.patch(templates, 'main', container, data);
+        container.dispatch = function (name, event, context, path) {
+            if (name === 'pick') {
+                data.options = data.options.map(function (opt) {
+                    opt.checked = (opt.value == context.value);
+                    return opt;
+                });
+            }
+            Magery.patch(templates, 'main', container, data);
+        };
+        var radioOne = child(container, 0);
+        var radioTwo = child(container, 1);
+        var radioThree = child(container, 2);
+        document.body.appendChild(container);
+        assert.ok(!radioOne.checked);
+        assert.ok(radioTwo.checked);
+        assert.ok(!radioThree.checked);
+        radioThree.click();
+        setTimeout(function () {
+            assert.ok(!radioOne.checked);
+            assert.ok(!radioTwo.checked);
+            assert.ok(radioThree.checked);
+            radioOne.click();
+            setTimeout(function () {
+                assert.ok(radioOne.checked);
+                assert.ok(!radioTwo.checked);
+                assert.ok(!radioThree.checked);
+                document.body.removeChild(container);
+                done();
+            }, 0);
         }, 0);
     });
 
@@ -229,6 +314,170 @@ suite('events', function () {
             assert.equal(select.value, 2);
             document.body.removeChild(container);
             done();
+        }, 0);
+    });
+
+    test('update select via dispatch', function (done) {
+        var container = document.createElement('div');
+        var src = '' +
+                '{{#define main}}' +
+                  '<select>' +
+                    '{{#each options}}' +
+                      '{{#if selected}}' +
+                        '<option value="{{value}}" onclick="pick" selected>{{label}}</option>' +
+                      '{{else}}' +
+                        '<option value="{{value}}" onclick="pick">{{label}}</option>' +
+                      '{{/if}}' +
+                    '{{/each}}' +
+                  '</select>' +
+                '{{/define}}';
+        var templates = Magery.loadTemplates(src);
+        var data = {
+            options: [
+                {value: 1, label: 'one', selected: false},
+                {value: 2, label: 'two', selected: true},
+                {value: 3, label: 'three', selected: false}
+            ]
+        };
+        Magery.patch(templates, 'main', container, data);
+        container.dispatch = function (name, event, context, path) {
+            if (name === 'pick') {
+                console.log([name, context]);
+                data.options = data.options.map(function (opt) {
+                    opt.selected = (opt.value == context.value);
+                    return opt;
+                });
+            }
+            Magery.patch(templates, 'main', container, data);
+        };
+        var select = child(container, 0);
+        var optionOne = child(select, 0);
+        var optionTwo = child(select, 1);
+        var optionThree = child(select, 2);
+        document.body.appendChild(container);
+        assert.ok(!optionOne.selected, 'option one (pre)');
+        assert.ok(optionTwo.selected, 'option two (pre)');
+        assert.ok(!optionThree.selected, 'option three (pre)');
+        assert.equal(select.value, 2);
+        optionThree.click();
+        setTimeout(function () {
+            assert.ok(!optionOne.selected, 'option one (pre)');
+            assert.ok(!optionTwo.selected, 'option two (pre)');
+            assert.ok(optionThree.selected, 'option three (pre)');
+            assert.equal(select.value, 3);
+            optionOne.click();
+            setTimeout(function () {
+                assert.ok(optionOne.selected, 'option one (pre)');
+                assert.ok(!optionTwo.selected, 'option two (pre)');
+                assert.ok(!optionThree.selected, 'option three (pre)');
+                assert.equal(select.value, 1);
+                document.body.removeChild(container);
+                done();
+            }, 0);
+        }, 0);
+    });
+
+    test('reset muliselect to match template data', function (done) {
+        assert.ok(false, 'TODO');
+        var container = document.createElement('div');
+        var src = '' +
+                '{{#define main}}' +
+                  '<select>' +
+                    '{{#each options}}' +
+                      '{{#if selected}}' +
+                        '<option value="{{value}}" selected>{{label}}</option>' +
+                      '{{else}}' +
+                        '<option value="{{value}}">{{label}}</option>' +
+                      '{{/if}}' +
+                    '{{/each}}' +
+                  '</select>' +
+                '{{/define}}';
+        var templates = Magery.loadTemplates(src);
+        var data = {
+            options: [
+                {value: 1, label: 'one', selected: false},
+                {value: 2, label: 'two', selected: true},
+                {value: 3, label: 'three', selected: false}
+            ]
+        };
+        Magery.patch(templates, 'main', container, data);
+        var select = child(container, 0);
+        var optionOne = child(select, 0);
+        var optionTwo = child(select, 1);
+        var optionThree = child(select, 2);
+        document.body.appendChild(container);
+        assert.ok(!optionOne.selected, 'option one (pre)');
+        assert.ok(optionTwo.selected, 'option two (pre)');
+        assert.ok(!optionThree.selected, 'option three (pre)');
+        assert.equal(select.value, 2);
+        optionThree.click();
+        setTimeout(function () {
+            assert.ok(!optionOne.selected, 'option one (pre)');
+            assert.ok(optionTwo.selected, 'option two (pre)');
+            assert.ok(!optionThree.selected, 'option three (pre)');
+            assert.equal(select.value, 2);
+            document.body.removeChild(container);
+            done();
+        }, 0);
+    });
+
+    test('update multiselect via dispatch', function (done) {
+        assert.ok(false, 'TODO');
+        var container = document.createElement('div');
+        var src = '' +
+                '{{#define main}}' +
+                  '<select>' +
+                    '{{#each options}}' +
+                      '{{#if selected}}' +
+                        '<option value="{{value}}" onclick="pick" selected>{{label}}</option>' +
+                      '{{else}}' +
+                        '<option value="{{value}}" onclick="pick">{{label}}</option>' +
+                      '{{/if}}' +
+                    '{{/each}}' +
+                  '</select>' +
+                '{{/define}}';
+        var templates = Magery.loadTemplates(src);
+        var data = {
+            options: [
+                {value: 1, label: 'one', selected: false},
+                {value: 2, label: 'two', selected: true},
+                {value: 3, label: 'three', selected: false}
+            ]
+        };
+        Magery.patch(templates, 'main', container, data);
+        container.dispatch = function (name, event, context, path) {
+            if (name === 'pick') {
+                data.options = data.options.map(function (opt) {
+                    opt.checked = (opt.value == context.value);
+                    return opt;
+                });
+            }
+            Magery.patch(templates, 'main', container, data);
+        };
+        var select = child(container, 0);
+        var optionOne = child(select, 0);
+        var optionTwo = child(select, 1);
+        var optionThree = child(select, 2);
+        document.body.appendChild(container);
+        assert.ok(!optionOne.selected, 'option one (pre)');
+        assert.ok(optionTwo.selected, 'option two (pre)');
+        assert.ok(!optionThree.selected, 'option three (pre)');
+        assert.equal(select.value, 2);
+        optionThree.click();
+        setTimeout(function () {
+            assert.ok(!optionOne.selected, 'option one (pre)');
+            assert.ok(!optionTwo.selected, 'option two (pre)');
+            assert.ok(optionThree.selected, 'option three (pre)');
+            assert.equal(select.value, 2);
+            optionOne.click();
+            setTimeout(function () {
+                assert.ok(optionOne.selected, 'option one (pre)');
+                assert.ok(!optionTwo.selected, 'option two (pre)');
+                assert.ok(!optionThree.selected, 'option three (pre)');
+                assert.equal(select.value, 2);
+                document.body.removeChild(container);
+                done();
+            }, 0);
         }, 0);
     });
 

@@ -41,6 +41,9 @@ exports.setAttribute = function (node, name, value) {
         case 'checked':
             node.checked = true;
             break;
+        case 'selected':
+            node.selected = true;
+            break;
         case 'value':
             node.value = value;
             break;
@@ -56,6 +59,9 @@ exports.removeAttribute = function (node, name) {
     switch (name) {
         case 'checked':
             node.checked = false;
+            break;
+        case 'selected':
+            node.selected = false;
             break;
         case 'value':
             node.value = '';

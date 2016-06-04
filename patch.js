@@ -204,7 +204,9 @@ function resetSelected(event) {
     while (option) {
         if (option.hasAttribute('selected')) {
             selected = option;
-            break;
+        }
+        else {
+            selected = false;
         }
         option = option.nextElementSibling;
     }

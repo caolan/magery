@@ -288,7 +288,9 @@ var patch =
 	    while (option) {
 	        if (option.hasAttribute('selected')) {
 	            selected = option;
-	            break;
+	        }
+	        else {
+	            selected = false;
 	        }
 	        option = option.nextElementSibling;
 	    }
@@ -412,6 +414,9 @@ var patch =
 	        case 'checked':
 	            node.checked = true;
 	            break;
+	        case 'selected':
+	            node.selected = true;
+	            break;
 	        case 'value':
 	            node.value = value;
 	            break;
@@ -427,6 +432,9 @@ var patch =
 	    switch (name) {
 	        case 'checked':
 	            node.checked = false;
+	            break;
+	        case 'selected':
+	            node.selected = false;
 	            break;
 	        case 'value':
 	            node.value = '';
