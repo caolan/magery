@@ -1428,18 +1428,11 @@ var Magery =
 
 	// force option node selected property to match last rendered attribute
 	function resetSelected(event) {
-	    var option = event.target.children[0];
-	    var selected = option;
-	    while (option) {
-	        if (option.hasAttribute('selected')) {
-	            selected = option;
-	        }
-	        else {
-	            selected = false;
-	        }
-	        option = option.nextElementSibling;
+	    var options = event.target.getElementsByTagName('option');
+	    for (var i = 0, len = options.length; i < len; i++) {
+	        var option = options[i];
+	        option.selected = option.hasAttribute('selected');
 	    }
-	    event.target.value = selected ? selected.value : null;
 	}
 
 	// force input to match last render of value attribute

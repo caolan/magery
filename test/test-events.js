@@ -342,7 +342,6 @@ suite('events', function () {
         Magery.patch(templates, 'main', container, data);
         container.dispatch = function (name, event, context, path) {
             if (name === 'pick') {
-                console.log([name, context]);
                 data.options = data.options.map(function (opt) {
                     opt.selected = (opt.value == context.value);
                     return opt;
@@ -378,11 +377,10 @@ suite('events', function () {
     });
 
     test('reset muliselect to match template data', function (done) {
-        assert.ok(false, 'TODO');
         var container = document.createElement('div');
         var src = '' +
                 '{{#define main}}' +
-                  '<select>' +
+                  '<select multiple>' +
                     '{{#each options}}' +
                       '{{#if selected}}' +
                         '<option value="{{value}}" selected>{{label}}</option>' +
@@ -395,7 +393,7 @@ suite('events', function () {
         var templates = Magery.loadTemplates(src);
         var data = {
             options: [
-                {value: 1, label: 'one', selected: false},
+                {value: 1, label: 'one', selected: true},
                 {value: 2, label: 'two', selected: true},
                 {value: 3, label: 'three', selected: false}
             ]
@@ -406,32 +404,29 @@ suite('events', function () {
         var optionTwo = child(select, 1);
         var optionThree = child(select, 2);
         document.body.appendChild(container);
-        assert.ok(!optionOne.selected, 'option one (pre)');
+        assert.ok(optionOne.selected, 'option one (pre)');
         assert.ok(optionTwo.selected, 'option two (pre)');
         assert.ok(!optionThree.selected, 'option three (pre)');
-        assert.equal(select.value, 2);
         optionThree.click();
         setTimeout(function () {
-            assert.ok(!optionOne.selected, 'option one (pre)');
+            assert.ok(optionOne.selected, 'option one (pre)');
             assert.ok(optionTwo.selected, 'option two (pre)');
             assert.ok(!optionThree.selected, 'option three (pre)');
-            assert.equal(select.value, 2);
             document.body.removeChild(container);
             done();
         }, 0);
     });
 
     test('update multiselect via dispatch', function (done) {
-        assert.ok(false, 'TODO');
         var container = document.createElement('div');
         var src = '' +
                 '{{#define main}}' +
-                  '<select>' +
+                  '<select multiple>' +
                     '{{#each options}}' +
                       '{{#if selected}}' +
-                        '<option value="{{value}}" onclick="pick" selected>{{label}}</option>' +
+                        '<option value="{{value}}" onclick="toggle" selected>{{label}}</option>' +
                       '{{else}}' +
-                        '<option value="{{value}}" onclick="pick">{{label}}</option>' +
+                        '<option value="{{value}}" onclick="toggle">{{label}}</option>' +
                       '{{/if}}' +
                     '{{/each}}' +
                   '</select>' +
@@ -439,16 +434,18 @@ suite('events', function () {
         var templates = Magery.loadTemplates(src);
         var data = {
             options: [
-                {value: 1, label: 'one', selected: false},
+                {value: 1, label: 'one', selected: true},
                 {value: 2, label: 'two', selected: true},
                 {value: 3, label: 'three', selected: false}
             ]
         };
         Magery.patch(templates, 'main', container, data);
         container.dispatch = function (name, event, context, path) {
-            if (name === 'pick') {
+            if (name === 'toggle') {
                 data.options = data.options.map(function (opt) {
-                    opt.checked = (opt.value == context.value);
+                    if (opt.value == context.value) {
+                        opt.selected = !opt.selected;
+                    }
                     return opt;
                 });
             }
@@ -459,22 +456,97 @@ suite('events', function () {
         var optionTwo = child(select, 1);
         var optionThree = child(select, 2);
         document.body.appendChild(container);
-        assert.ok(!optionOne.selected, 'option one (pre)');
+        assert.ok(optionOne.selected, 'option one (pre)');
         assert.ok(optionTwo.selected, 'option two (pre)');
         assert.ok(!optionThree.selected, 'option three (pre)');
+        optionThree.click();
+        setTimeout(function () {
+            assert.ok(optionOne.selected, 'option one (pre)');
+            assert.ok(optionTwo.selected, 'option two (pre)');
+            assert.ok(optionThree.selected, 'option three (pre)');
+            optionOne.click();
+            setTimeout(function () {
+                assert.ok(!optionOne.selected, 'option one (pre)');
+                assert.ok(optionTwo.selected, 'option two (pre)');
+                assert.ok(optionThree.selected, 'option three (pre)');
+                document.body.removeChild(container);
+                done();
+            }, 0);
+        }, 0);
+    });
+
+    test('update select with optgroups via dispatch', function (done) {
+        var container = document.createElement('div');
+        var src = '' +
+                '{{#define main}}' +
+                  '<select>' +
+                    '{{#each groups}}' +
+                      '<optgroup label="{{label}}">' +
+                        '{{#each options}}' +
+                          '{{#if selected}}' +
+                            '<option value="{{value}}" onclick="pick" selected>{{label}}</option>' +
+                          '{{else}}' +
+                            '<option value="{{value}}" onclick="pick">{{label}}</option>' +
+                          '{{/if}}' +
+                        '{{/each}}' +
+                      '</optgroup>' +
+                    '{{/each}}' +
+                  '</select>' +
+                '{{/define}}';
+        var templates = Magery.loadTemplates(src);
+        var data = {
+            groups: [
+                {
+                    label: 'Group A',
+                    options: [
+                        {value: 1, label: 'one', selected: false},
+                        {value: 2, label: 'two', selected: true}
+                    ]
+                },
+                {
+                    label: 'Group B',
+                    options: [
+                        {value: 3, label: 'three', selected: false}
+                    ]
+                }
+            ]
+        };
+        Magery.patch(templates, 'main', container, data);
+        container.dispatch = function (name, event, context, path) {
+            if (name === 'pick') {
+                console.log([name, context]);
+                data.groups.forEach(function (group) {
+                    group.options = group.options.map(function (opt) {
+                        opt.selected = (opt.value == context.value);
+                        return opt;
+                    });
+                });
+            }
+            Magery.patch(templates, 'main', container, data);
+        };
+        var select = child(container, 0);
+        var groupA = child(select, 0);
+        var groupB = child(select, 1);
+        var optionOne = child(groupA, 0);
+        var optionTwo = child(groupA, 1);
+        var optionThree = child(groupB, 0);
+        document.body.appendChild(container);
+        assert.ok(!optionOne.selected, 'option one (1)');
+        assert.ok(optionTwo.selected, 'option two (1)');
+        assert.ok(!optionThree.selected, 'option three (1)');
         assert.equal(select.value, 2);
         optionThree.click();
         setTimeout(function () {
-            assert.ok(!optionOne.selected, 'option one (pre)');
-            assert.ok(!optionTwo.selected, 'option two (pre)');
-            assert.ok(optionThree.selected, 'option three (pre)');
-            assert.equal(select.value, 2);
+            assert.ok(!optionOne.selected, 'option one (2)');
+            assert.ok(!optionTwo.selected, 'option two (2)');
+            assert.ok(optionThree.selected, 'option three (2)');
+            assert.equal(select.value, 3);
             optionOne.click();
             setTimeout(function () {
-                assert.ok(optionOne.selected, 'option one (pre)');
-                assert.ok(!optionTwo.selected, 'option two (pre)');
-                assert.ok(!optionThree.selected, 'option three (pre)');
-                assert.equal(select.value, 2);
+                assert.ok(optionOne.selected, 'option one (3)');
+                assert.ok(!optionTwo.selected, 'option two (3)');
+                assert.ok(!optionThree.selected, 'option three (3)');
+                assert.equal(select.value, 1);
                 document.body.removeChild(container);
                 done();
             }, 0);
