@@ -591,10 +591,8 @@ function patch() {
 
 container.dispatch = function (name, event, context) {
   if (name === 'updateSelect') {
-    // get the updated value from event.target.value;
-    var value = Number(event.target.value);
     data.options = data.options.map(function (option) {
-      option.selected = (option.value == value);
+      option.selected = (option.value == context.value);
       return option;
     });
     patch();
