@@ -6,6 +6,7 @@
     "parsimmon": "^0.7.0"
   },
   "devDependencies": {
+    "mocha-phantomjs": "^4.0.2",
     "uglifyjs": "^2.4.10",
     "webpack": "^1.12.14"
   },
@@ -17,6 +18,7 @@
     "build-test": "mkdir -p build/test && webpack --config webpack.test.config.js",
     "build-dev": "mkdir -p build && webpack",
     "build-min": "uglifyjs build/magery.js > build/magery.min.js",
-    "build": "npm run build-dev && npm run build-min && npm run build-test"
+    "build": "npm run build-dev && npm run build-min && npm run build-test",
+    "test": "mocha-phantomjs test/index.html"
   }
 }

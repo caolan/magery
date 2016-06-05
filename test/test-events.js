@@ -1,13 +1,29 @@
-var assert = chai.assert;
-
-function child(node /*...*/) {
-    for (var i = 1; i < arguments.length; i++) {
-        node = node.childNodes[arguments[i]];
-    }
-    return node;
-}
-
 suite('events', function () {
+
+    var assert = chai.assert;
+
+    function child(node /*...*/) {
+        for (var i = 1; i < arguments.length; i++) {
+            node = node.childNodes[arguments[i]];
+        }
+        return node;
+    }
+
+    function click(el){
+        var ev = document.createEvent("MouseEvent");
+        ev.initMouseEvent(
+            "click",
+            true /* bubble */,
+            true /* cancelable */,
+            window,
+            null,
+            0, 0, 0, 0, /* coordinates */
+            false, false, false, false, /* modifier keys */
+            0 /*left*/,
+            null
+        );
+        el.dispatchEvent(ev);
+    }
 
     test('click event to dispatch', function (done) {
         var container = document.createElement('div');
@@ -25,7 +41,7 @@ suite('events', function () {
             assert.deepEqual(path, []);
             done();
         };
-        child(container, 0).click();
+        click(child(container, 0))
     });
 
     test('click event with nested context', function (done) {
@@ -46,7 +62,7 @@ suite('events', function () {
             assert.deepEqual(path, ['user']);
             done();
         };
-        child(container, 0).click();
+        click(child(container, 0));
     });
 
     test('text input value reset to match template data on input', function () {
@@ -143,7 +159,7 @@ suite('events', function () {
         var input = child(container, 0);
         document.body.appendChild(container);
         assert.ok(input.checked);
-        input.click();
+        click(input);
         setTimeout(function () {
             assert.ok(input.checked);
             document.body.removeChild(container);
@@ -171,10 +187,10 @@ suite('events', function () {
         var input = child(container, 0);
         document.body.appendChild(container);
         assert.ok(input.checked);
-        input.click();
+        click(input);
         setTimeout(function () {
             assert.ok(!input.checked);
-            input.click();
+            click(input);
             setTimeout(function () {
                 assert.ok(input.checked);
                 document.body.removeChild(container);
@@ -211,7 +227,7 @@ suite('events', function () {
         assert.ok(!radioOne.checked, 'radio one (pre)');
         assert.ok(radioTwo.checked, 'radio two (pre)');
         assert.ok(!radioThree.checked, 'radio three (pre)');
-        radioThree.click();
+        click(radioThree);
         setTimeout(function () {
             assert.ok(!radioOne.checked, 'radio one (post)');
             assert.ok(radioTwo.checked, 'radio two (post)');
@@ -258,12 +274,12 @@ suite('events', function () {
         assert.ok(!radioOne.checked);
         assert.ok(radioTwo.checked);
         assert.ok(!radioThree.checked);
-        radioThree.click();
+        click(radioThree);
         setTimeout(function () {
             assert.ok(!radioOne.checked);
             assert.ok(!radioTwo.checked);
             assert.ok(radioThree.checked);
-            radioOne.click();
+            click(radioOne);
             setTimeout(function () {
                 assert.ok(radioOne.checked);
                 assert.ok(!radioTwo.checked);
@@ -306,7 +322,7 @@ suite('events', function () {
         assert.ok(optionTwo.selected, 'option two (pre)');
         assert.ok(!optionThree.selected, 'option three (pre)');
         assert.equal(select.value, 2);
-        optionThree.click();
+        click(optionThree);
         setTimeout(function () {
             assert.ok(!optionOne.selected, 'option one (pre)');
             assert.ok(optionTwo.selected, 'option two (pre)');
@@ -358,13 +374,13 @@ suite('events', function () {
         assert.ok(optionTwo.selected, 'option two (pre)');
         assert.ok(!optionThree.selected, 'option three (pre)');
         assert.equal(select.value, 2);
-        optionThree.click();
+        click(optionThree);
         setTimeout(function () {
             assert.ok(!optionOne.selected, 'option one (pre)');
             assert.ok(!optionTwo.selected, 'option two (pre)');
             assert.ok(optionThree.selected, 'option three (pre)');
             assert.equal(select.value, 3);
-            optionOne.click();
+            click(optionOne);
             setTimeout(function () {
                 assert.ok(optionOne.selected, 'option one (pre)');
                 assert.ok(!optionTwo.selected, 'option two (pre)');
@@ -407,7 +423,7 @@ suite('events', function () {
         assert.ok(optionOne.selected, 'option one (pre)');
         assert.ok(optionTwo.selected, 'option two (pre)');
         assert.ok(!optionThree.selected, 'option three (pre)');
-        optionThree.click();
+        click(optionThree);
         setTimeout(function () {
             assert.ok(optionOne.selected, 'option one (pre)');
             assert.ok(optionTwo.selected, 'option two (pre)');
@@ -459,12 +475,12 @@ suite('events', function () {
         assert.ok(optionOne.selected, 'option one (pre)');
         assert.ok(optionTwo.selected, 'option two (pre)');
         assert.ok(!optionThree.selected, 'option three (pre)');
-        optionThree.click();
+        click(optionThree);
         setTimeout(function () {
             assert.ok(optionOne.selected, 'option one (pre)');
             assert.ok(optionTwo.selected, 'option two (pre)');
             assert.ok(optionThree.selected, 'option three (pre)');
-            optionOne.click();
+            click(optionOne);
             setTimeout(function () {
                 assert.ok(!optionOne.selected, 'option one (pre)');
                 assert.ok(optionTwo.selected, 'option two (pre)');
@@ -514,7 +530,6 @@ suite('events', function () {
         Magery.patch(templates, 'main', container, data);
         container.dispatch = function (name, event, context, path) {
             if (name === 'pick') {
-                console.log([name, context]);
                 data.groups.forEach(function (group) {
                     group.options = group.options.map(function (opt) {
                         opt.selected = (opt.value == context.value);
@@ -535,13 +550,13 @@ suite('events', function () {
         assert.ok(optionTwo.selected, 'option two (1)');
         assert.ok(!optionThree.selected, 'option three (1)');
         assert.equal(select.value, 2);
-        optionThree.click();
+        click(optionThree);
         setTimeout(function () {
             assert.ok(!optionOne.selected, 'option one (2)');
             assert.ok(!optionTwo.selected, 'option two (2)');
             assert.ok(optionThree.selected, 'option three (2)');
             assert.equal(select.value, 3);
-            optionOne.click();
+            click(optionOne);
             setTimeout(function () {
                 assert.ok(optionOne.selected, 'option one (3)');
                 assert.ok(!optionTwo.selected, 'option two (3)');

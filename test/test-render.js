@@ -1,5 +1,7 @@
 suite('render', function () {
 
+    var assert = chai.assert;
+
     var patcher_calls = [];
     var test_patcher = {
         start: function () {

@@ -1,11 +1,29 @@
-function child(node /*...*/) {
-    for (var i = 1; i < arguments.length; i++) {
-        node = node.childNodes[arguments[i]];
-    }
-    return node;
-}
-
 suite('patch', function () {
+
+    var assert = chai.assert;
+
+    function child(node /*...*/) {
+        for (var i = 1; i < arguments.length; i++) {
+            node = node.childNodes[arguments[i]];
+        }
+        return node;
+    }
+
+    function click(el){
+        var ev = document.createEvent("MouseEvent");
+        ev.initMouseEvent(
+            "click",
+            true /* bubble */,
+            true /* cancelable */,
+            window,
+            null,
+            0, 0, 0, 0, /* coordinates */
+            false, false, false, false, /* modifier keys */
+            0 /*left*/,
+            null
+        );
+        el.dispatchEvent(ev);
+    }
 
     var transform_log = [];
     var test_transforms = {};
@@ -951,7 +969,7 @@ suite('patch', function () {
         var renderer = new render.Renderer(patcher, templates, true);
         renderer.render('app', next_data, prev_data);
         assert.strictEqual(div.getAttribute('id'), 'testing', 'id not removed');
-        div.click();
+        click(div);
         assert.deepEqual(calls, ['click'], 'event handler not removed');
     });
 

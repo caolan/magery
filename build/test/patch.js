@@ -91,6 +91,7 @@ var patch =
 
 	var utils = __webpack_require__(3);
 	var transforms = __webpack_require__(7);
+	var Set = __webpack_require__(8);
 
 	var ELEMENT_NODE = 1;
 	var TEXT_NODE = 3;
@@ -449,6 +450,26 @@ var patch =
 	    node.removeEventListener(name, handler);
 	    return node;
 	};
+
+
+/***/ },
+/* 8 */
+/***/ function(module, exports) {
+
+	function Set() {
+	    this.values = [];
+	}
+
+	Set.prototype.add = function (x) {
+	    this.values.push(x);
+	};
+
+	Set.prototype.has = function (x) {
+	    return this.values.indexOf(x) !== -1;
+	};
+
+	// use built in Set() if available
+	module.exports = window.Set || Set;
 
 
 /***/ }

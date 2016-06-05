@@ -1,7 +1,6 @@
-var assert = chai.assert;
-
-
 suite('parsers', function () {
+
+    var assert = chai.assert;
 
     test('parseParams - positional property args', function () {
         assert.deepEqual(
