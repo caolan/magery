@@ -1,5 +1,7 @@
 # Magery.js
 
+[![Build Status](https://travis-ci.org/caolan/magery.svg?branch=master)][ci]
+
 _**NOTE:** This project is **experimental** - do not expect full
 browser compatibility, bug-free operation or stable APIs. The current
 code is to prompt discussion. Your ideas and questions are very
@@ -610,3 +612,4 @@ patch();
 [magery-min-js]: https://raw.githubusercontent.com/caolan/magery/master/build/magery.min.js
 [immutable-js]: http://facebook.github.io/immutable-js/
 [copy-kitten]: https://github.com/caolan/copykitten
+[ci]: https://travis-ci.org/caolan/magery
