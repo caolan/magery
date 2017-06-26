@@ -108,10 +108,10 @@ Magery.bind('container', 'myApp', data, {
 You should now be able to type "universe" into the textbox and see the
 displayed message update to "Hello, universe!".
 
-Well done, you know now all the necessary JavaScript. Now you just
-need to learn the remaining template tags.
+Well done, you know now all the arguments to `Magery.bind()`. All
+that's left is to learn the remaining template tags.
 
 ## Template tags
 
-### <template-each>
+### `<template-each>`
 
