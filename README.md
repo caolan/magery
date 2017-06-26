@@ -61,14 +61,16 @@ should see "Hello, world!".
 ### Using data
 
 You can pass JSON data into your templates to change what is
-displayed. Properties of the data object can be rendered using `{{`
-curly braces `}}`:
+displayed. Properties of the data object can then be rendered using
+`{{` curly braces `}}`:
 
 ```html
 <template id="myApp">
   <h1>Hello, {{name}}!</h1>
 </template>
 ```
+
+Your initial data is the third parameter of `Magery.bind`:
 
 ```javascript
 var data = {name: "galaxy"};
@@ -78,22 +80,26 @@ Magery.bind('container', 'myApp', data, {});
 
 This will display "Hello, galaxy!".
 
-### Live page updates
+### Event handlers
 
 Once bound using `Magery.bind`, a template's data can be changed on
-the fly by listening for events. Let's make our greeting universal
-using a textbox to change the name:
+the fly by listening for events. Let's make our greeting message
+universal by using a textbox to change the name:
 
 ```html
 <template id="myApp">
   <h1>Hello, {{name}}!</h1>
-  <input type="text" value="{{name}}" oninput="updateName(event)" />
+  
+  <input type="text"
+         value="{{name}}"
+         oninput="updateName(event)" />
 </template>
 ```
 
-The value of the textbox is set to the current value of `name`, and
-when an `input` event occurs, we're going to call the `updateName`
-function. This function goes in the final parameter to `Magery.bind`:
+The value of the textbox is set to the current `name`, and when an
+`input` event occurs, we're going to call the `updateName` function.
+The 'updateName' function goes in the final parameter to
+`Magery.bind`:
 
 ```javascript
 var data = {name: 'galaxy'};
@@ -105,13 +111,52 @@ Magery.bind('container', 'myApp', data, {
 });
 ```
 
-You should now be able to type "universe" into the textbox and see the
-displayed message update to "Hello, universe!".
+You can now type "universe" into the textbox and see the message
+update to "Hello, universe!" as you type.
 
-Well done, you know now all the arguments to `Magery.bind()`. All
-that's left is to learn the remaining template tags.
+__Well done, you know now all the arguments to `Magery.bind`! All
+that's left is to learn the remaining template tags.__
 
 ## Template tags
 
+* [template](#template)
+* [template-each](#template-each)
+
+### `<template>`
+
+This defines a new template. Each template **must** have an `id`
+attribute to uniquely identify it. All other template tags can only be
+used inside a `<template>` tag.
+
+#### Attributes
+
+* __id__ - uniquely identifies the template (required)
+
+#### Example use
+
+```html
+<template id="greeting">
+  <h1>Hello, world!</h1>
+</template>
+```
+
 ### `<template-each>`
 
+Loop over an array, rendering the child elements with each item bound
+to the given name.
+
+#### Attributes
+
+* __name__ - the name to use for the current item (required)
+* __in__ - the array to iterate over (required)
+* __key__ - a property to uniquely identify the current item (optional)
+
+#### Example use
+
+```html
+<ol>
+  <template-each name="user" in="highscores">
+    <li>{{user.name}} (score: {{user.score}})</li>
+  </template-each>
+</ol>
+```
