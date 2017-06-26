@@ -45,13 +45,14 @@ var patch =
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(5);
+	module.exports = __webpack_require__(6);
 
 
 /***/ }),
 /* 1 */,
 /* 2 */,
-/* 3 */
+/* 3 */,
+/* 4 */
 /***/ (function(module, exports) {
 
 	exports.htmlEscape = function (str) {
@@ -77,8 +78,8 @@ var patch =
 
 
 /***/ }),
-/* 4 */,
-/* 5 */
+/* 5 */,
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -88,9 +89,9 @@ var patch =
 	 * DOM, performing DOM mutation only through transform calls.
 	 */
 
-	var utils = __webpack_require__(3);
-	var transforms = __webpack_require__(6);
-	var Set = __webpack_require__(7);
+	var utils = __webpack_require__(4);
+	var transforms = __webpack_require__(7);
+	var Set = __webpack_require__(8);
 
 	var ELEMENT_NODE = 1;
 	var TEXT_NODE = 3;
@@ -379,7 +380,7 @@ var patch =
 
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports) {
 
 	/**
@@ -470,7 +471,7 @@ var patch =
 
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports) {
 
 	function Set() {

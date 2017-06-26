@@ -1,6 +1,6 @@
 "use strict";
 
-// var context = require('./context');
+var context = require('./context');
 var render = require('./render');
 var patch = require('./patch');
 

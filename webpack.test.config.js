@@ -1,6 +1,5 @@
 module.exports = {
     entry: {
-        // 'parsers': ['./parsers.js'],
         'context': ['./context.js'],
         'render': ['./render.js'],
         'patch': ['./patch.js'],

@@ -45,12 +45,13 @@ var render =
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(2);
+	module.exports = __webpack_require__(3);
 
 
 /***/ }),
 /* 1 */,
-/* 2 */
+/* 2 */,
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -60,8 +61,8 @@ var render =
 	 * emit events.
 	 */
 
-	var utils = __webpack_require__(3);
-	var builtins = __webpack_require__(4);
+	var utils = __webpack_require__(4);
+	var builtins = __webpack_require__(5);
 
 	var ELEMENT_NODE = 1;
 	var TEXT_NODE = 3;
@@ -206,7 +207,7 @@ var render =
 
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports) {
 
 	exports.htmlEscape = function (str) {
@@ -232,10 +233,10 @@ var render =
 
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var render = __webpack_require__(2);
+	var render = __webpack_require__(3);
 
 	function getAttr(node, name) {
 	    var attr = node.attributes.getNamedItem(name);
