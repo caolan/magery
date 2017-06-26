@@ -43,16 +43,16 @@ var utils =
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__(3);
 
 
-/***/ },
+/***/ }),
 /* 1 */,
 /* 2 */,
 /* 3 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	exports.htmlEscape = function (str) {
 	    return String(str)
@@ -76,5 +76,5 @@ var utils =
 	};
 
 
-/***/ }
+/***/ })
 /******/ ]);

@@ -43,16 +43,16 @@ var parsers =
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__(4);
 
 
-/***/ },
+/***/ }),
 /* 1 */,
 /* 2 */,
 /* 3 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	exports.htmlEscape = function (str) {
 	    return String(str)
@@ -76,9 +76,9 @@ var parsers =
 	};
 
 
-/***/ },
+/***/ }),
 /* 4 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * Tools for converting any raw template data into structured form
@@ -289,15 +289,30 @@ var parsers =
 	};
 
 
-/***/ },
+/***/ }),
 /* 5 */
-/***/ function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-	// pass
-	var Parsimmon = {};
+	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// This unsightly UMD-module header is here to make this code work without
+	// modification with CommonJS, AMD, and browser globals.
 
-	Parsimmon.Parser = (function() {
+	(function(root, factory) {
+	  if (true) {
+	    // AMD. Register as an anonymous module.
+	    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	  } else if (typeof module === 'object' && module.exports) {
+	    // Node. Does not work with strict CommonJS, but
+	    // only CommonJS-like environments that support module.exports,
+	    // like Node.
+	    module.exports = factory();
+	  } else {
+	    // Browser globals (root is window).
+	    root.Parsimmon = factory();
+	  }
+	}(this, function() {
 	  "use strict";
+
+	  var Parsimmon = {};
 
 	  // The Parser object is a wrapper for a parser function.
 	  // Externally, you use one to parse a string by calling
@@ -309,6 +324,8 @@ var parsers =
 	    if (!(this instanceof Parser)) return new Parser(action);
 	    this._ = action;
 	  };
+
+	  Parsimmon.Parser = Parser;
 
 	  var _ = Parser.prototype;
 
@@ -349,8 +366,21 @@ var parsers =
 	    }
 	  }
 
+	  // For ensuring we have the right argument types
 	  function assertParser(p) {
 	    if (!(p instanceof Parser)) throw new Error('not a parser: '+p);
+	  }
+	  function assertNumber(x) {
+	    if (typeof x !== 'number') throw new Error('not a number: '+x);
+	  }
+	  function assertRegexp(x) {
+	    if (!(x instanceof RegExp)) throw new Error('not a regex: '+x);
+	  }
+	  function assertFunction(x) {
+	    if (typeof x !== 'function') throw new Error('not a function: '+x);
+	  }
+	  function assertString(x) {
+	    if (typeof x !== 'string') throw new Error('not a string: '+x)
 	  }
 
 	  function formatExpected(expected) {
@@ -360,7 +390,8 @@ var parsers =
 	  }
 
 	  function formatGot(stream, error) {
-	    var i = error.index;
+	    var index = error.index;
+	    var i = index.offset;
 
 	    if (i === stream.length) return ', got the end of the stream'
 
@@ -368,7 +399,8 @@ var parsers =
 	    var prefix = (i > 0 ? "'..." : "'");
 	    var suffix = (stream.length - i > 12 ? "...'" : "'");
 
-	    return ' at character ' + i + ', got ' + prefix + stream.slice(i, i+12) + suffix
+	    return ' at line ' + index.line + ' column ' + index.column
+	      +  ', got ' + prefix + stream.slice(i, i+12) + suffix
 	  }
 
 	  var formatError = Parsimmon.formatError = function(stream, error) {
@@ -376,6 +408,9 @@ var parsers =
 	  };
 
 	  _.parse = function(stream) {
+	    if (typeof stream !== 'string') {
+	      throw new Error('.parse must be called with a string as its argument');
+	    }
 	    var result = this.skip(eof)._(stream, 0);
 
 	    return result.status ? {
@@ -383,7 +418,7 @@ var parsers =
 	      value: result.value
 	    } : {
 	      status: false,
-	      index: result.furthest,
+	      index: makeLineColumnIndex(stream, result.furthest),
 	      expected: result.expected
 	    };
 	  };
@@ -392,6 +427,10 @@ var parsers =
 	  var seq = Parsimmon.seq = function() {
 	    var parsers = [].slice.call(arguments);
 	    var numParsers = parsers.length;
+
+	    for (var j = 0; j < numParsers; j += 1) {
+	      assertParser(parsers[j]);
+	    }
 
 	    return Parser(function(stream, i) {
 	      var result;
@@ -429,6 +468,10 @@ var parsers =
 	    var numParsers = parsers.length;
 	    if (numParsers === 0) return fail('zero alternates')
 
+	    for (var j = 0; j < numParsers; j += 1) {
+	      assertParser(parsers[j]);
+	    }
+
 	    return Parser(function(stream, i) {
 	      var result;
 	      for (var j = 0; j < parsers.length; j += 1) {
@@ -437,6 +480,24 @@ var parsers =
 	      }
 	      return result;
 	    });
+	  };
+
+	  var sepBy = Parsimmon.sepBy = function(parser, separator) {
+	    // Argument asserted by sepBy1
+	    return sepBy1(parser, separator).or(Parsimmon.of([]));
+	  };
+
+	  var sepBy1 = Parsimmon.sepBy1 = function(parser, separator) {
+	    assertParser(parser);
+	    assertParser(separator);
+
+	    var pairs = separator.then(parser).many();
+
+	    return parser.chain(function(r) {
+	      return pairs.map(function(rs) {
+	        return [r].concat(rs);
+	      })
+	    })
 	  };
 
 	  // -*- primitive combinators -*- //
@@ -513,6 +574,9 @@ var parsers =
 	    if (arguments.length < 2) max = min;
 	    var self = this;
 
+	    assertNumber(min);
+	    assertNumber(max);
+
 	    return Parser(function(stream, i) {
 	      var accum = [];
 	      var start = i;
@@ -554,6 +618,9 @@ var parsers =
 	  };
 
 	  _.map = function(fn) {
+
+	    assertFunction(fn);
+
 	    var self = this;
 	    return Parser(function(stream, i) {
 	      var result = self._(stream, i);
@@ -586,6 +653,8 @@ var parsers =
 	    var len = str.length;
 	    var expected = "'"+str+"'";
 
+	    assertString(str);
+
 	    return Parser(function(stream, i) {
 	      var head = stream.slice(i, i+len);
 
@@ -599,6 +668,10 @@ var parsers =
 	  };
 
 	  var regex = Parsimmon.regex = function(re, group) {
+
+	    assertRegexp(re);
+	    if (group) assertNumber(group);
+
 	    var anchored = RegExp('^(?:'+re.source+')', (''+re).slice((''+re).lastIndexOf('/')+1));
 	    var expected = '' + re;
 	    if (group == null) group = 0;
@@ -650,6 +723,8 @@ var parsers =
 	  });
 
 	  var test = Parsimmon.test = function(predicate) {
+	    assertFunction(predicate);
+
 	    return Parser(function(stream, i) {
 	      var char = stream.charAt(i);
 	      if (i < stream.length && predicate(char)) {
@@ -670,6 +745,8 @@ var parsers =
 	  };
 
 	  var takeWhile = Parsimmon.takeWhile = function(predicate) {
+	    assertFunction(predicate);
+
 	    return Parser(function(stream, i) {
 	      var j = i;
 	      while (j < stream.length && predicate(stream.charAt(j))) j += 1;
@@ -693,9 +770,25 @@ var parsers =
 	    return parser;
 	  };
 
-	  var index = Parsimmon.index = Parser(function(stream, i) {
-	    return makeSuccess(i, i);
-	  });
+	  var makeLineColumnIndex = function(stream, i) {
+	    var lines = stream.slice(0, i).split("\n");
+	    // Note that unlike the character offset, the line and column offsets are
+	    // 1-based.
+	    var lineWeAreUpTo = lines.length;
+	    var columnWeAreUpTo = lines[lines.length - 1].length + 1;
+
+	    return {
+	      offset: i,
+	      line: lineWeAreUpTo,
+	      column: columnWeAreUpTo
+	    };
+	  };
+
+	  var index
+	    = Parsimmon.index
+	    = Parser(function(stream, i) {
+	      return makeSuccess(i, makeLineColumnIndex(stream, i));
+	    });
 
 	  //- fantasyland compat
 
@@ -721,10 +814,9 @@ var parsers =
 	    });
 	  };
 
-	  return Parser;
-	})();
-	module.exports = Parsimmon;
+	  return Parsimmon;
+	}));
 
 
-/***/ }
+/***/ })
 /******/ ]);

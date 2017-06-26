@@ -1,0 +1,32 @@
+<html>
+    <head>
+        <title>Example: managed text input</title>
+    </head>
+    <body>
+        <template id="main">
+            <p>
+                The input below should only allow you to enter digits
+                (0-9), not letters etc.
+            </p>
+            <label for="id_number">Enter a number:</label>
+            <input type="text"
+                   id="id_number"
+                   name="number"
+                   value="{{number_str}}"
+                   data-managed="true"
+                   oninput="addDigit(event)" />
+        </template>
+        <div id="container"></div>
+        <script src="../build/magery.js"></script>
+        <script>
+         var data = {
+             number_str: ''
+         };
+         window.app = Magery.bind('container', 'main', data, {
+             addDigit: function (event) {
+                 this.context.number_str = event.target.value.replace(/[^0-9]/g, '');
+             }
+         });
+        </script>
+    </body>
+</html>

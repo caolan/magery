@@ -2,7 +2,7 @@
  * Tools for converting any raw template data into structured form
  */
 
-var p = require('parsimmon/build/parsimmon.commonjs');
+var p = require('parsimmon/build/parsimmon.browser');
 var utils = require('./utils');
 
 

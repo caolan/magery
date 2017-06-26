@@ -44,15 +44,15 @@ var transforms =
 /******/ ({
 
 /***/ 0:
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(7);
+	module.exports = __webpack_require__(6);
 
 
-/***/ },
+/***/ }),
 
-/***/ 7:
-/***/ function(module, exports) {
+/***/ 6:
+/***/ (function(module, exports) {
 
 	/**
 	 * DOM mutation procedures called by the patcher. This module provides
@@ -141,6 +141,6 @@ var transforms =
 	};
 
 
-/***/ }
+/***/ })
 
 /******/ });

@@ -1,11 +1,13 @@
 module.exports = {
     entry: {
-        'parsers': ['./parsers.js'],
+        // 'parsers': ['./parsers.js'],
+        'context': ['./context.js'],
         'render': ['./render.js'],
         'patch': ['./patch.js'],
         'builtins': ['./builtins.js'],
         'transforms': ['./transforms.js'],
-        'utils': ['./utils.js']
+        'utils': ['./utils.js'],
+        'Magery': ['./magery.js']
     },
     output: {
         path: 'build/test',

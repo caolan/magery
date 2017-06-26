@@ -1,0 +1,23 @@
+<html>
+    <head>
+        <title>Example: live text input</title>
+    </head>
+    <body>
+        <template id="main">
+            <h1>Hello, {{name}}!</h1>
+            <input type="text" onkeyup="updateName(event)" />
+        </template>
+        <div id="container"></div>
+        <script src="../build/magery.js"></script>
+        <script>
+         var data = {
+             name: 'world'
+         };
+         window.app = Magery.bind('container', 'main', data, {
+             updateName: function (event) {
+                 this.context.name = event.target.value;
+             }
+         });
+        </script>
+    </body>
+</html>

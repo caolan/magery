@@ -145,11 +145,18 @@ function replaceListener(transforms, node, type, handler) {
 
 // TODO: these get re-bound every render of an element because
 // the context etc may have changed - probably a better to do this
-Patcher.prototype.eventListener = function (type, name, context, path) {
+Patcher.prototype.eventListener = function (type, value, data, bound_template) {
+    var start = value.indexOf('(');
+    var end = value.lastIndexOf(')');
+    var name = value.substring(0, start);
+    var src = '[' + value.substring(start + 1, end) + ']';
     var container = this.container;
     var f = function (event) {
-        if (container.dispatch) {
-            container.dispatch(name, event, context, path);
+        if (start !== -1) {
+            with (data) {
+                var args = eval(src);
+            }
+            bound_template.trigger.apply(bound_template, [name].concat(args));
         }
         var node = event.target;
         if (node.tagName === 'INPUT') {
@@ -175,44 +182,55 @@ Patcher.prototype.eventListener = function (type, name, context, path) {
 
 // force checkbox node checked property to match last rendered attribute
 function resetCheckbox(event) {
-    event.target.checked = event.target.hasAttribute('checked');
+    var node = event.target;
+    if (node.dataset['managed'] === 'true') {
+        node.checked = node.hasAttribute('checked');
+    }
 }
 
 function resetRadio(event) {
-    var expected = event.target.hasAttribute('checked');
-    if (event.target.checked != expected) {
-        if (event.target.name) {
-            // TODO: are radio buttons with the same name in different forms
-            // considered part of the same group?
-            var els = document.getElementsByName(event.target.name);
-            for (var i = 0, len = els.length; i < len; i++) {
-                var el = els[i];
-                el.checked = el.hasAttribute('checked');
+    var node = event.target;
+    if (node.dataset['managed'] === 'true') {
+        var expected = node.hasAttribute('checked');
+        if (node.checked != expected) {
+            if (node.name) {
+                // TODO: are radio buttons with the same name in different forms
+                // considered part of the same group?
+                var els = document.getElementsByName(node.name);
+                for (var i = 0, len = els.length; i < len; i++) {
+                    var el = els[i];
+                    el.checked = el.hasAttribute('checked');
+                }
+            }
+            else {
+                // not part of a group
+                node.checked = expected;
             }
         }
-        else {
-            // not part of a group
-            event.target.checked = expected;
-        }
+        //event.target.checked = event.target.hasAttribute('checked');
     }
-    //event.target.checked = event.target.hasAttribute('checked');
 }
 
 // force option node selected property to match last rendered attribute
 function resetSelected(event) {
-    var options = event.target.getElementsByTagName('option');
-    for (var i = 0, len = options.length; i < len; i++) {
-        var option = options[i];
-        option.selected = option.hasAttribute('selected');
+    var node = event.target;
+    if (node.dataset['managed'] === 'true') {
+        var options = node.getElementsByTagName('option');
+        for (var i = 0, len = options.length; i < len; i++) {
+            var option = options[i];
+            option.selected = option.hasAttribute('selected');
+        }
     }
 }
 
 // force input to match last render of value attribute
 function resetInput(event) {
     var node = event.target;
-    var expected = node.getAttribute('value');
-    if (node.value !== expected) {
-        node.value = expected;
+    if (node.dataset['managed'] === 'true') {
+        var expected = node.getAttribute('value');
+        if (node.value !== expected) {
+            node.value = expected;
+        }
     }
 }
 
