@@ -1,10 +1,10 @@
 # Magery
 
-[![Build Status](https://travis-ci.org/caolan/magery.svg?branch=master)][ci]
+[![Build Status](https://travis-ci.org/caolan/magery.svg?branch=master)][ci]]
 
 I want to improve JavaScript development for 'traditional' multi-page
 websites. This is the easiest JavaScript framework I can think of that
-/could/ work with server-side rendering in any language.
+_could_ work with server-side rendering in any language.
 
 ## Download
 
@@ -72,6 +72,7 @@ curly braces `}}`:
 
 ```javascript
 var data = {name: "galaxy"};
+
 Magery.bind('container', 'myApp', data, {});
 ```
 
