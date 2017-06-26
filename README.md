@@ -114,13 +114,17 @@ Magery.bind('container', 'myApp', data, {
 You can now type "universe" into the textbox and see the message
 update to "Hello, universe!" as you type.
 
-__Well done, you know now all the arguments to `Magery.bind`! All
-that's left is to learn the remaining template tags.__
+__Well done, you now know all the arguments to `Magery.bind`!__ Next,
+take a look at the remaining template tags.
 
 ## Template tags
 
 * [template](#template)
 * [template-each](#template-each)
+* [template-if](#template-if)
+* [template-unless](#template-unless)
+* [template-call](#template-call)
+* [template-children](#template-children)
 
 ### `<template>`
 
@@ -149,14 +153,45 @@ to the given name.
 
 * __name__ - the name to use for the current item (required)
 * __in__ - the array to iterate over (required)
-* __key__ - a property to uniquely identify the current item (optional)
+* __key__ - a property to identify the current item, *must* be unique (optional)
 
 #### Example use
 
 ```html
 <ol>
   <template-each name="user" in="highscores">
-    <li>{{user.name}} (score: {{user.score}})</li>
+    <li>{{user.name}}: {{user.score}} points</li>
   </template-each>
 </ol>
+```
+
+```javascript
+var data = {
+  highscores: [
+    {name: 'popchop', score: 100},
+    {name: 'fuzzable', score: 98},
+    {name: 'deathmop', score: 72}
+  ]
+};
+```
+
+If possible, use a `key` property to uniquely idenfify each item. It
+enables some optimisations when Magery updates the DOM.
+
+```html
+<ul>
+  <template-each name="item" in="basket" key="id">
+    <li>{{item.title}}</li>
+  </template-each>
+</ul>
+```
+
+```javascript
+var data = {
+  basket: [
+    {id: 1000, title: 'jelly'},
+    {id: 1001, title: 'custard'},
+    {id: 1002, title: 'cake'}
+  ]
+};
 ```
