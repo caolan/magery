@@ -27,7 +27,8 @@ Magery uses `<template>` tags containing HTML to update the page:
 </template>
 ```
 
-Each template is identified by it's `id` attribute, the template above is "myApp".
+Each template is identified by it's `id` attribute. The template above
+is "myApp".
 
 ### Render a template
 
@@ -70,7 +71,7 @@ displayed. Properties of the data object can then be rendered using
 </template>
 ```
 
-Your initial data is the third parameter of `Magery.bind`:
+Your initial data is the third parameter of `Magery.bind()`:
 
 ```javascript
 var data = {name: "galaxy"};
@@ -82,7 +83,7 @@ This will display "Hello, galaxy!". [View page][hello-galaxy].
 
 ### Attach event handlers
 
-Once bound using `Magery.bind`, a template's data can be changed on
+Once bound using `Magery.bind()`, a template's data can be changed on
 the fly by listening for events. Let's make our greeting message
 universal by using a textbox to change the name:
 
@@ -97,9 +98,9 @@ universal by using a textbox to change the name:
 ```
 
 The value of the textbox is set to the current `name`, and when an
-`input` event occurs, we're going to call the `updateName` function.
-The 'updateName' function goes in the final parameter to
-`Magery.bind`:
+`input` event occurs, we're going to call the `updateName()` function.
+The 'updateName()' function goes in the final parameter to
+`Magery.bind()`:
 
 ```javascript
 var data = {name: 'galaxy'};
@@ -111,10 +112,12 @@ Magery.bind('container', 'myApp', data, {
 });
 ```
 
-You can now type "universe" into the textbox and see the message
-update to "Hello, universe!" as you type. [View page][hello-universe].
+By modifying `this.context`, the `updateName()` function will cause
+the page to update to reflect the new template data. You can now type
+"universe" into the textbox and see the message update to "Hello,
+universe!" as you type. [View page][hello-universe].
 
-__You now know all the arguments to `Magery.bind`__ Next, take a look
+__You now know all the arguments to `Magery.bind()`__ Next, take a look
 at the other template tags.
 
 ## Template tags
