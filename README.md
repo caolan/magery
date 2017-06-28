@@ -113,7 +113,7 @@ Magery.bind('container', 'myApp', data, {
 ```
 
 By modifying `this.context`, the `updateName()` function will cause
-the page to update to reflect the new template data. You can now type
+the page to update and display the new template data. You can now type
 "universe" into the textbox and see the message update to "Hello,
 universe!" as you type. [View page][hello-universe].
 
