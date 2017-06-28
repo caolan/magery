@@ -1,6 +1,6 @@
 # Magery
 
-[![Build Status](https://travis-ci.org/caolan/magery.svg?branch=master)][ci]]
+[![Build Status](https://travis-ci.org/caolan/magery.svg?branch=master)][ci]
 
 I want to improve JavaScript development for 'traditional' multi-page
 websites. This is the easiest JavaScript framework I can think of that
@@ -53,12 +53,12 @@ To display the "myApp" template we need a HTML page:
 </html>
 ```
 
-This page includes the template "myApp", a `<div>` container element to
-render the template into, and a script block which binds the "myApp"
-template to the container. Open this page in the browser and you
-should see "Hello, world!".
+This page includes the template "myApp", a `<div>` container element
+to render the template into, and a script block which binds the
+"myApp" template to the container. Open [this page][hello-world] in
+the browser and you should see "Hello, world!".
 
-### Using data
+### Provide data
 
 You can pass JSON data into your templates to change what is
 displayed. Properties of the data object can then be rendered using
@@ -78,9 +78,9 @@ var data = {name: "galaxy"};
 Magery.bind('container', 'myApp', data, {});
 ```
 
-This will display "Hello, galaxy!".
+This will display "Hello, galaxy!". [View page][hello-galaxy].
 
-### Event handlers
+### Attach event handlers
 
 Once bound using `Magery.bind`, a template's data can be changed on
 the fly by listening for events. Let's make our greeting message
@@ -112,10 +112,10 @@ Magery.bind('container', 'myApp', data, {
 ```
 
 You can now type "universe" into the textbox and see the message
-update to "Hello, universe!" as you type.
+update to "Hello, universe!" as you type. [View page][hello-universe].
 
-__Well done, you now know all the arguments to `Magery.bind`!__ Next,
-take a look at the remaining template tags.
+__You now know all the arguments to `Magery.bind`__ Next, take a look
+at the other template tags.
 
 ## Template tags
 
@@ -144,6 +144,7 @@ used inside a `<template>` tag.
 </template>
 ```
 
+
 ### `<template-each>`
 
 Loop over an array, rendering the child elements with each item bound
@@ -157,6 +158,7 @@ to the given name.
 
 #### Example use
 
+Template:
 ```html
 <ol>
   <template-each name="user" in="highscores">
@@ -165,19 +167,30 @@ to the given name.
 </ol>
 ```
 
+Data:
 ```javascript
-var data = {
+{
   highscores: [
     {name: 'popchop', score: 100},
     {name: 'fuzzable', score: 98},
     {name: 'deathmop', score: 72}
   ]
-};
+}
 ```
 
-If possible, use a `key` property to uniquely idenfify each item. It
-enables some optimisations when Magery updates the DOM.
+Result:
+```html
+<ol>
+  <li>popchop: 100 points</li>
+  <li>fuzzable: 98 points</li>
+  <li>deathmop: 72 points</li>
+</ol>
+```
 
+If possible, use a `key` property to uniquely idenfify each item, it
+enables some optimisations when Magery updates the DOM:
+
+Template:
 ```html
 <ul>
   <template-each name="item" in="basket" key="id">
@@ -186,12 +199,29 @@ enables some optimisations when Magery updates the DOM.
 </ul>
 ```
 
+Data:
 ```javascript
-var data = {
+{
   basket: [
     {id: 1000, title: 'jelly'},
     {id: 1001, title: 'custard'},
     {id: 1002, title: 'cake'}
   ]
-};
+}
 ```
+
+Result:
+```html
+<ul>
+  <li>jelly</li>
+  <li>custard</li>
+  <li>cake</li>
+</ul>
+```
+
+[magery-js]: https://raw.githubusercontent.com/caolan/magery/master/build/magery.js
+[magery-min-js]: https://raw.githubusercontent.com/caolan/magery/master/build/magery.min.js
+[hello-world]: https://caolan.github.io/magery/examples/hello-world.html
+[hello-galaxy]: https://caolan.github.io/magery/examples/hello-galaxy.html
+[hello-universe]: https://caolan.github.io/magery/examples/hello-universe.html
+[ci]: https://travis-ci.org/caolan/magery

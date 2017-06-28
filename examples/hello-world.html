@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <title>My App</title>
+  </head>
+  <body>
+    <div id="container"></div>
+
+    <template id="myApp">
+      <h1>Hello, world!</h1>
+    </template>
+
+    <script src="../build/magery.min.js"></script>
+    <script>
+     Magery.bind('container', 'myApp', {}, {});
+    </script>
+  </body>
+</html>
