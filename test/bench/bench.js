@@ -83,26 +83,31 @@ function section(heading, f) {
     new Chartist.Bar(chart, data, options, responsiveOptions);
 }
 
+function createTemplateNode(id, src) {
+    var el = document.getElementById(id);
+    if (!el) {
+        el = document.createElement('template');
+        document.body.appendChild(el);
+        el.id = id;
+    }
+    el.innerHTML = src;
+    return el;
+}
+
 section('Add 100 elements to a list, one at a time - no keys', function (bench) {
     bench('Magery', function (container, iter) {
-        var templates = Magery.loadTemplates(
-            '{{#define app}}' +
+        createTemplateNode('app',
               '<ul>' +
-                '{{#each items}}' +
-                  '<li>{{name}}</li>' +
-                '{{/each}}' +
-              '</ul>' +
-            '{{/define}}'
+                '<template-each name="item" in="items">' +
+                  '<li>{{item.name}}</li>' +
+                '</template-each>' +
+              '</ul>'
         );
-        var prev_data = null;
         var data = {items: []};
-        Magery.patch(templates, 'app', container, data);
+        var app = Magery.bind(container, 'app', data, {});
         iter(100, function (i) {
-            var items = data.items.slice();
-            items.push({name: 'item' + i});
-            prev_data = data;
-            data = {items: items};
-            Magery.patch(templates, 'app', container, data, prev_data);
+            app.context.items.push({name: 'item' + i});
+            app.update();
         });
     });
 
@@ -148,24 +153,18 @@ section('Add 100 elements to a list, one at a time - no keys', function (bench) 
 section('Add 100 elements to a list, one at a time - keys', function (bench) {
 
     bench('Magery', function (container, iter) {
-        var templates = Magery.loadTemplates(
-            '{{#define app}}' +
+        createTemplateNode('app',
               '<ul>' +
-                '{{#each items key=id}}' +
-                  '<li>{{name}}</li>' +
-                '{{/each}}' +
-              '</ul>' +
-            '{{/define}}'
+                '<template-each name="item" in="items" key="id">' +
+                  '<li>{{item.name}}</li>' +
+                '</template-each>' +
+              '</ul>'
         );
-        var prev_data = null;
         var data = {items: []};
-        Magery.patch(templates, 'app', container, data);
+        var app = Magery.bind(container, 'app', data, {});
         iter(100, function (i) {
-            var items = data.items.slice();
-            items.push({id: i, name: 'item' + i});
-            prev_data = data;
-            data = {items: items};
-            Magery.patch(templates, 'app', container, data, prev_data);
+            app.context.items.push({id: i, name: 'item' + i});
+            app.update();
         });
     });
 
@@ -221,27 +220,21 @@ section('Randomly remove elements from 100 length list, one at a time - with key
     }
 
     bench('Magery', function (container, iter) {
-        var templates = Magery.loadTemplates(
-            '{{#define app}}' +
+        createTemplateNode('app',
                 '<ul>' +
-                    '{{#each items key=id}}' +
-                        '<li>{{name}}</li>' +
-                    '{{/each}}' +
-                '</ul>' +
-            '{{/define}}'
+                    '<template-each name="item" in="items" key="id">' +
+                        '<li>{{item.name}}</li>' +
+                    '</template-each>' +
+                '</ul>'
         );
-        var prev_data = null;
         var data = {items: []};
         for (var i = 0; i < 100; i++) {
             data.items.push({id: i, name: 'item' + i});
         }
-        Magery.patch(templates, 'app', container, data);
+        var app = Magery.bind(container, 'app', data, {});
         iter(100, function (i) {
-            var items = data.items.slice();
-            items.splice(random(items.length - 1), 1);
-            prev_data = data;
-            data = {items: items};
-            Magery.patch(templates, 'app', container, data, prev_data);
+            app.context.items.splice(random(app.context.items.length - 1), 1);
+            app.update();
         });
     });
 
