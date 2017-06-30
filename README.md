@@ -222,6 +222,168 @@ Result:
 </ul>
 ```
 
+### `<template-if>`
+
+Conditionally expands it's child elements if the property named in the
+`test` attribute evaluates to true.
+
+__NOTE:__ An empty Array in Magery is considered 'false' (normally in
+javascript it would be considered 'true').
+
+#### Attributes
+
+* __test__ - the property path (e.g. user.name) to test to use as the
+  predicate (required)
+
+#### Example use
+
+Template:
+```html
+<template-if test="article.published">
+  <span>Published: {{ article.pubDate }}</span>
+</template-if>
+```
+
+Data:
+```javascript
+{
+  article: {
+    published: true,
+    pubDate: 'today'
+  }
+}
+```
+
+Result:
+```html
+<span>Published: today</span>
+```
+
+### `<template-unless>`
+
+This is the compliment to [`<template-if>`](#template-if), and will
+display it's child nodes if the `test` property evaluates to false.
+
+__NOTE:__ An empty Array in Magery is considered 'false' (normally in
+javascript it would be considered 'true').
+
+#### Attributes
+
+* __test__ - the property path (e.g. user.name) to test to use, if
+  this is false the child nodes will be displayed (required)
+
+#### Example use
+
+Template:
+```html
+<template-unless test="article.published">
+  <span>Draft</span>
+</template-if>
+```
+
+Data:
+```javascript
+{
+  article: {
+    published: false,
+    pubDate: null
+  }
+}
+```
+
+Result:
+```html
+<span>Draft</span>
+```
+
+### `<template-call>`
+
+Renders another named template in this position.
+
+#### Attributes
+
+* __template__ - the ID of the template to expand (required)
+* ___(any other argument)___ - used to set context data for the new template
+
+#### Example use
+
+```html
+<template id="score">
+  <li>{{ user.name }} - {{ user.score }}</li>
+</template>
+
+<template id="highscores">
+  <ol>
+    <template-each name="user" in="users">
+      <template-call template="score" user="user" />
+    </template-each>
+  </ol>
+</template>
+```
+
+Data:
+```javascript
+{
+  users: [
+    {name: 'fuzzable', score: 100},
+    {name: 'popchop', score: 99}
+  ]
+}
+```
+
+Result:
+```html
+<ol>
+  <li>fuzzable - 100</li>
+  <li>popchop - 100</li>
+</ol>
+```
+
+### `<template-children>`
+
+Expands child nodes from the calling `<template-call>` tag, if any.
+Note: any child nodes of this tag will be ignored.
+
+#### Attributes
+
+No attributes.
+
+#### Example use
+
+Template:
+```html
+<template id="article">
+  <h1>{{ title }}</h1>
+  <div class="main-content">
+    <template-children />
+  </div>
+</template>
+
+<template id="page">
+  <template-call template="article" title="article.title">
+    <p>{{ article.text }}</p>
+  </template-call>
+</template>
+```
+
+Data:
+```javascript
+{
+  article: {
+    title: 'Guinea Pig Names',
+    text: 'Popchop, Fuzzable, Deathmop'
+  }
+}
+```
+
+Result:
+```html
+<h1>Guinea Pig Names</h1>
+<div class="main-content">
+  <p>Popchop, Fuzzable, Deathmop</p>
+</div>
+```
+
 [magery-js]: https://raw.githubusercontent.com/caolan/magery/master/build/magery.js
 [magery-min-js]: https://raw.githubusercontent.com/caolan/magery/master/build/magery.min.js
 [hello-world]: https://caolan.github.io/magery/examples/hello-world.html
