@@ -27,7 +27,7 @@ Magery uses `<template>` tags containing HTML to update the page:
 </template>
 ```
 
-Each template is identified by it's `id` attribute. The template above
+Each template is identified by its `id` attribute. The template above
 is "myApp".
 
 ### Render a template
@@ -224,7 +224,7 @@ Result:
 
 ### `<template-if>`
 
-Conditionally expands it's child elements if the property named in the
+Conditionally expands its child elements if the property named in the
 `test` attribute evaluates to true.
 
 __NOTE:__ An empty Array in Magery is considered 'false' (normally in
@@ -262,7 +262,7 @@ Result:
 ### `<template-unless>`
 
 This is the compliment to [`<template-if>`](#template-if), and will
-display it's child nodes if the `test` property evaluates to false.
+display its child nodes if the `test` property evaluates to false.
 
 __NOTE:__ An empty Array in Magery is considered 'false' (normally in
 javascript it would be considered 'true').
