@@ -161,6 +161,22 @@ suite('events', function () {
         assert.equal(child(container, 0).value, '5');
     });
 
+    test('render html tags back into managed input', function () {
+        var container = document.createElement('div');
+        createTemplateNode('main',
+                           '<input type="text" value="{{user.name}}" data-managed="true" oninput="updateID(user, event)">');
+        var data = {user: {name: 'test'}};
+        var calls = [];
+        Magery.bind(container, 'main', data, {
+            updateID: function (user, event) {
+                user.name = event.target.value;
+            }
+        });
+        assert.equal(child(container, 0).value, 'test');
+        input(child(container, 0), '<h1>test</h1>');
+        assert.equal(child(container, 0).value, '<h1>test</h1>');
+    });
+
     // test('text input value reset to match template data on input', function () {
     //     var container = document.createElement('div');
     //     var src = '' +

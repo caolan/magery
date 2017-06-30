@@ -724,31 +724,21 @@ suite('patch', function () {
         createTemplateNode('foo',
                            '<span class="{{type}}">foo</span>');
         var prev_data = {};
-        var next_data = {type: 'te" onclick="alert()"><script>alert();'};
+        var next_data = {type: 'test" onclick="throw new Error(\'fail\');'};
         var patcher = new patch.Patcher(div, test_transforms);
         var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
         var renderer = new render.Renderer(patcher, bound);
         renderer.render('foo', next_data, prev_data);
         assert.equal(
             div.childNodes[0].className,
-            'te&quot; onclick=&quot;alert()&quot;&gt;&lt;script&gt;alert();'
+            'test" onclick="throw new Error(\'fail\');'
         );
-    });
-
-    test('escaped attribute with whitespace', function () {
-        var div = document.createElement('div');
-        createTemplateNode('foo',
-                           '<span class="{{ type }}">foo</span>');
-        var prev_data = {};
-        var next_data = {type: 'te" onclick="alert()"><script>alert();'};
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var renderer = new render.Renderer(patcher, bound);
-        renderer.render('foo', next_data, prev_data);
         assert.equal(
-            div.childNodes[0].className,
-            'te&quot; onclick=&quot;alert()&quot;&gt;&lt;script&gt;alert();'
+            div.innerHTML,
+            '<span class="test&quot; onclick=&quot;throw new Error(\'fail\');">foo</span>'
         );
+        // this should not trigger an error
+        click(div.childNodes[0]);
     });
 
     // test('patch using body from render of complete html document', function () {

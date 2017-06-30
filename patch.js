@@ -156,7 +156,7 @@ Patcher.prototype.eventListener = function (type, value, data, bound_template) {
             with (data) {
                 var args = eval(src);
             }
-            bound_template.trigger.apply(bound_template, [name].concat(args));
+            bound_template.applyHandler(name, args);
         }
         var node = event.target;
         if (node.tagName === 'INPUT') {
@@ -237,7 +237,7 @@ function resetInput(event) {
 Patcher.prototype.attribute = function (name, value) {
     var node = this.parent;
     if (node.getAttribute(name) !== value) {
-        this.transforms.setAttribute(node, name, utils.htmlEscape(value));
+        this.transforms.setAttribute(node, name, value);
     }
     node.visited_attributes.add(name);
 };

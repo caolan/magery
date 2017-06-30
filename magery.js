@@ -15,10 +15,20 @@ function BoundTemplate(node, template, data, handlers) {
 }
 
 BoundTemplate.prototype.trigger = function (name /* args... */) {
-    // console.log(['trigger', name].concat(Array.prototype.slice.call(arguments, 1)));
-    this.handlers[name].apply(this, Array.prototype.slice.call(arguments, 1));
-    this.update();
+    var args = Array.prototype.slice.call(arguments, 1);
+    return this.applyHandler(this, name, args);
 };
+
+
+BoundTemplate.prototype.applyHandler = function (name, args) {
+    // console.log(['trigger', name].concat(Array.prototype.slice.call(arguments, 1)));
+    var start = performance.now();
+    this.handlers[name].apply(this, args);
+    this.update();
+    var end = performance.now();
+    console.log((end - start) + 'ms');
+};
+
 
 exports.bind = function (node, template, data, handlers) {
     if (typeof node === 'string') {

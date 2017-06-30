@@ -69,10 +69,20 @@ var Magery =
 	}
 
 	BoundTemplate.prototype.trigger = function (name /* args... */) {
-	    // console.log(['trigger', name].concat(Array.prototype.slice.call(arguments, 1)));
-	    this.handlers[name].apply(this, Array.prototype.slice.call(arguments, 1));
-	    this.update();
+	    var args = Array.prototype.slice.call(arguments, 1);
+	    return this.applyHandler(this, name, args);
 	};
+
+
+	BoundTemplate.prototype.applyHandler = function (name, args) {
+	    // console.log(['trigger', name].concat(Array.prototype.slice.call(arguments, 1)));
+	    var start = performance.now();
+	    this.handlers[name].apply(this, args);
+	    this.update();
+	    var end = performance.now();
+	    console.log((end - start) + 'ms');
+	};
+
 
 	exports.bind = function (node, template, data, handlers) {
 	    if (typeof node === 'string') {
@@ -371,15 +381,6 @@ var Magery =
 /* 4 */
 /***/ (function(module, exports) {
 
-	exports.htmlEscape = function (str) {
-	    return String(str)
-	        .replace(/&/g, '&amp;')
-	        .replace(/"/g, '&quot;')
-	        .replace(/'/g, '&#39;')
-	        .replace(/</g, '&lt;')
-	        .replace(/>/g, '&gt;');
-	};
-
 	exports.eachNode = function (nodelist, f) {
 	    var i = 0;
 	    var node = nodelist[0];
@@ -657,7 +658,7 @@ var Magery =
 	            with (data) {
 	                var args = eval(src);
 	            }
-	            bound_template.trigger.apply(bound_template, [name].concat(args));
+	            bound_template.applyHandler(name, args);
 	        }
 	        var node = event.target;
 	        if (node.tagName === 'INPUT') {
@@ -738,7 +739,7 @@ var Magery =
 	Patcher.prototype.attribute = function (name, value) {
 	    var node = this.parent;
 	    if (node.getAttribute(name) !== value) {
-	        this.transforms.setAttribute(node, name, utils.htmlEscape(value));
+	        this.transforms.setAttribute(node, name, value);
 	    }
 	    node.visited_attributes.add(name);
 	};

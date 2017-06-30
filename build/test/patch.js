@@ -55,15 +55,6 @@ var patch =
 /* 4 */
 /***/ (function(module, exports) {
 
-	exports.htmlEscape = function (str) {
-	    return String(str)
-	        .replace(/&/g, '&amp;')
-	        .replace(/"/g, '&quot;')
-	        .replace(/'/g, '&#39;')
-	        .replace(/</g, '&lt;')
-	        .replace(/>/g, '&gt;');
-	};
-
 	exports.eachNode = function (nodelist, f) {
 	    var i = 0;
 	    var node = nodelist[0];
@@ -240,7 +231,7 @@ var patch =
 	            with (data) {
 	                var args = eval(src);
 	            }
-	            bound_template.trigger.apply(bound_template, [name].concat(args));
+	            bound_template.applyHandler(name, args);
 	        }
 	        var node = event.target;
 	        if (node.tagName === 'INPUT') {
@@ -321,7 +312,7 @@ var patch =
 	Patcher.prototype.attribute = function (name, value) {
 	    var node = this.parent;
 	    if (node.getAttribute(name) !== value) {
-	        this.transforms.setAttribute(node, name, utils.htmlEscape(value));
+	        this.transforms.setAttribute(node, name, value);
 	    }
 	    node.visited_attributes.add(name);
 	};
