@@ -213,7 +213,83 @@ section('Add 100 elements to a list, one at a time - keys', function (bench) {
 
 });
 
-section('Randomly remove elements from 100 length list, one at a time - with keys', function (bench) {
+section('Randomly remove elements from 100 length list, one at a time - no keys', function (bench) {
+
+    function random(max) {
+        return Math.floor(Math.random() * (max + 1));
+    }
+
+    bench('Magery', function (container, iter) {
+        createTemplateNode('app',
+                '<ul>' +
+                    '<template-each name="item" in="items">' +
+                        '<li>{{item.name}}</li>' +
+                    '</template-each>' +
+                '</ul>'
+        );
+        var data = {items: []};
+        for (var i = 0; i < 100; i++) {
+            data.items.push({name: 'item' + i});
+        }
+        var app = Magery.bind(container, 'app', data, {});
+        iter(100, function (i) {
+            app.context.items.splice(random(app.context.items.length - 1), 1);
+            app.update();
+        });
+    });
+
+    bench('React', function (container, iter) {
+        var Item = React.createClass({
+            shouldComponentUpdate: function(nextProps, nextState) {
+                return nextProps.item.id !== this.props.item.id;
+            },
+            render: function () {
+                return React.createElement('li', null, this.props.item.name);
+            }
+        });
+        var App = React.createClass({
+            render: function () {
+                var items = this.props.items;
+                return React.createElement('ul', null, items.map(function (item) {
+                    return React.createElement(Item, {item: item});
+                }));
+            }
+        });
+        var data = {items: []};
+        for (var i = 0; i < 100; i++) {
+            data.items.push({name: 'item' + i});
+        }
+        iter(100, function (i) {
+            data.items.splice(random(data.items.length), 1);
+            ReactDOM.render(React.createElement(App, data), container);
+        });
+    });
+
+    bench('IncrementalDOM', function (container, iter) {
+        function render(data) {
+            idom.elementOpen('ul', '', null);
+            data.items.forEach(function (item) {
+                idom.elementOpen('li', '', null);
+                idom.text(item.name);
+                idom.elementClose('li');
+            });
+            idom.elementClose('ul');
+        }
+        var data = {items: []};
+        for (var i = 0; i < 100; i++) {
+            data.items.push({name: 'item' + i});
+        }
+        iter(100, function (i) {
+            data.items.splice(random(data.items.length), 1);
+            idom.patch(container, function() {
+                render(data);
+            });
+        });
+    });
+
+});
+
+section('Randomly remove elements from 100 length list, one at a time - keys', function (bench) {
 
     function random(max) {
         return Math.floor(Math.random() * (max + 1));
