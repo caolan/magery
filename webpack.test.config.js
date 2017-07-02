@@ -1,5 +1,6 @@
 module.exports = {
     entry: {
+        'init': ['./init.js'],
         'context': ['./context.js'],
         'render': ['./render.js'],
         'patch': ['./patch.js'],

@@ -64,9 +64,6 @@ var builtins =
 	var utils = __webpack_require__(4);
 	var builtins = __webpack_require__(5);
 
-	var ELEMENT_NODE = 1;
-	var TEXT_NODE = 3;
-
 
 	function isTemplateTag(node) {
 	    return /^TEMPLATE-/.test(node.tagName);
@@ -83,12 +80,6 @@ var builtins =
 	    node._template_tag = m[1].toLowerCase();
 	    return node._template_tag;
 	}
-
-	exports.propertyPath = function (str) {
-	    return str.split('.').filter(function (x) {
-	        return x;
-	    });
-	};
 
 	// finds property path array (e.g. ['foo', 'bar']) in data object
 	exports.lookup = function (data, props) {
@@ -124,13 +115,13 @@ var builtins =
 	};
 
 	Renderer.prototype.child = function (node, i, next_data, prev_data, key, inner) {
-	    if (node.nodeType === TEXT_NODE) {
+	    if (utils.isTextNode(node)) {
 	        this.text(node, next_data);
 	    }
 	    else if (isTemplateTag(node)) {
 	        this.templateTag(node, next_data, prev_data, key, inner);
 	    }
-	    else if (node.nodeType === ELEMENT_NODE) {
+	    else if (utils.isElementNode(node)) {
 	        var k = key && key + '/' + i;
 	        this.element(node, next_data, prev_data, k, inner);
 	    }
@@ -179,7 +170,7 @@ var builtins =
 	Renderer.prototype.expandVars = function (str, data) {
 	    return str.replace(/{{\s*([^}]+?)\s*}}/g,
 	        function (full, property) {
-	            return exports.lookup(data, exports.propertyPath(property));
+	            return exports.lookup(data, utils.propertyPath(property));
 	        }
 	    );
 	};
@@ -210,6 +201,22 @@ var builtins =
 /* 4 */
 /***/ (function(module, exports) {
 
+	var ELEMENT_NODE = 1;
+	var TEXT_NODE = 3;
+	var DOCUMENT_FRAGMENT = 11;
+
+	exports.isDocumentFragment = function (node) {
+	    return node.nodeType === DOCUMENT_FRAGMENT;
+	};
+
+	exports.isElementNode = function (node) {
+	    return node.nodeType === ELEMENT_NODE;
+	};
+
+	exports.isTextNode = function (node) {
+	    return node.nodeType === TEXT_NODE;
+	};
+
 	exports.eachNode = function (nodelist, f) {
 	    var i = 0;
 	    var node = nodelist[0];
@@ -218,8 +225,22 @@ var builtins =
 	        // need to call nextSibling before f() because f()
 	        // might remove the node from the DOM
 	        node = node.nextSibling;
-	        f(tmp, i++);
+	        f(tmp, i++, nodelist);
 	    }
+	};
+
+	exports.mapNodes = function (nodelist, f) {
+	    var results = [];
+	    exports.eachNode(nodelist, function (node, i) {
+	        results[i] = f(node, i, nodelist);
+	    });
+	    return results;
+	};
+
+	exports.propertyPath = function (str) {
+	    return str.split('.').filter(function (x) {
+	        return x;
+	    });
 	};
 
 
