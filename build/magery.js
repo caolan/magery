@@ -50,6 +50,7 @@ var Magery =
 	var context = __webpack_require__(1);
 	var render = __webpack_require__(2);
 	var patch = __webpack_require__(5);
+	var init = __webpack_require__(8);
 
 
 	/***** Public API *****/
@@ -92,6 +93,7 @@ var Magery =
 	};
 
 	exports.BoundTemplate = BoundTemplate;
+	exports.initTemplates = init.initTemplates;
 
 
 /***/ }),
@@ -899,6 +901,14 @@ var Magery =
 
 	// use built in Set() if available
 	module.exports = window.Set || Set;
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports) {
+
+	exports.initTemplates = function () {
+	};
 
 
 /***/ })
