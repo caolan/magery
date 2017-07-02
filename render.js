@@ -8,9 +8,6 @@
 var utils = require('./utils');
 var builtins = require('./builtins');
 
-var ELEMENT_NODE = 1;
-var TEXT_NODE = 3;
-
 
 function isTemplateTag(node) {
     return /^TEMPLATE-/.test(node.tagName);
@@ -27,12 +24,6 @@ function templateTagName(node) {
     node._template_tag = m[1].toLowerCase();
     return node._template_tag;
 }
-
-exports.propertyPath = function (str) {
-    return str.split('.').filter(function (x) {
-        return x;
-    });
-};
 
 // finds property path array (e.g. ['foo', 'bar']) in data object
 exports.lookup = function (data, props) {
@@ -68,13 +59,13 @@ Renderer.prototype.renderTemplate = function (template_id, next_data, prev_data,
 };
 
 Renderer.prototype.child = function (node, i, next_data, prev_data, key, inner) {
-    if (node.nodeType === TEXT_NODE) {
+    if (utils.isTextNode(node)) {
         this.text(node, next_data);
     }
     else if (isTemplateTag(node)) {
         this.templateTag(node, next_data, prev_data, key, inner);
     }
-    else if (node.nodeType === ELEMENT_NODE) {
+    else if (utils.isElementNode(node)) {
         var k = key && key + '/' + i;
         this.element(node, next_data, prev_data, k, inner);
     }
@@ -123,7 +114,7 @@ Renderer.prototype.element = function (node, next_data, prev_data, key, inner) {
 Renderer.prototype.expandVars = function (str, data) {
     return str.replace(/{{\s*([^}]+?)\s*}}/g,
         function (full, property) {
-            return exports.lookup(data, exports.propertyPath(property));
+            return exports.lookup(data, utils.propertyPath(property));
         }
     );
 };
