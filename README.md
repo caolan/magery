@@ -297,7 +297,9 @@ Result:
 
 ### `<template-call>`
 
-Renders another named template in this position.
+Renders another named template in this position. Can also be used to
+dynamically render a template based on context data (see 'dynamic'
+example).
 
 #### Attributes
 
@@ -306,6 +308,9 @@ Renders another named template in this position.
 
 #### Example use
 
+##### Static example
+
+Template:
 ```html
 <template id="score">
   <li>{{ user.name }} - {{ user.score }}</li>
@@ -326,6 +331,41 @@ Data:
   users: [
     {name: 'fuzzable', score: 100},
     {name: 'popchop', score: 99}
+  ]
+}
+```
+
+Result:
+```html
+<ol>
+  <li>fuzzable - 100</li>
+  <li>popchop - 100</li>
+</ol>
+```
+
+##### Dynamic example
+
+Template:
+```html
+<template id="score">
+  <li>{{ user.name }} - {{ user.score }}</li>
+</template>
+
+<template id="list">
+  <ol>
+    <template-each name="item" in="items">
+      <template-call template="{{item.template}}" user="item" />
+    </template-each>
+  </ol>
+</template>
+```
+
+Data:
+```javascript
+{
+  items: [
+    {template: 'score', name: 'fuzzable', score: 100},
+    {template: 'score', name: 'popchop', score: 99}
   ]
 }
 ```
