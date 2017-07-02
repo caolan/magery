@@ -115,8 +115,8 @@ the page to update and display the new template data. You can now type
 "universe" into the textbox and see the message update to "Hello,
 universe!" as you type. [View page][hello-universe].
 
-__You now know all the arguments to `Magery.bind()`__ Next, take a look
-at the other template tags.
+__You now know all the arguments to `Magery.bind()`__. Now, take a
+look at the available template tags.
 
 ## Template tags
 
@@ -126,6 +126,7 @@ at the other template tags.
 * [template-unless](#template-unless)
 * [template-call](#template-call)
 * [template-children](#template-children)
+* template-embed
 
 ### `<template>`
 

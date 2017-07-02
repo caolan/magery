@@ -1613,41 +1613,41 @@ suite('render', function () {
         assert.equal(patcher_calls.length, 6);
     });
 
-    // test('template tags inside select element', function () {
-    //     createTemplateNode('foo',
-    //                        '<select>' +
-    //                          '<template-each name="opt" in="options">' +
-    //                            '<option value="{{opt.value}}">{{opt.label}}</option>' +
-    //                          '</template-each>' +
-    //                        '</select>');
-    //     var prev_data = {};
-    //     var next_data = {
-    //         options: [
-    //             {value: 1, label: 'one'},
-    //             {value: 2, label: 'two'},
-    //             {value: 3, label: 'three'},
-    //         ]
-    //     };
-    //     patcher_calls = [];
-    //     var renderer = new render.Renderer(test_patcher);
-    //     renderer.render('foo', next_data, prev_data);
-    //     assert.deepEqual(patcher_calls[0], ['start']);
-    //     assert.deepEqual(patcher_calls[1], ['enterTag', 'SELECT', null]);
-    //     assert.deepEqual(patcher_calls[2], ['enterTag', 'OPTION', null]);
-    //     assert.deepEqual(patcher_calls[3], ['attribute', 'value', '1']);
-    //     assert.deepEqual(patcher_calls[4], ['text', 'one']);
-    //     assert.deepEqual(patcher_calls[5], ['exitTag']);
-    //     assert.deepEqual(patcher_calls[6], ['enterTag', 'OPTION', null]);
-    //     assert.deepEqual(patcher_calls[7], ['attribute', 'value', '2']);
-    //     assert.deepEqual(patcher_calls[8], ['text', 'two']);
-    //     assert.deepEqual(patcher_calls[9], ['exitTag']);
-    //     assert.deepEqual(patcher_calls[10], ['enterTag', 'OPTION', null]);
-    //     assert.deepEqual(patcher_calls[11], ['attribute', 'value', '3']);
-    //     assert.deepEqual(patcher_calls[12], ['text', 'three']);
-    //     assert.deepEqual(patcher_calls[13], ['exitTag']);
-    //     assert.deepEqual(patcher_calls[14], ['exitTag']);
-    //     assert.deepEqual(patcher_calls[15], ['end']);
-    //     assert.equal(patcher_calls.length, 16);
-    // });
+    test('template tags inside select element', function () {
+        createTemplateNode('foo',
+                           '<select>' +
+                             '<template-each name="opt" in="options">' +
+                               '<option value="{{opt.value}}">{{opt.label}}</option>' +
+                             '</template-each>' +
+                           '</select>');
+        var prev_data = {};
+        var next_data = {
+            options: [
+                {value: 1, label: 'one'},
+                {value: 2, label: 'two'},
+                {value: 3, label: 'three'},
+            ]
+        };
+        patcher_calls = [];
+        var renderer = new render.Renderer(test_patcher);
+        renderer.render('foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['start']);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'SELECT', null]);
+        assert.deepEqual(patcher_calls[2], ['enterTag', 'OPTION', null]);
+        assert.deepEqual(patcher_calls[3], ['attribute', 'value', '1']);
+        assert.deepEqual(patcher_calls[4], ['text', 'one']);
+        assert.deepEqual(patcher_calls[5], ['exitTag']);
+        assert.deepEqual(patcher_calls[6], ['enterTag', 'OPTION', null]);
+        assert.deepEqual(patcher_calls[7], ['attribute', 'value', '2']);
+        assert.deepEqual(patcher_calls[8], ['text', 'two']);
+        assert.deepEqual(patcher_calls[9], ['exitTag']);
+        assert.deepEqual(patcher_calls[10], ['enterTag', 'OPTION', null]);
+        assert.deepEqual(patcher_calls[11], ['attribute', 'value', '3']);
+        assert.deepEqual(patcher_calls[12], ['text', 'three']);
+        assert.deepEqual(patcher_calls[13], ['exitTag']);
+        assert.deepEqual(patcher_calls[14], ['exitTag']);
+        assert.deepEqual(patcher_calls[15], ['end']);
+        assert.equal(patcher_calls.length, 16);
+    });
 
 });

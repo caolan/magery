@@ -3,6 +3,7 @@
 var context = require('./context');
 var render = require('./render');
 var patch = require('./patch');
+var init = require('./init');
 
 
 /***** Public API *****/
@@ -45,3 +46,4 @@ exports.bind = function (node, template, data, handlers) {
 };
 
 exports.BoundTemplate = BoundTemplate;
+exports.initTemplates = init.initTemplates;
