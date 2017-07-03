@@ -70,11 +70,11 @@ var Magery =
 
 	BoundTemplate.prototype.applyHandler = function (name, args) {
 	    // console.log(['trigger', name].concat(Array.prototype.slice.call(arguments, 1)));
-	    var start = performance.now();
+	    // var start = performance.now();
 	    this.handlers[name].apply(this, args);
 	    this.update();
-	    var end = performance.now();
-	    console.log((end - start) + 'ms');
+	    // var end = performance.now();
+	    // console.log((end - start) + 'ms');
 	};
 
 
@@ -1026,17 +1026,26 @@ var Magery =
 	};
 
 	function updateChildPaths (paths, node) {
+	    var wildcard = false;
 	    var child_paths = utils.mapNodes(node.childNodes, initNode);
-	    child_paths.forEach(exports.mergePaths.bind(null, paths));
+	    for (var i = 0, len = child_paths.length; i < len; i++) {
+	        var p = child_paths[i];
+	        if (!p) {
+	            wildcard = true;
+	            break;
+	        }
+	        exports.mergePaths(paths, p);
+	    }
 	    utils.eachNode(node.childNodes, function (child, i) {
-	        if (Object.keys(child_paths[i]).length === 0) {
+	        var p = child_paths[i];
+	        if (p && Object.keys(p).length === 0) {
 	            child.static = true;
 	        }
-	        else if (!exports.equivalentPathObjects(child_paths[i], paths)) {
-	            child.active_paths = child_paths[i];
+	        else if (wildcard || !exports.equivalentPathObjects(p, paths)) {
+	            child.active_paths = p;
 	        }
 	    });
-	    return paths;
+	    return wildcard ? false: paths;
 	};
 
 	exports.elementPaths = function (node) {
@@ -1065,9 +1074,9 @@ var Magery =
 	    var iter_prop = node.getAttribute('in');
 	    exports.markPath(paths, utils.propertyPath(iter_prop));
 	    paths = updateChildPaths(paths, node);
-	    //if (paths) {
+	    if (paths) {
 	        delete paths[name_prop];
-	    //}
+	    }
 	    return paths;
 	}
 
@@ -1121,7 +1130,7 @@ var Magery =
 	    for (var i = 0, len = templates.length; i < len; i++) {
 	        var tmpl = templates[i].content;
 	        var paths = initNode(tmpl);
-	        tmpl.static = (Object.keys(paths).length === 0);
+	        tmpl.static = (paths && Object.keys(paths).length === 0);
 	        tmpl.active_paths = paths;
 	    }
 	};

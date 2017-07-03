@@ -77,11 +77,11 @@ var Magery =
 
 	BoundTemplate.prototype.applyHandler = function (name, args) {
 	    // console.log(['trigger', name].concat(Array.prototype.slice.call(arguments, 1)));
-	    var start = performance.now();
+	    // var start = performance.now();
 	    this.handlers[name].apply(this, args);
 	    this.update();
-	    var end = performance.now();
-	    console.log((end - start) + 'ms');
+	    // var end = performance.now();
+	    // console.log((end - start) + 'ms');
 	};
 
 
