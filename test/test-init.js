@@ -292,9 +292,7 @@ suite('initTemplates', function () {
         });
         // <template-if test="article.published">...</template-if>
         assert.ok(!child(tmpl, 0).static);
-        assert.deepEqual(child(tmpl, 0).active_paths, {
-            article: {published: true}
-        });
+        assert.ok(!child(tmpl, 0).active_paths);
         // published
         assert.ok(child(tmpl, 0, 0).static);
         
@@ -311,9 +309,7 @@ suite('initTemplates', function () {
         });
         // <template-if test="article.published">...</template-if>
         assert.ok(!child(tmpl, 0).static);
-        assert.deepEqual(child(tmpl, 0).active_paths, {
-            article: true
-        });
+        assert.ok(!child(tmpl, 0).active_paths);
         // {{article.title}} is published
         assert.ok(!child(tmpl, 0, 0).static);
         assert.deepEqual(child(tmpl, 0, 0).active_paths, {
@@ -335,9 +331,7 @@ suite('initTemplates', function () {
         });
         // <template-unless test="article.published">...</template-unless>
         assert.ok(!child(tmpl, 0).static);
-        assert.deepEqual(child(tmpl, 0).active_paths, {
-            article: {published: true}
-        });
+        assert.ok(!child(tmpl, 0).active_paths);
         // draft
         assert.ok(child(tmpl, 0, 0).static);
         
@@ -354,9 +348,7 @@ suite('initTemplates', function () {
         });
         // <template-unless test="article.published">...</template-unless>
         assert.ok(!child(tmpl, 0).static);
-        assert.deepEqual(child(tmpl, 0).active_paths, {
-            article: true
-        });
+        assert.ok(!child(tmpl, 0).active_paths);
         // {{article.title}} is a draft
         assert.ok(!child(tmpl, 0, 0).static);
         assert.deepEqual(child(tmpl, 0, 0).active_paths, {

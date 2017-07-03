@@ -65,22 +65,6 @@ var render =
 	var builtins = __webpack_require__(5);
 
 
-	function isTemplateTag(node) {
-	    return /^TEMPLATE-/.test(node.tagName);
-	}
-
-	function templateTagName(node) {
-	    if (node._template_tag) {
-	        return node._template_tag;
-	    }
-	    var m = /^TEMPLATE-([^\s/>]+)/.exec(node.tagName);
-	    if (!m) {
-	        throw new Error('Not a template tag: ' + node.tagName);
-	    }
-	    node._template_tag = m[1].toLowerCase();
-	    return node._template_tag;
-	}
-
 	function Renderer(patcher, bound_template) {
 	    this.bound_template = bound_template;
 	    this.patcher = patcher;
@@ -106,7 +90,7 @@ var render =
 	    if (utils.isTextNode(node)) {
 	        this.text(node, next_data);
 	    }
-	    else if (isTemplateTag(node)) {
+	    else if (utils.isTemplateTag(node)) {
 	        this.templateTag(node, next_data, prev_data, key, inner);
 	    }
 	    else if (utils.isElementNode(node)) {
@@ -174,7 +158,7 @@ var render =
 	};
 
 	Renderer.prototype.templateTag = function (node, next_data, prev_data, key, inner) {
-	    var name = templateTagName(node);
+	    var name = utils.templateTagName(node);
 	    var f = builtins[name];
 	    if (!f) {
 	        throw new Error('Unknown template tag: ' + node.tagName);
@@ -241,6 +225,22 @@ var render =
 	        value = value[props[i]];
 	    }
 	    return (value === undefined || value === null) ? '' : value;
+	};
+
+	exports.isTemplateTag = function (node) {
+	    return /^TEMPLATE-/.test(node.tagName);
+	};
+
+	exports.templateTagName = function (node) {
+	    if (node._template_tag) {
+	        return node._template_tag;
+	    }
+	    var m = /^TEMPLATE-([^\s/>]+)/.exec(node.tagName);
+	    if (!m) {
+	        throw new Error('Not a template tag: ' + node.tagName);
+	    }
+	    node._template_tag = m[1].toLowerCase();
+	    return node._template_tag;
 	};
 
 

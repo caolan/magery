@@ -108,6 +108,22 @@ var init =
 	    return (value === undefined || value === null) ? '' : value;
 	};
 
+	exports.isTemplateTag = function (node) {
+	    return /^TEMPLATE-/.test(node.tagName);
+	};
+
+	exports.templateTagName = function (node) {
+	    if (node._template_tag) {
+	        return node._template_tag;
+	    }
+	    var m = /^TEMPLATE-([^\s/>]+)/.exec(node.tagName);
+	    if (!m) {
+	        throw new Error('Not a template tag: ' + node.tagName);
+	    }
+	    node._template_tag = m[1].toLowerCase();
+	    return node._template_tag;
+	};
+
 
 /***/ }),
 
@@ -211,14 +227,7 @@ var init =
 	    return paths;
 	};
 
-	exports.elementPaths = function (node) {
-	    var paths = {};
-	    if (node.attributes) {
-	        for (var i = 0, len = node.attributes.length; i < len; i++) {
-	            var attr = node.attributes[i];
-	            exports.mergePaths(paths, exports.stringPaths(attr.value));
-	        }
-	    }
+	function updateChildPaths (paths, node) {
 	    var child_paths = utils.mapNodes(node.childNodes, initNode);
 	    child_paths.forEach(exports.mergePaths.bind(null, paths));
 	    utils.eachNode(node.childNodes, function (child, i) {
@@ -229,13 +238,44 @@ var init =
 	            child.active_paths = child_paths[i];
 	        }
 	    });
+	};
+
+	exports.elementPaths = function (node) {
+	    var paths = {};
+	    if (node.attributes) {
+	        for (var i = 0, len = node.attributes.length; i < len; i++) {
+	            var attr = node.attributes[i];
+	            exports.mergePaths(paths, exports.stringPaths(attr.value));
+	        }
+	    }
+	    updateChildPaths(paths, node);
 	    return paths;
 	};
 
+	function templateIfPaths(node) {
+	    var paths = {};
+	    var test_prop = node.getAttribute('test');
+	    exports.markPath(paths, utils.propertyPath(test_prop));
+	    updateChildPaths(paths, node);
+	    return paths;
+	}
+
+	var templateTags = {
+	    'if': templateIfPaths,
+	    'unless': templateIfPaths
+	};
+
 	function initNode(node) {
-	    console.log(['initNode', node]);
 	    if (utils.isTextNode(node)) {
 	        return exports.stringPaths(node.textContent);
+	    }
+	    else if (utils.isTemplateTag(node)) {
+	        var name = utils.templateTagName(node);
+	        var f = templateTags[name];
+	        if (!f) {
+	            throw new Error('Unknown template tag: ' + node.tagName);
+	        }
+	        return f(node);
 	    }
 	    else if (utils.isElementNode(node) || utils.isDocumentFragment(node)) {
 	        return exports.elementPaths(node);
