@@ -88,7 +88,7 @@ exports.stringPaths = function (str) {
         m.forEach(function (v) {
             exports.markPath(
                 paths,
-                utils.propertyPath(v.substring(2, v.length-2))
+                utils.propertyPath(v.replace(/^{{\s*|\s*}}$/g, ''))
             );
         });
     }
@@ -114,7 +114,7 @@ exports.elementPaths = function (node) {
         }
     });
     return paths;
-}
+};
 
 function initNode(node) {
     console.log(['initNode', node]);
@@ -133,6 +133,6 @@ exports.initTemplates = function () {
         var tmpl = templates[i].content;
         var paths = initNode(tmpl);
         tmpl.static = (Object.keys(paths).length === 0);
-        tmpl.active_keys = paths;
+        tmpl.active_paths = paths;
     }
 };

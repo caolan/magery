@@ -135,6 +135,11 @@ suite('initTemplates', function () {
                 user: true
             }
         );
+        // with spaces around property names
+        assert.deepEqual(
+            init.stringPaths('{{  user.name  }}'),
+            {user: {name: true}}
+        );
     });
 
     test('elementPaths', function () {
@@ -226,11 +231,51 @@ suite('initTemplates', function () {
         init.initTemplates();
         var tmpl = document.getElementById('app').content;
         assert.ok(!tmpl.static);
-        // assert.ok(!child(tmpl, 0).static, true);
-        // assert.ok(child(tmpl, 0, 0).static, true);
-        // assert.ok(child(tmpl, 0, 0, 0).static, true);
-        // assert.ok(!child(tmpl, 0, 1).static, true);
-        // assert.ok(!child(tmpl, 0, 1, 0).static, true);
+        assert.ok(!child(tmpl, 0).static, true);
+        assert.ok(child(tmpl, 0, 0).static, true);
+        assert.ok(child(tmpl, 0, 0, 0).static, true);
+        assert.ok(!child(tmpl, 0, 1).static, true);
+        assert.ok(!child(tmpl, 0, 1, 0).static, true);
+    });
+
+    test('simple active_paths', function () {
+        createTemplateNode('app',
+                           '<div class="site-name">Test</div>' +
+                           '<h1>{{title}}</h1>' +
+                           'by ' +
+                           '<a href="{{ author.profile }}">' +
+                             '{{ author.name }}' +
+                           '</a>');
+        init.initTemplates();
+        var tmpl = document.getElementById('app').content;
+        // template root element
+        assert.ok(!tmpl.static);
+        assert.deepEqual(tmpl.active_paths, {
+            title: true,
+            author: true
+        });
+        // <div class="site-name">Test</div>
+        assert.ok(child(tmpl, 0).static);
+        // <h1>{{title}}</h1>
+        assert.ok(!child(tmpl, 1).static);
+        assert.deepEqual(child(tmpl, 1).active_paths, {
+            title: true
+        });
+        // {{title}}
+        assert.ok(!child(tmpl, 1, 0).static);
+        assert.ok(!child(tmpl, 1, 0).active_paths);
+        // by
+        assert.ok(child(tmpl, 2).static);
+        // <a href="{{ author.profile }}">...</a>
+        assert.ok(!child(tmpl, 3).static);
+        assert.deepEqual(child(tmpl, 3).active_paths, {
+            author: true
+        });
+        // {{ author.name }}
+        assert.ok(!child(tmpl, 3, 0).static);
+        assert.deepEqual(child(tmpl, 3, 0).active_paths, {
+            author: {name: true}
+        });
     });
 
 });
