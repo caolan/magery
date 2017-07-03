@@ -7,13 +7,13 @@ _could_ work with server-side rendering in any language.
 ## Aims
 
 * Make your progressive enhancement of multi-page websites easier
-* Be relatively small in filesize, as your enhancements may also be small
 * Be agnostic of your backend language
+* Be relatively small in filesize, as your enhancements may also be small
 * Provide clean separation between your data and markup
 * Prove that you don't _need_ a 'single page app' to write JavaScript that is sophisticated, yet maintainable
 
 You might also like to read the [blog post][blog-post] that started
-this project (Magery syntax has since been updated).
+this (Magery syntax has since been updated).
 
 ## Download
 

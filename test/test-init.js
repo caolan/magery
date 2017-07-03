@@ -370,9 +370,7 @@ suite('initTemplates', function () {
         });
         // <template-each name="item" in="items">...</template-each>
         assert.ok(!child(tmpl, 0).static);
-        assert.deepEqual(child(tmpl, 0).active_paths, {
-            items: true
-        });
+        assert.ok(!child(tmpl, 0).active_paths);
         // {{ item.name }}
         assert.ok(!child(tmpl, 0, 0).static);
         assert.deepEqual(child(tmpl, 0, 0).active_paths, {
@@ -380,7 +378,7 @@ suite('initTemplates', function () {
         });
 
         createTemplateNode('app',
-                           '<template-each name="item" in="basket.items">' +
+                           '<template-each name="item" in="items">' +
                              '{{ item.name }} added by {{ user.name }}' +
                            '</template-each>');
         init.initTemplates();
@@ -393,10 +391,7 @@ suite('initTemplates', function () {
         });
         // <template-each name="item" in="items">...</template-each>
         assert.ok(!child(tmpl, 0).static);
-        assert.deepEqual(child(tmpl, 0).active_paths, {
-            user: {name: true},
-            items: true
-        });
+        assert.ok(!child(tmpl, 0).active_paths);
         // {{ item.name }}
         assert.ok(!child(tmpl, 0, 0).static);
         assert.deepEqual(child(tmpl, 0, 0).active_paths, {

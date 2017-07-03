@@ -128,9 +128,20 @@ function templateIfPaths(node) {
     return paths;
 }
 
+function templateEachPaths(node) {
+    var paths = {};
+    var name_prop = node.getAttribute('name');
+    var iter_prop = node.getAttribute('in');
+    exports.markPath(paths, utils.propertyPath(iter_prop));
+    updateChildPaths(paths, node);
+    delete paths[name_prop];
+    return paths;
+}
+
 var templateTags = {
     'if': templateIfPaths,
-    'unless': templateIfPaths
+    'unless': templateIfPaths,
+    'each': templateEachPaths
 };
 
 function initNode(node) {
