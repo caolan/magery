@@ -17,7 +17,7 @@
   "scripts": {
     "build-test": "mkdir -p build/test && node node_modules/.bin/webpack --config webpack.test.config.js",
     "build-dev": "mkdir -p build && node node_modules/.bin/webpack",
-    "build-min": "uglifyjs build/magery.js > build/magery.min.js",
+    "build-min": "uglifyjs build/magery.js -m -o build/magery.min.js",
     "build": "npm run build-dev && npm run build-min && npm run build-test",
     "test": "mocha-phantomjs test/index.html"
   }
