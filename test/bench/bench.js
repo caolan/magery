@@ -24,7 +24,7 @@ function section(heading, f) {
     container.appendChild(section);
     var results = {};
     function bench(name, f) {
-        var container = document.createElement('div');
+        var container = document.getElementById('output');
         f(container, function (iterations, patch) {
             var sample = [];
             var fastest = Infinity;
@@ -363,4 +363,55 @@ section('Randomly remove elements from 100 length list, one at a time - keys', f
         });
     });
 
+});
+
+section('Live update a managed text box', function (bench) {
+
+    function input(el, value){
+        var ev = new InputEvent('input');
+        el.value = value;
+        el.dispatchEvent(ev);
+    }
+    
+    var test_string = 'This is a test of how quickly input events update a textbox';
+    
+    bench('Magery', function (container, iter) {
+        createTemplateNode(
+            'app',
+            '<input type="text" id="testInput" value="{{name}}" oninput="updateInput(event)" />'
+        );
+        var data = {name: ''};
+        var app = Magery.bind(container, 'app', data, {
+            updateInput: function (ev) {
+                this.context.name = ev.target.value;
+            }
+        });
+        var el = document.getElementById('testInput');
+        iter(test_string.length, function (i) {
+            input(el, test_string.substring(0, i + 1));
+        });
+    });
+
+    bench('React', function (container, iter) {
+        var data = {name: ''};
+        var App = React.createClass({
+            render: function () {
+                return React.createElement('input', {
+                    type: 'text',
+                    id: 'testInput',
+                    value: this.props.name,
+                    onInput: this.props.updateInput
+                });
+            }
+        });
+        var updateInput = function (ev) {
+            data.name = ev.target.value;
+            ReactDOM.render(React.createElement(App, {name: data.name, updateInput: updateInput}), container);
+        };
+        var el = document.getElementById('testInput');
+        iter(100, function (i) {
+            input(el, test_string.substring(0, i + 1));
+        });
+    });
+    
 });
