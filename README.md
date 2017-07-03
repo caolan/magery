@@ -4,6 +4,17 @@ I want to improve JavaScript development for 'traditional' multi-page
 websites. This is the easiest JavaScript framework I can think of that
 _could_ work with server-side rendering in any language.
 
+## Aims
+
+* Make your progressive enhancement of multi-page websites easier
+* Be relatively small in filesize, as your enhancements may also be small
+* Be agnostic of your backend language
+* Provide clean separation between your data and markup
+* Prove that you don't _need_ a 'single page app' to write JavaScript that is sophisticated, yet maintainable
+
+You might also like to read the [blog post][blog-post] that started
+this project (Magery syntax has since been updated).
+
 ## Download
 
 * [magery.js][magery-js] (development)
@@ -428,4 +439,5 @@ Result:
 [hello-world]: https://caolan.github.io/magery/examples/hello-world.html
 [hello-galaxy]: https://caolan.github.io/magery/examples/hello-galaxy.html
 [hello-universe]: https://caolan.github.io/magery/examples/hello-universe.html
+[blog-post]: https://caolan.org/posts/progressive_enhancement_and_modern_javascript.html
 [ci]: https://travis-ci.org/caolan/magery
