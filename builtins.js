@@ -1,4 +1,4 @@
-var render = require('./render');
+var utils = require('./utils');
 
 function getAttr(node, name) {
     var attr = node.attributes.getNamedItem(name);
@@ -26,17 +26,17 @@ exports['each'] = function (renderer, node, next_data, prev_data, key, inner) {
     if (!count) {
         count = node.count = each_counter++;
     }
-    var path = render.propertyPath(getAttr(node, 'in'));
-    var iterable = render.lookup(next_data, path);
+    var path = utils.propertyPath(getAttr(node, 'in'));
+    var iterable = utils.lookup(next_data, path);
     var key_path = null;
     if (hasAttr(node, 'key')) {
-        key_path = render.propertyPath(getAttr(node, 'key'));
+        key_path = utils.propertyPath(getAttr(node, 'key'));
     }
     for (var i = 0, len = iterable.length; i < len; i++) {
         var item = iterable[i];
         var d = Object.assign({}, next_data);
         d[getAttr(node, 'name')] = item;
-        var item_key = key_path && render.lookup(item, key_path);
+        var item_key = key_path && utils.lookup(item, key_path);
         var k = key;
         if (item_key) {
             if (k) {
@@ -59,16 +59,16 @@ function isTruthy(x) {
 }
 
 exports['if'] = function (renderer, node, next_data, prev_data, key, inner) {
-    var path = render.propertyPath(getAttr(node, 'test'));
-    var test = render.lookup(next_data, path);
+    var path = utils.propertyPath(getAttr(node, 'test'));
+    var test = utils.lookup(next_data, path);
     if (isTruthy(test)) {
         renderer.children(node, next_data, prev_data, key, inner);
     }
 };
 
 exports['unless'] = function (renderer, node, next_data, prev_data, key, inner) {
-    var path = render.propertyPath(getAttr(node, 'test'));
-    var test = render.lookup(next_data, path);
+    var path = utils.propertyPath(getAttr(node, 'test'));
+    var test = utils.lookup(next_data, path);
     if (!isTruthy(test)) {
         renderer.children(node, next_data, prev_data, key, inner);
     }
@@ -80,8 +80,8 @@ exports['call'] = function (renderer, node, next_data, prev_data, key, inner) {
     for (var i = 0, len = node.attributes.length; i < len; i++) {
         var name = node.attributes[i].name;
         if (name !== 'template') {
-            var path = render.propertyPath(node.attributes[i].value);
-            var value = render.lookup(next_data, path);
+            var path = utils.propertyPath(node.attributes[i].value);
+            var value = utils.lookup(next_data, path);
             nd[name] = value;
         }
     }

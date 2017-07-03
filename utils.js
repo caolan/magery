@@ -39,3 +39,15 @@ exports.propertyPath = function (str) {
         return x;
     });
 };
+
+// finds property path array (e.g. ['foo', 'bar']) in data object
+exports.lookup = function (data, props) {
+    var value = data;
+    for(var i = 0, len = props.length; i < len; i++) {
+        if (value === undefined || value === null) {
+            return '';
+        }
+        value = value[props[i]];
+    }
+    return (value === undefined || value === null) ? '' : value;
+};

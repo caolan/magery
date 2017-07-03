@@ -247,18 +247,6 @@ var Magery =
 	    return node._template_tag;
 	}
 
-	// finds property path array (e.g. ['foo', 'bar']) in data object
-	exports.lookup = function (data, props) {
-	    var value = data;
-	    for(var i = 0, len = props.length; i < len; i++) {
-	        if (value === undefined || value === null) {
-	            return '';
-	        }
-	        value = value[props[i]];
-	    }
-	    return (value === undefined || value === null) ? '' : value;
-	};
-
 	function Renderer(patcher, bound_template) {
 	    this.bound_template = bound_template;
 	    this.patcher = patcher;
@@ -336,7 +324,7 @@ var Magery =
 	Renderer.prototype.expandVars = function (str, data) {
 	    return str.replace(/{{\s*([^}]+?)\s*}}/g,
 	        function (full, property) {
-	            return exports.lookup(data, utils.propertyPath(property));
+	            return utils.lookup(data, utils.propertyPath(property));
 	        }
 	    );
 	};
@@ -409,12 +397,24 @@ var Magery =
 	    });
 	};
 
+	// finds property path array (e.g. ['foo', 'bar']) in data object
+	exports.lookup = function (data, props) {
+	    var value = data;
+	    for(var i = 0, len = props.length; i < len; i++) {
+	        if (value === undefined || value === null) {
+	            return '';
+	        }
+	        value = value[props[i]];
+	    }
+	    return (value === undefined || value === null) ? '' : value;
+	};
+
 
 /***/ }),
 /* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var render = __webpack_require__(2);
+	var utils = __webpack_require__(3);
 
 	function getAttr(node, name) {
 	    var attr = node.attributes.getNamedItem(name);
@@ -442,17 +442,17 @@ var Magery =
 	    if (!count) {
 	        count = node.count = each_counter++;
 	    }
-	    var path = render.propertyPath(getAttr(node, 'in'));
-	    var iterable = render.lookup(next_data, path);
+	    var path = utils.propertyPath(getAttr(node, 'in'));
+	    var iterable = utils.lookup(next_data, path);
 	    var key_path = null;
 	    if (hasAttr(node, 'key')) {
-	        key_path = render.propertyPath(getAttr(node, 'key'));
+	        key_path = utils.propertyPath(getAttr(node, 'key'));
 	    }
 	    for (var i = 0, len = iterable.length; i < len; i++) {
 	        var item = iterable[i];
 	        var d = Object.assign({}, next_data);
 	        d[getAttr(node, 'name')] = item;
-	        var item_key = key_path && render.lookup(item, key_path);
+	        var item_key = key_path && utils.lookup(item, key_path);
 	        var k = key;
 	        if (item_key) {
 	            if (k) {
@@ -475,16 +475,16 @@ var Magery =
 	}
 
 	exports['if'] = function (renderer, node, next_data, prev_data, key, inner) {
-	    var path = render.propertyPath(getAttr(node, 'test'));
-	    var test = render.lookup(next_data, path);
+	    var path = utils.propertyPath(getAttr(node, 'test'));
+	    var test = utils.lookup(next_data, path);
 	    if (isTruthy(test)) {
 	        renderer.children(node, next_data, prev_data, key, inner);
 	    }
 	};
 
 	exports['unless'] = function (renderer, node, next_data, prev_data, key, inner) {
-	    var path = render.propertyPath(getAttr(node, 'test'));
-	    var test = render.lookup(next_data, path);
+	    var path = utils.propertyPath(getAttr(node, 'test'));
+	    var test = utils.lookup(next_data, path);
 	    if (!isTruthy(test)) {
 	        renderer.children(node, next_data, prev_data, key, inner);
 	    }
@@ -496,8 +496,8 @@ var Magery =
 	    for (var i = 0, len = node.attributes.length; i < len; i++) {
 	        var name = node.attributes[i].name;
 	        if (name !== 'template') {
-	            var path = render.propertyPath(node.attributes[i].value);
-	            var value = render.lookup(next_data, path);
+	            var path = utils.propertyPath(node.attributes[i].value);
+	            var value = utils.lookup(next_data, path);
 	            nd[name] = value;
 	        }
 	    }

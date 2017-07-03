@@ -6,9 +6,9 @@
     "parsimmon": "^0.7.0"
   },
   "devDependencies": {
-    "mocha-phantomjs": "^4.0.2",
-    "uglifyjs": "^2.4.10",
-    "webpack": "^1.12.14"
+    "mocha-phantomjs": "^4.1.0",
+    "uglify-js": "^3.0.23",
+    "webpack": "^1.15.0"
   },
   "repository": {
     "type": "git",
