@@ -166,7 +166,6 @@ suite('events', function () {
         createTemplateNode('main',
                            '<input type="text" value="{{user.name}}" data-managed="true" oninput="updateID(user, event)">');
         var data = {user: {name: 'test'}};
-        var calls = [];
         Magery.bind(container, 'main', data, {
             updateID: function (user, event) {
                 user.name = event.target.value;
@@ -175,6 +174,30 @@ suite('events', function () {
         assert.equal(child(container, 0).value, 'test');
         input(child(container, 0), '<h1>test</h1>');
         assert.equal(child(container, 0).value, '<h1>test</h1>');
+    });
+
+    test('trigger() should not run update() if an update is already queued', function () {
+        var container = document.createElement('div');
+        createTemplateNode('main',
+                           '<input type="text" value="{{input}}" data-managed="true">' +
+                           '<button onclick="clearBtn()">clear</button>');
+        var data = {input: 'test'};
+        var bound = Magery.bind(container, 'main', data, {
+            clearBtn: function (event) {
+                this.trigger('clearInput');
+            },
+            clearInput: function () {
+                this.context.input = '';
+            }
+        });
+        var calls = 0;
+        var _update = bound.update;
+        bound.update = function () {
+            calls++;
+            return _update.apply(this, arguments);
+        };
+        click(child(container, 1));
+        assert.equal(calls, 1);
     });
 
     // test('text input value reset to match template data on input', function () {

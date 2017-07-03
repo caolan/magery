@@ -1,14 +1,14 @@
 # Magery
 
 I want to improve JavaScript development for 'traditional' multi-page
-websites. This is the easiest JavaScript framework I can think of that
-_could_ work with server-side rendering in any language.
+websites. This is the easiest framework I can think of that can work
+with server-side rendering in any language.
 
 ## Aims
 
 * Make your progressive enhancement of multi-page websites easier
 * Be agnostic of your backend language
-* Be relatively small in filesize, as your enhancements may also be small
+* Be relatively small in filesize, because your enhancements may also be small
 * Provide clean separation between your data and markup
 * Prove that you don't _need_ a 'single page app' to write JavaScript that is sophisticated, yet maintainable
 

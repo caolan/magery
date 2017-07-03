@@ -64,19 +64,18 @@ var Magery =
 
 	BoundTemplate.prototype.trigger = function (name /* args... */) {
 	    var args = Array.prototype.slice.call(arguments, 1);
-	    return this.applyHandler(this, name, args);
+	    return this.applyHandler(name, args);
 	};
 
 
 	BoundTemplate.prototype.applyHandler = function (name, args) {
-	    // console.log(['trigger', name].concat(Array.prototype.slice.call(arguments, 1)));
-	    // var start = performance.now();
+	    var queued = this.update_queued;
+	    this.update_queued = true;
 	    this.handlers[name].apply(this, args);
-	    this.update();
-	    // var end = performance.now();
-	    // console.log((end - start) + 'ms');
+	    if (!queued) {
+	        this.update();
+	    }
 	};
-
 
 	exports.bind = function (node, template, data, handlers) {
 	    if (typeof node === 'string') {
@@ -87,6 +86,7 @@ var Magery =
 	    var renderer = new render.Renderer(patcher, bound);
 	    bound.update = function () {
 	        renderer.render(this.template, this.context, null);
+	        this.update_queued = false;
 	    };
 	    bound.update();
 	    return bound;
