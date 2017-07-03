@@ -96,16 +96,26 @@ exports.stringPaths = function (str) {
 };
 
 function updateChildPaths (paths, node) {
+    var wildcard = false;
     var child_paths = utils.mapNodes(node.childNodes, initNode);
-    child_paths.forEach(exports.mergePaths.bind(null, paths));
+    for (var i = 0, len = child_paths.length; i < len; i++) {
+        var p = child_paths[i];
+        if (!p) {
+            wildcard = true;
+            break;
+        }
+        exports.mergePaths(paths, p);
+    }
     utils.eachNode(node.childNodes, function (child, i) {
-        if (Object.keys(child_paths[i]).length === 0) {
+        var p = child_paths[i];
+        if (p && Object.keys(p).length === 0) {
             child.static = true;
         }
-        else if (!exports.equivalentPathObjects(child_paths[i], paths)) {
-            child.active_paths = child_paths[i];
+        else if (wildcard || !exports.equivalentPathObjects(p, paths)) {
+            child.active_paths = p;
         }
     });
+    return wildcard ? false: paths;
 };
 
 exports.elementPaths = function (node) {
@@ -116,7 +126,7 @@ exports.elementPaths = function (node) {
             exports.mergePaths(paths, exports.stringPaths(attr.value));
         }
     }
-    updateChildPaths(paths, node);
+    paths = updateChildPaths(paths, node);
     return paths;
 };
 
@@ -124,7 +134,7 @@ function templateIfPaths(node) {
     var paths = {};
     var test_prop = node.getAttribute('test');
     exports.markPath(paths, utils.propertyPath(test_prop));
-    updateChildPaths(paths, node);
+    paths = updateChildPaths(paths, node);
     return paths;
 }
 
@@ -133,15 +143,38 @@ function templateEachPaths(node) {
     var name_prop = node.getAttribute('name');
     var iter_prop = node.getAttribute('in');
     exports.markPath(paths, utils.propertyPath(iter_prop));
-    updateChildPaths(paths, node);
-    delete paths[name_prop];
+    paths = updateChildPaths(paths, node);
+    if (paths) {
+        delete paths[name_prop];
+    }
     return paths;
+}
+
+function templateCallPaths(node) {
+    var paths = {};
+    for (var i = 0, len = node.attributes.length; i < len; i++) {
+        var attr = node.attributes[i];
+        if (attr.name === 'template') {
+            exports.mergePaths(paths, exports.stringPaths(attr.value));
+        }
+        else {
+            exports.markPath(paths, utils.propertyPath(attr.value));
+        }
+    }
+    paths = updateChildPaths(paths, node);
+    return paths;
+}
+
+function templateChildrenPaths(node) {
+    return false;
 }
 
 var templateTags = {
     'if': templateIfPaths,
     'unless': templateIfPaths,
-    'each': templateEachPaths
+    'each': templateEachPaths,
+    'call': templateCallPaths,
+    'children': templateChildrenPaths
 };
 
 function initNode(node) {
@@ -167,7 +200,7 @@ exports.initTemplates = function () {
     for (var i = 0, len = templates.length; i < len; i++) {
         var tmpl = templates[i].content;
         var paths = initNode(tmpl);
-        tmpl.static = (Object.keys(paths).length === 0);
+        tmpl.static = (paths && Object.keys(paths).length === 0);
         tmpl.active_paths = paths;
     }
 };

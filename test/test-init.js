@@ -413,10 +413,7 @@ suite('initTemplates', function () {
         });
         // <template-call>
         assert.ok(!child(tmpl, 0).static);
-        assert.deepEqual(child(tmpl, 0).active_paths, {
-            article: {author: true},
-            title: true
-        });
+        assert.ok(!child(tmpl, 0).active_paths);
     });
 
     test('dynamic template-call active_paths', function () {
@@ -433,11 +430,7 @@ suite('initTemplates', function () {
         });
         // <template-call>
         assert.ok(!child(tmpl, 0).static);
-        assert.deepEqual(child(tmpl, 0).active_paths, {
-            article: {author: true},
-            title: true,
-            template: true
-        });
+        assert.ok(!child(tmpl, 0).active_paths);
     });
 
     test('template-call with children active_paths', function () {
@@ -455,10 +448,7 @@ suite('initTemplates', function () {
         });
         // <template-call>
         assert.ok(!child(tmpl, 0).static);
-        assert.deepEqual(child(tmpl, 0).active_paths, {
-            article: {author: true},
-            text: true
-        });
+        assert.ok(!child(tmpl, 0).active_paths);
         // <p>
         assert.ok(!child(tmpl, 0, 0).static);
         assert.deepEqual(child(tmpl, 0, 0).active_paths, {
@@ -466,9 +456,7 @@ suite('initTemplates', function () {
         });
         // {{ text }}
         assert.ok(!child(tmpl, 0, 0, 0).static);
-        assert.deepEqual(child(tmpl, 0, 0, 0).active_paths, {
-            text: true
-        });
+        assert.ok(!child(tmpl, 0, 0, 0).active_paths);
     });
 
     test('template-children must wildcard active_paths to root of current template', function () {
@@ -476,7 +464,7 @@ suite('initTemplates', function () {
                            '<div class="container">' +
                              '<div class="main">' +
                                '{{ test }}' +
-                               '<template-children />' +
+                               '<template-children></template-children>' +
                                'foo' +
                              '</div>' +
                            '</div>');
@@ -484,7 +472,7 @@ suite('initTemplates', function () {
         var tmpl = document.getElementById('app').content;
         // template root element
         assert.ok(!tmpl.static);
-        assert.ok(!tmpl.active_paths);
+        assert.equal(tmpl.active_paths, false);
         // <div class="container">...</div>
         assert.ok(!child(tmpl, 0).static);
         assert.ok(!child(tmpl, 0).active_paths);
@@ -501,6 +489,24 @@ suite('initTemplates', function () {
         assert.ok(!child(tmpl, 0, 0, 1).active_paths);
         // foo
         assert.ok(child(tmpl, 0, 0, 2).static);
+    });
+    
+    test('template-children inside template-each', function () {
+        createTemplateNode('app',
+                           '<template-each name="item" in="items">' +
+                             '<p><template-children/></p>' +
+                           '</template-each>');
+        init.initTemplates();
+        var tmpl = document.getElementById('app').content;
+        // template root element
+        assert.ok(!tmpl.static);
+        assert.ok(!tmpl.active_paths);
+        // <p>
+        assert.ok(!child(tmpl, 0).static);
+        assert.ok(!child(tmpl, 0).active_paths);
+        // <template-children>
+        assert.ok(!child(tmpl, 0, 0).static);
+        assert.ok(!child(tmpl, 0, 0).active_paths);
     });
 
 });
