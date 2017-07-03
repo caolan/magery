@@ -277,5 +277,243 @@ suite('initTemplates', function () {
             author: {name: true}
         });
     });
+    
+    test('template-if active_paths', function () {
+        createTemplateNode('app',
+                           '<template-if test="article.published">' +
+                             'published' +
+                           '</template-if>');
+        init.initTemplates();
+        var tmpl = document.getElementById('app').content;
+        // template root element
+        assert.ok(!tmpl.static);
+        assert.deepEqual(tmpl.active_paths, {
+            article: {published: true}
+        });
+        // <template-if test="article.published">...</template-if>
+        assert.ok(!child(tmpl, 0).static);
+        assert.deepEqual(child(tmpl, 0).active_paths, {
+            article: {published: true}
+        });
+        // published
+        assert.ok(child(tmpl, 0, 0).static);
+        
+        createTemplateNode('app',
+                           '<template-if test="article.published">' +
+                             '{{article.title}} is published' +
+                           '</template-if>');
+        init.initTemplates();
+        tmpl = document.getElementById('app').content;
+        // template root element
+        assert.ok(!tmpl.static);
+        assert.deepEqual(tmpl.active_paths, {
+            article: true
+        });
+        // <template-if test="article.published">...</template-if>
+        assert.ok(!child(tmpl, 0).static);
+        assert.deepEqual(child(tmpl, 0).active_paths, {
+            article: true
+        });
+        // {{article.title}} is published
+        assert.ok(!child(tmpl, 0, 0).static);
+        assert.deepEqual(child(tmpl, 0, 0).active_paths, {
+            article: {title: true}
+        });
+    });
+
+    test('template-unless active_paths', function () {
+        createTemplateNode('app',
+                           '<template-unless test="article.published">' +
+                             'draft' +
+                           '</template-unless>');
+        init.initTemplates();
+        var tmpl = document.getElementById('app').content;
+        // template root element
+        assert.ok(!tmpl.static);
+        assert.deepEqual(tmpl.active_paths, {
+            article: {published: true}
+        });
+        // <template-unless test="article.published">...</template-unless>
+        assert.ok(!child(tmpl, 0).static);
+        assert.deepEqual(child(tmpl, 0).active_paths, {
+            article: {published: true}
+        });
+        // draft
+        assert.ok(child(tmpl, 0, 0).static);
+        
+        createTemplateNode('app',
+                           '<template-unless test="article.published">' +
+                             '{{article.title}} is a draft' +
+                           '</template-unless>');
+        init.initTemplates();
+        tmpl = document.getElementById('app').content;
+        // template root element
+        assert.ok(!tmpl.static);
+        assert.deepEqual(tmpl.active_paths, {
+            article: true
+        });
+        // <template-unless test="article.published">...</template-unless>
+        assert.ok(!child(tmpl, 0).static);
+        assert.deepEqual(child(tmpl, 0).active_paths, {
+            article: true
+        });
+        // {{article.title}} is a draft
+        assert.ok(!child(tmpl, 0, 0).static);
+        assert.deepEqual(child(tmpl, 0, 0).active_paths, {
+            article: {title: true}
+        });
+    });
+    
+    test('template-each active_paths', function () {
+        createTemplateNode('app',
+                           '<template-each name="item" in="items">' +
+                             '{{ item.name }}' +
+                           '</template-each>');
+        init.initTemplates();
+        var tmpl = document.getElementById('app').content;
+        // template root element
+        assert.ok(!tmpl.static);
+        assert.deepEqual(tmpl.active_paths, {
+            items: true
+        });
+        // <template-each name="item" in="items">...</template-each>
+        assert.ok(!child(tmpl, 0).static);
+        assert.deepEqual(child(tmpl, 0).active_paths, {
+            items: true
+        });
+        // {{ item.name }}
+        assert.ok(!child(tmpl, 0, 0).static);
+        assert.deepEqual(child(tmpl, 0, 0).active_paths, {
+            item: {name: true}
+        });
+
+        createTemplateNode('app',
+                           '<template-each name="item" in="basket.items">' +
+                             '{{ item.name }} added by {{ user.name }}' +
+                           '</template-each>');
+        init.initTemplates();
+        tmpl = document.getElementById('app').content;
+        // template root element
+        assert.ok(!tmpl.static);
+        assert.deepEqual(tmpl.active_paths, {
+            user: {name: true},
+            items: true
+        });
+        // <template-each name="item" in="items">...</template-each>
+        assert.ok(!child(tmpl, 0).static);
+        assert.deepEqual(child(tmpl, 0).active_paths, {
+            user: {name: true},
+            items: true
+        });
+        // {{ item.name }}
+        assert.ok(!child(tmpl, 0, 0).static);
+        assert.deepEqual(child(tmpl, 0, 0).active_paths, {
+            user: {name: true},
+            item: {name: true}
+        });
+    });
+
+    test('static template-call active_paths', function () {
+        createTemplateNode('app',
+                           '<template-call template="profileInfo" user="article.author" title="title" />');
+        init.initTemplates();
+        var tmpl = document.getElementById('app').content;
+        // template root element
+        assert.ok(!tmpl.static);
+        assert.deepEqual(tmpl.active_paths, {
+            article: {author: true},
+            title: true
+        });
+        // <template-call>
+        assert.ok(!child(tmpl, 0).static);
+        assert.deepEqual(child(tmpl, 0).active_paths, {
+            article: {author: true},
+            title: true
+        });
+    });
+
+    test('dynamic template-call active_paths', function () {
+        createTemplateNode('app',
+                           '<template-call template="{{template}}" user="article.author" title="title" />');
+        init.initTemplates();
+        var tmpl = document.getElementById('app').content;
+        // template root element
+        assert.ok(!tmpl.static);
+        assert.deepEqual(tmpl.active_paths, {
+            article: {author: true},
+            title: true,
+            template: true
+        });
+        // <template-call>
+        assert.ok(!child(tmpl, 0).static);
+        assert.deepEqual(child(tmpl, 0).active_paths, {
+            article: {author: true},
+            title: true,
+            template: true
+        });
+    });
+
+    test('template-call with children active_paths', function () {
+        createTemplateNode('app',
+                           '<template-call template="example" author="article.author">' +
+                             '<p>{{ text }}</p>' +
+                           '</template-call>');
+        init.initTemplates();
+        var tmpl = document.getElementById('app').content;
+        // template root element
+        assert.ok(!tmpl.static);
+        assert.deepEqual(tmpl.active_paths, {
+            article: {author: true},
+            text: true
+        });
+        // <template-call>
+        assert.ok(!child(tmpl, 0).static);
+        assert.deepEqual(child(tmpl, 0).active_paths, {
+            article: {author: true},
+            text: true
+        });
+        // <p>
+        assert.ok(!child(tmpl, 0, 0).static);
+        assert.deepEqual(child(tmpl, 0, 0).active_paths, {
+            text: true
+        });
+        // {{ text }}
+        assert.ok(!child(tmpl, 0, 0, 0).static);
+        assert.deepEqual(child(tmpl, 0, 0, 0).active_paths, {
+            text: true
+        });
+    });
+
+    test('template-children must wildcard active_paths to root of current template', function () {
+        createTemplateNode('app',
+                           '<div class="container">' +
+                             '<div class="main">' +
+                               '{{ test }}' +
+                               '<template-children />' +
+                               'foo' +
+                             '</div>' +
+                           '</div>');
+        init.initTemplates();
+        var tmpl = document.getElementById('app').content;
+        // template root element
+        assert.ok(!tmpl.static);
+        assert.ok(!tmpl.active_paths);
+        // <div class="container">...</div>
+        assert.ok(!child(tmpl, 0).static);
+        assert.ok(!child(tmpl, 0).active_paths);
+        // <div class="main">...</div>
+        assert.ok(!child(tmpl, 0, 0).static);
+        assert.ok(!child(tmpl, 0, 0).active_paths);
+        // {{ test }}
+        assert.ok(!child(tmpl, 0, 0, 0).static);
+        assert.deepEqual(child(tmpl, 0, 0, 0).active_paths, {
+            test: true
+        });
+        // <template-children />
+        assert.ok(!child(tmpl, 0, 0, 1).static);
+        assert.ok(!child(tmpl, 0, 0, 1).active_paths);
+        // foo
+        assert.ok(child(tmpl, 0, 0, 2).static);
+    });
 
 });
