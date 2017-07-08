@@ -124,9 +124,7 @@ suite('events', function () {
     test('reference named item in loop', function () {
         var container = document.createElement('div');
         createTemplateNode('main',
-                           '<template-each name="item" in="items">' +
-                           '<button onclick="test(item)">test</button>' +
-                           '</template-each>');
+                           '<button data-each="item in items" onclick="test(item)">test</button>');
         var data = {items: [{name: 'one'}, {name: 'two'}, {name: 'three'}]};
         var calls = [];
         Magery.bind(container, 'main', data, {

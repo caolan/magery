@@ -46,7 +46,7 @@ var init =
 /***/ 0:
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(9);
+	module.exports = __webpack_require__(8);
 
 
 /***/ }),
@@ -127,7 +127,7 @@ var init =
 
 /***/ }),
 
-/***/ 9:
+/***/ 8:
 /***/ (function(module, exports, __webpack_require__) {
 
 	var utils = __webpack_require__(4);
@@ -252,35 +252,32 @@ var init =
 
 	exports.elementPaths = function (node) {
 	    var paths = {};
+	    var remove = null;
 	    if (node.attributes) {
 	        for (var i = 0, len = node.attributes.length; i < len; i++) {
 	            var attr = node.attributes[i];
+	            if (attr.name == 'data-each') {
+	                var parts = attr.value.split(' in ');
+	                if (parts.length < 2) {
+	                    throw new Error(
+	                        'Badly formed data-each attribute value: ' + attr.value
+	                    );
+	                }
+	                exports.markPath(paths, utils.propertyPath(parts[1]));
+	                remove = parts[0];
+	            }
+	            if (attr.name == 'data-if' || attr.name == 'data-unless') {
+	                exports.markPath(paths, utils.propertyPath(attr.value));
+	            }
 	            exports.mergePaths(paths, exports.stringPaths(attr.value));
 	        }
 	    }
 	    paths = updateChildPaths(paths, node);
-	    return paths;
-	};
-
-	function templateIfPaths(node) {
-	    var paths = {};
-	    var test_prop = node.getAttribute('test');
-	    exports.markPath(paths, utils.propertyPath(test_prop));
-	    paths = updateChildPaths(paths, node);
-	    return paths;
-	}
-
-	function templateEachPaths(node) {
-	    var paths = {};
-	    var name_prop = node.getAttribute('name');
-	    var iter_prop = node.getAttribute('in');
-	    exports.markPath(paths, utils.propertyPath(iter_prop));
-	    paths = updateChildPaths(paths, node);
-	    if (paths) {
-	        delete paths[name_prop];
+	    if (remove) {
+	        delete paths[remove];
 	    }
 	    return paths;
-	}
+	};
 
 	function templateCallPaths(node) {
 	    var paths = {};
@@ -302,9 +299,6 @@ var init =
 	}
 
 	var templateTags = {
-	    'if': templateIfPaths,
-	    'unless': templateIfPaths,
-	    'each': templateEachPaths,
 	    'call': templateCallPaths,
 	    'children': templateChildrenPaths
 	};

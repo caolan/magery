@@ -278,11 +278,11 @@ suite('initTemplates', function () {
         });
     });
     
-    test('template-if active_paths', function () {
+    test('data-if active_paths', function () {
         createTemplateNode('app',
-                           '<template-if test="article.published">' +
+                           '<span data-if="article.published">' +
                              'published' +
-                           '</template-if>');
+                           '</span>');
         init.initTemplates();
         var tmpl = document.getElementById('app').content;
         // template root element
@@ -290,16 +290,16 @@ suite('initTemplates', function () {
         assert.deepEqual(tmpl.active_paths, {
             article: {published: true}
         });
-        // <template-if test="article.published">...</template-if>
+        // <span data-if="article.published">...</span>
         assert.ok(!child(tmpl, 0).static);
         assert.ok(!child(tmpl, 0).active_paths);
         // published
         assert.ok(child(tmpl, 0, 0).static);
         
         createTemplateNode('app',
-                           '<template-if test="article.published">' +
+                           '<span data-if="article.published">' +
                              '{{article.title}} is published' +
-                           '</template-if>');
+                           '</span>');
         init.initTemplates();
         tmpl = document.getElementById('app').content;
         // template root element
@@ -307,7 +307,7 @@ suite('initTemplates', function () {
         assert.deepEqual(tmpl.active_paths, {
             article: true
         });
-        // <template-if test="article.published">...</template-if>
+        // <span data-if="article.published">...</span>
         assert.ok(!child(tmpl, 0).static);
         assert.ok(!child(tmpl, 0).active_paths);
         // {{article.title}} is published
@@ -317,11 +317,11 @@ suite('initTemplates', function () {
         });
     });
 
-    test('template-unless active_paths', function () {
+    test('data-unless active_paths', function () {
         createTemplateNode('app',
-                           '<template-unless test="article.published">' +
+                           '<span data-unless="article.published">' +
                              'draft' +
-                           '</template-unless>');
+                           '</span>');
         init.initTemplates();
         var tmpl = document.getElementById('app').content;
         // template root element
@@ -329,16 +329,16 @@ suite('initTemplates', function () {
         assert.deepEqual(tmpl.active_paths, {
             article: {published: true}
         });
-        // <template-unless test="article.published">...</template-unless>
+        // <span data-unless="article.published">...</span>
         assert.ok(!child(tmpl, 0).static);
         assert.ok(!child(tmpl, 0).active_paths);
         // draft
         assert.ok(child(tmpl, 0, 0).static);
         
         createTemplateNode('app',
-                           '<template-unless test="article.published">' +
+                           '<span data-unless="article.published">' +
                              '{{article.title}} is a draft' +
-                           '</template-unless>');
+                           '</span>');
         init.initTemplates();
         tmpl = document.getElementById('app').content;
         // template root element
@@ -346,7 +346,7 @@ suite('initTemplates', function () {
         assert.deepEqual(tmpl.active_paths, {
             article: true
         });
-        // <template-unless test="article.published">...</template-unless>
+        // <span data-unless="article.published">...</span>
         assert.ok(!child(tmpl, 0).static);
         assert.ok(!child(tmpl, 0).active_paths);
         // {{article.title}} is a draft
@@ -356,11 +356,11 @@ suite('initTemplates', function () {
         });
     });
     
-    test('template-each active_paths', function () {
+    test('data-each active_paths', function () {
         createTemplateNode('app',
-                           '<template-each name="item" in="items">' +
+                           '<span data-each="item in items">' +
                              '{{ item.name }}' +
-                           '</template-each>');
+                           '</span>');
         init.initTemplates();
         var tmpl = document.getElementById('app').content;
         // template root element
@@ -368,7 +368,7 @@ suite('initTemplates', function () {
         assert.deepEqual(tmpl.active_paths, {
             items: true
         });
-        // <template-each name="item" in="items">...</template-each>
+        // <span data-each="item" in="items">...</span>
         assert.ok(!child(tmpl, 0).static);
         assert.ok(!child(tmpl, 0).active_paths);
         // {{ item.name }}
@@ -378,9 +378,9 @@ suite('initTemplates', function () {
         });
 
         createTemplateNode('app',
-                           '<template-each name="item" in="items">' +
+                           '<span data-each="item in items">' +
                              '{{ item.name }} added by {{ user.name }}' +
-                           '</template-each>');
+                           '</span>');
         init.initTemplates();
         tmpl = document.getElementById('app').content;
         // template root element
@@ -389,7 +389,7 @@ suite('initTemplates', function () {
             user: {name: true},
             items: true
         });
-        // <template-each name="item" in="items">...</template-each>
+        // <span data-each="item in items">...</span>
         assert.ok(!child(tmpl, 0).static);
         assert.ok(!child(tmpl, 0).active_paths);
         // {{ item.name }}
@@ -491,11 +491,11 @@ suite('initTemplates', function () {
         assert.ok(child(tmpl, 0, 0, 2).static);
     });
     
-    test('template-children inside template-each', function () {
+    test('template-children inside data-each', function () {
         createTemplateNode('app',
-                           '<template-each name="item" in="items">' +
+                           '<div data-each="item in items">' +
                              '<p><template-children/></p>' +
-                           '</template-each>');
+                           '</div>');
         init.initTemplates();
         var tmpl = document.getElementById('app').content;
         // template root element

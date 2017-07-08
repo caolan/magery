@@ -4,7 +4,6 @@ module.exports = {
         'context': ['./context.js'],
         'render': ['./render.js'],
         'patch': ['./patch.js'],
-        'builtins': ['./builtins.js'],
         'transforms': ['./transforms.js'],
         'utils': ['./utils.js'],
         'Magery': ['./magery.js']

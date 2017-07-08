@@ -45,7 +45,7 @@ var patch =
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(6);
+	module.exports = __webpack_require__(5);
 
 
 /***/ }),
@@ -127,8 +127,7 @@ var patch =
 
 
 /***/ }),
-/* 5 */,
-/* 6 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -139,8 +138,8 @@ var patch =
 	 */
 
 	var utils = __webpack_require__(4);
-	var transforms = __webpack_require__(7);
-	var Set = __webpack_require__(8);
+	var transforms = __webpack_require__(6);
+	var Set = __webpack_require__(7);
 
 	var ELEMENT_NODE = 1;
 	var TEXT_NODE = 3;
@@ -429,7 +428,7 @@ var patch =
 
 
 /***/ }),
-/* 7 */
+/* 6 */
 /***/ (function(module, exports) {
 
 	/**
@@ -520,7 +519,7 @@ var patch =
 
 
 /***/ }),
-/* 8 */
+/* 7 */
 /***/ (function(module, exports) {
 
 	function Set() {

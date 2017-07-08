@@ -342,12 +342,10 @@ suite('render', function () {
     //     assert.equal(patcher_calls.length, 10);
     // });
 
-    test('template-each', function () {
+    test('data-each', function () {
         createTemplateNode('foo',
                            '<h1>title</h1>' +
-                           '<template-each name="item" in="items">' +
-                             '<section>item</section>' +
-                           '</template-each>');
+                           '<section data-each="item in items">item</section>');
         var prev_data = {};
         var next_data = {items: [{name: 'one'}, {name: 'two'}, {name: 'three'}]};
         var changes = true;
@@ -371,56 +369,56 @@ suite('render', function () {
         assert.equal(patcher_calls.length, 14);
     });
 
-    test('template-each with multiple child nodes', function () {
-        createTemplateNode('foo',
-                           '<h1>title</h1>' +
-                           '<template-each name="item" in="items">' +
-                             '<section>item</section>' +
-                             '<div>separator</div>' +
-                           '</template-each>' +
-                           '<p>footer</p>');
-        var prev_data = {};
-        var next_data = {items: [{name: 'one'}, {name: 'two'}, {name: 'three'}]};
-        var changes = true;
-        patcher_calls = [];
-        var renderer = new render.Renderer(test_patcher);
-        renderer.render('foo', next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
-        assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
-        assert.deepEqual(patcher_calls[2], ['text', 'title']);
-        assert.deepEqual(patcher_calls[3], ['exitTag']);
-        assert.deepEqual(patcher_calls[4], ['enterTag', 'SECTION', null]);
-        assert.deepEqual(patcher_calls[5], ['text', 'item']);
-        assert.deepEqual(patcher_calls[6], ['exitTag']);
-        assert.deepEqual(patcher_calls[7], ['enterTag', 'DIV', null]);
-        assert.deepEqual(patcher_calls[8], ['text', 'separator']);
-        assert.deepEqual(patcher_calls[9], ['exitTag']);
-        assert.deepEqual(patcher_calls[10], ['enterTag', 'SECTION', null]);
-        assert.deepEqual(patcher_calls[11], ['text', 'item']);
-        assert.deepEqual(patcher_calls[12], ['exitTag']);
-        assert.deepEqual(patcher_calls[13], ['enterTag', 'DIV', null]);
-        assert.deepEqual(patcher_calls[14], ['text', 'separator']);
-        assert.deepEqual(patcher_calls[15], ['exitTag']);
-        assert.deepEqual(patcher_calls[16], ['enterTag', 'SECTION', null]);
-        assert.deepEqual(patcher_calls[17], ['text', 'item']);
-        assert.deepEqual(patcher_calls[18], ['exitTag']);
-        assert.deepEqual(patcher_calls[19], ['enterTag', 'DIV', null]);
-        assert.deepEqual(patcher_calls[20], ['text', 'separator']);
-        assert.deepEqual(patcher_calls[21], ['exitTag']);
-        assert.deepEqual(patcher_calls[22], ['enterTag', 'P', null]);
-        assert.deepEqual(patcher_calls[23], ['text', 'footer']);
-        assert.deepEqual(patcher_calls[24], ['exitTag']);
-        assert.deepEqual(patcher_calls[25], ['end']);
-        assert.equal(patcher_calls.length, 26);
-    });
+    // test('template-each with multiple child nodes', function () {
+    //     createTemplateNode('foo',
+    //                        '<h1>title</h1>' +
+    //                        '<template-each name="item" in="items">' +
+    //                          '<section>item</section>' +
+    //                          '<div>separator</div>' +
+    //                        '</template-each>' +
+    //                        '<p>footer</p>');
+    //     var prev_data = {};
+    //     var next_data = {items: [{name: 'one'}, {name: 'two'}, {name: 'three'}]};
+    //     var changes = true;
+    //     patcher_calls = [];
+    //     var renderer = new render.Renderer(test_patcher);
+    //     renderer.render('foo', next_data, prev_data);
+    //     assert.deepEqual(patcher_calls[0], ['start']);
+    //     assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
+    //     assert.deepEqual(patcher_calls[2], ['text', 'title']);
+    //     assert.deepEqual(patcher_calls[3], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[4], ['enterTag', 'SECTION', null]);
+    //     assert.deepEqual(patcher_calls[5], ['text', 'item']);
+    //     assert.deepEqual(patcher_calls[6], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[7], ['enterTag', 'DIV', null]);
+    //     assert.deepEqual(patcher_calls[8], ['text', 'separator']);
+    //     assert.deepEqual(patcher_calls[9], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[10], ['enterTag', 'SECTION', null]);
+    //     assert.deepEqual(patcher_calls[11], ['text', 'item']);
+    //     assert.deepEqual(patcher_calls[12], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[13], ['enterTag', 'DIV', null]);
+    //     assert.deepEqual(patcher_calls[14], ['text', 'separator']);
+    //     assert.deepEqual(patcher_calls[15], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[16], ['enterTag', 'SECTION', null]);
+    //     assert.deepEqual(patcher_calls[17], ['text', 'item']);
+    //     assert.deepEqual(patcher_calls[18], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[19], ['enterTag', 'DIV', null]);
+    //     assert.deepEqual(patcher_calls[20], ['text', 'separator']);
+    //     assert.deepEqual(patcher_calls[21], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[22], ['enterTag', 'P', null]);
+    //     assert.deepEqual(patcher_calls[23], ['text', 'footer']);
+    //     assert.deepEqual(patcher_calls[24], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[25], ['end']);
+    //     assert.equal(patcher_calls.length, 26);
+    // });
 
-    test('template-each introduces new context variable', function () {
+    test('data-each introduces new context variable', function () {
         createTemplateNode('foo',
                            '<h1>title</h1>' +
                            '<ul>' +
-                             '<template-each name="item" in="items">' +
-                               '<li>{{item.name}}</li>' +
-                             '</template-each>' +
+                             '<li data-each="item in items">' +
+                               '{{item.name}}' +
+                             '</li>' +
                            '</ul>');
         var prev_data = {};
         var next_data = {items: [{name: 'one'}, {name: 'two'}, {name: 'three'}]};
@@ -447,13 +445,12 @@ suite('render', function () {
         assert.equal(patcher_calls.length, 16);
     });
 
-    test('template-each with keys', function () {
+    test('data-each with data-key', function () {
         createTemplateNode('foo',
                            '<h1>title</h1>' +
-                           '<template-each name="item" in="items" key="name">' +
-                             '<section>item</section>' +
-                             '<div>separator</div>' +
-                           '</template-each>' +
+                           '<section data-each="item in items" data-key="{{item.name}}">' +
+                             'item' +
+                           '</section>' +
                            '<p>footer</p>');
         var prev_data = {};
         var next_data = {items: [{name: 'one'}, {name: 'two'}, {name: 'three'}]};
@@ -465,29 +462,20 @@ suite('render', function () {
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
-        assert.deepEqual(patcher_calls[4], ['enterTag', 'SECTION', '3/one/0']);
+        assert.deepEqual(patcher_calls[4], ['enterTag', 'SECTION', 'one']);
         assert.deepEqual(patcher_calls[5], ['text', 'item']);
         assert.deepEqual(patcher_calls[6], ['exitTag']);
-        assert.deepEqual(patcher_calls[7], ['enterTag', 'DIV', '3/one/1']);
-        assert.deepEqual(patcher_calls[8], ['text', 'separator']);
+        assert.deepEqual(patcher_calls[7], ['enterTag', 'SECTION', 'two']);
+        assert.deepEqual(patcher_calls[8], ['text', 'item']);
         assert.deepEqual(patcher_calls[9], ['exitTag']);
-        assert.deepEqual(patcher_calls[10], ['enterTag', 'SECTION', '3/two/0']);
+        assert.deepEqual(patcher_calls[10], ['enterTag', 'SECTION', 'three']);
         assert.deepEqual(patcher_calls[11], ['text', 'item']);
         assert.deepEqual(patcher_calls[12], ['exitTag']);
-        assert.deepEqual(patcher_calls[13], ['enterTag', 'DIV', '3/two/1']);
-        assert.deepEqual(patcher_calls[14], ['text', 'separator']);
+        assert.deepEqual(patcher_calls[13], ['enterTag', 'P', null]);
+        assert.deepEqual(patcher_calls[14], ['text', 'footer']);
         assert.deepEqual(patcher_calls[15], ['exitTag']);
-        assert.deepEqual(patcher_calls[16], ['enterTag', 'SECTION', '3/three/0']);
-        assert.deepEqual(patcher_calls[17], ['text', 'item']);
-        assert.deepEqual(patcher_calls[18], ['exitTag']);
-        assert.deepEqual(patcher_calls[19], ['enterTag', 'DIV', '3/three/1']);
-        assert.deepEqual(patcher_calls[20], ['text', 'separator']);
-        assert.deepEqual(patcher_calls[21], ['exitTag']);
-        assert.deepEqual(patcher_calls[22], ['enterTag', 'P', null]);
-        assert.deepEqual(patcher_calls[23], ['text', 'footer']);
-        assert.deepEqual(patcher_calls[24], ['exitTag']);
-        assert.deepEqual(patcher_calls[25], ['end']);
-        assert.equal(patcher_calls.length, 26);
+        assert.deepEqual(patcher_calls[16], ['end']);
+        assert.equal(patcher_calls.length, 17);
     });
 
     // test('template-each skips keys with no changes', function () {
@@ -528,54 +516,52 @@ suite('render', function () {
     //     assert.equal(patcher_calls.length, 10);
     // });
 
-    test('template-each block siblings should avoid conflicting keys', function () {
-        createTemplateNode('foo',
-                           '<template-each name="item" in="items" key="id">' +
-                             '<li>{{item.name}}</li>' +
-                           '</template-each>' +
-                           '<template-each name="item" in="items2" key="id">' +
-                             '<li>{{item.name}}</li>' +
-                           '</template-each>');
+    // test('template-each block siblings should avoid conflicting keys', function () {
+    //     createTemplateNode('foo',
+    //                        '<template-each name="item" in="items" key="id">' +
+    //                          '<li>{{item.name}}</li>' +
+    //                        '</template-each>' +
+    //                        '<template-each name="item" in="items2" key="id">' +
+    //                          '<li>{{item.name}}</li>' +
+    //                        '</template-each>');
 
-        var prev_data = {};
-        var next_data = {
-            items: [
-                {id: 'one', name: '1.1'},
-                {id: 'two', name: '1.2'}
-            ],
-            items2: [
-                {id: 'one', name: '2.1'},
-                {id: 'two', name: '2.2'}
-            ]
-        };
+    //     var prev_data = {};
+    //     var next_data = {
+    //         items: [
+    //             {id: 'one', name: '1.1'},
+    //             {id: 'two', name: '1.2'}
+    //         ],
+    //         items2: [
+    //             {id: 'one', name: '2.1'},
+    //             {id: 'two', name: '2.2'}
+    //         ]
+    //     };
 
-        patcher_calls = [];
-        var renderer = new render.Renderer(test_patcher);
-        renderer.render('foo', next_data, prev_data);
+    //     patcher_calls = [];
+    //     var renderer = new render.Renderer(test_patcher);
+    //     renderer.render('foo', next_data, prev_data);
 
-        assert.deepEqual(patcher_calls[0], ['start']);
-        assert.deepEqual(patcher_calls[1], ['enterTag', 'LI', '4/one/0']);
-        assert.deepEqual(patcher_calls[2], ['text', '1.1']);
-        assert.deepEqual(patcher_calls[3], ['exitTag']);
-        assert.deepEqual(patcher_calls[4], ['enterTag', 'LI', '4/two/0']);
-        assert.deepEqual(patcher_calls[5], ['text', '1.2']);
-        assert.deepEqual(patcher_calls[6], ['exitTag']);
-        assert.deepEqual(patcher_calls[7], ['enterTag', 'LI', '5/one/0']);
-        assert.deepEqual(patcher_calls[8], ['text', '2.1']);
-        assert.deepEqual(patcher_calls[9], ['exitTag']);
-        assert.deepEqual(patcher_calls[10], ['enterTag', 'LI', '5/two/0']);
-        assert.deepEqual(patcher_calls[11], ['text', '2.2']);
-        assert.deepEqual(patcher_calls[12], ['exitTag']);
-        assert.deepEqual(patcher_calls[13], ['end']);
-        assert.equal(patcher_calls.length, 14);
-    });
+    //     assert.deepEqual(patcher_calls[0], ['start']);
+    //     assert.deepEqual(patcher_calls[1], ['enterTag', 'LI', '4/one/0']);
+    //     assert.deepEqual(patcher_calls[2], ['text', '1.1']);
+    //     assert.deepEqual(patcher_calls[3], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[4], ['enterTag', 'LI', '4/two/0']);
+    //     assert.deepEqual(patcher_calls[5], ['text', '1.2']);
+    //     assert.deepEqual(patcher_calls[6], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[7], ['enterTag', 'LI', '5/one/0']);
+    //     assert.deepEqual(patcher_calls[8], ['text', '2.1']);
+    //     assert.deepEqual(patcher_calls[9], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[10], ['enterTag', 'LI', '5/two/0']);
+    //     assert.deepEqual(patcher_calls[11], ['text', '2.2']);
+    //     assert.deepEqual(patcher_calls[12], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[13], ['end']);
+    //     assert.equal(patcher_calls.length, 14);
+    // });
 
-    test('template-if block', function () {
+    test('data-if', function () {
         createTemplateNode('foo',
                            '<h1>title</h1>' +
-                           '<template-if test="published">' +
-                             '<b>published</b>' +
-                           '</template-if>');
+                           '<b data-if="published">published</b>');
         var next_data = {published: true};
         var prev_data = {};
         patcher_calls = [];
@@ -642,12 +628,10 @@ suite('render', function () {
         assert.equal(patcher_calls.length, 5);
     });
 
-    test('template-unless block', function () {
+    test('data-unless', function () {
         createTemplateNode('foo',
                            '<h1>title</h1>' +
-                           '<template-unless test="published">' +
-                           '<b>published</b>' +
-                           '</template-unless>');
+                           '<b data-unless="published">published</b>');
         var next_data = {published: true};
         var prev_data = {};
         patcher_calls = [];
@@ -988,17 +972,16 @@ suite('render', function () {
     });
 
     test('collapse adjacent text nodes', function () {
-        createTemplateNode('foo',
+        createTemplateNode('foo', 'Hello, <b>world</b>!');
+        createTemplateNode('bar',
                            'MESSAGE ' +
-                           '<template-if test="greeting">' +
-                           'Hello, <b>world</b>!' +
-                           '</template-if>\n' +
+                           '<template-call template="foo"></template-call>\n' +
                            'END');
         var prev_data = {};
-        var next_data = {greeting: true};
+        var next_data = {};
         patcher_calls = [];
         var renderer = new render.Renderer(test_patcher);
-        renderer.render('foo', next_data, prev_data);
+        renderer.render('bar', next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['text', 'MESSAGE Hello, ']);
         assert.deepEqual(patcher_calls[2], ['enterTag', 'B', null]);
@@ -1616,9 +1599,7 @@ suite('render', function () {
     test('template tags inside select element', function () {
         createTemplateNode('foo',
                            '<select>' +
-                             '<template-each name="opt" in="options">' +
-                               '<option value="{{opt.value}}">{{opt.label}}</option>' +
-                             '</template-each>' +
+                             '<option data-each="opt in options" value="{{opt.value}}">{{opt.label}}</option>' +
                            '</select>');
         var prev_data = {};
         var next_data = {

@@ -1,19 +1,18 @@
 # Magery
 
-I want to improve JavaScript development for 'traditional' multi-page
-websites. This is the easiest framework I can think of that can work
-with server-side rendering in any language.
+The easiest JavaScript framework I can think of that could work with
+server-side rendering in _any_ language.
 
 ## Aims
 
 * Make your progressive enhancement of multi-page websites easier
 * Be agnostic of your backend language
-* Be relatively small in filesize, because your enhancements may also be small
 * Provide clean separation between your data and markup
+* Be relatively small in filesize, because your enhancements may also be small
 * Prove that you don't _need_ a 'single page app' to write JavaScript that is sophisticated, yet maintainable
 
 You might also like to read the [blog post][blog-post] that started
-this (Magery syntax has since been updated).
+this project (Magery syntax has since been updated).
 
 ## Download
 
@@ -126,57 +125,32 @@ the page to update and display the new template data. You can now type
 "universe" into the textbox and see the message update to "Hello,
 universe!" as you type. [View page][hello-universe].
 
-__You now know all the arguments to `Magery.bind()`__. Now, take a
-look at the available template tags.
+__You now know all the arguments to `Magery.bind()`__. Once you've had
+a look at the available template [attributes](#attributes) and
+[tags](#tags), you should be ready to get started.
 
-## Template tags
+## Attributes
 
-* [template](#template)
-* [template-each](#template-each)
-* [template-if](#template-if)
-* [template-unless](#template-unless)
-* [template-call](#template-call)
-* [template-children](#template-children)
-* template-embed
+* [data-each](#data-each)
+* [data-key](#data-key)
+* [data-if](#data-if)
+* [data-unless](#data-unless)
 
-### `<template>`
-
-This defines a new template. Each template **must** have an `id`
-attribute to uniquely identify it. All other template tags can only be
-used inside a `<template>` tag.
-
-#### Attributes
-
-* __id__ - uniquely identifies the template (required)
-
-#### Example use
-
-```html
-<template id="greeting">
-  <h1>Hello, world!</h1>
-</template>
-```
-
-
-### `<template-each>`
+### `data-each`
 
 Loop over an array, rendering the child elements with each item bound
-to the given name.
-
-#### Attributes
-
-* __name__ - the name to use for the current item (required)
-* __in__ - the array to iterate over (required)
-* __key__ - a property to identify the current item, *must* be unique (optional)
+to the given name. The value should be in the form `"item in array"`
+where `item` is the name to use for the current item, and `array` is
+the context property to iterate over.
 
 #### Example use
 
 Template:
 ```html
 <ol>
-  <template-each name="user" in="highscores">
-    <li>{{user.name}}: {{user.score}} points</li>
-  </template-each>
+  <li data-each="user in highscores">
+    {{user.name}}: {{user.score}} points
+  </li>
 </ol>
 ```
 
@@ -200,15 +174,16 @@ Result:
 </ol>
 ```
 
-If possible, use a `key` property to uniquely idenfify each item, it
-enables some optimisations when Magery updates the DOM:
+If possible, combine with a `data-key` property to uniquely idenfify
+each item in a loop. This enables some optimisations when Magery
+updates the DOM.
 
 Template:
 ```html
 <ul>
-  <template-each name="item" in="basket" key="id">
-    <li>{{item.title}}</li>
-  </template-each>
+  <li data-each="item in basket" data-key="{{item.id}}">
+    {{item.title}}
+  </li>
 </ul>
 ```
 
@@ -232,26 +207,28 @@ Result:
 </ul>
 ```
 
-### `<template-if>`
+### `data-key`
 
-Conditionally expands its child elements if the property named in the
-`test` attribute evaluates to true.
+Helps Magery match up tags between page updates for improved
+preformance. The value can use the normal property `{{` expansion `}}`
+syntax and __must__ be unique within it's parent element.
 
-__NOTE:__ An empty Array in Magery is considered 'false' (normally in
-javascript it would be considered 'true').
+This attribute is particularly useful when combined with the
+`data-each` attribute but it can be used elsewhere too. See the
+[data-each](#data-each) examples for more information.
 
-#### Attributes
+### `data-if`
 
-* __test__ - the property path (e.g. user.name) to test to use as the
-  predicate (required)
+Conditionally expands the element if a context property evaluates to
+true. Note that an empty Array in Magery is considered `false`.
 
 #### Example use
 
 Template:
 ```html
-<template-if test="article.published">
-  <span>Published: {{ article.pubDate }}</span>
-</template-if>
+<span data-if="article.published">
+  Published: {{ article.pubDate }}
+</span>
 ```
 
 Data:
@@ -269,26 +246,19 @@ Result:
 <span>Published: today</span>
 ```
 
-### `<template-unless>`
+### `data-unless`
 
-This is the compliment to [`<template-if>`](#template-if), and will
-display its child nodes if the `test` property evaluates to false.
-
-__NOTE:__ An empty Array in Magery is considered 'false' (normally in
-javascript it would be considered 'true').
-
-#### Attributes
-
-* __test__ - the property path (e.g. user.name) to test to use, if
-  this is false the child nodes will be displayed (required)
+This is the compliment to [`data-if`](#data-if), and will display if
+the property evaluates to false. Note that an empty Array in Magery is
+considered `false`.
 
 #### Example use
 
 Template:
 ```html
-<template-unless test="article.published">
-  <span>Draft</span>
-</template-if>
+<span data-unless="article.published">
+  Draft
+</span>
 ```
 
 Data:
@@ -304,6 +274,41 @@ Data:
 Result:
 ```html
 <span>Draft</span>
+```
+
+### Attribute processing order
+
+It's possible to add multiple template attributes to a single element.
+The attributes will be processed in the following order:
+
+- `data-each`
+- `data-if`
+- `data-unless`
+- `data-key`
+
+## Tags
+
+* [template](#template)
+* [template-call](#template-call)
+* [template-children](#template-children)
+* template-embed
+
+### `<template>`
+
+This defines a new template. Each template **must** have an `id`
+attribute to uniquely identify it. All other template tags can only be
+used inside a `<template>` tag.
+
+#### Attributes
+
+* __id__ - uniquely identifies the template (required)
+
+#### Example use
+
+```html
+<template id="greeting">
+  <h1>Hello, world!</h1>
+</template>
 ```
 
 ### `<template-call>`
