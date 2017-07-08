@@ -98,9 +98,9 @@ section('Add 100 elements to a list, one at a time - no keys', function (bench) 
     bench('Magery', function (container, iter) {
         createTemplateNode('app',
               '<ul>' +
-                '<template-each name="item" in="items">' +
-                  '<li>{{item.name}}</li>' +
-                '</template-each>' +
+                '<li data-each="item in items">' +
+                  '{{item.name}}' +
+                '</li>' +
               '</ul>'
         );
         var data = {items: []};
@@ -155,9 +155,9 @@ section('Add 100 elements to a list, one at a time - keys', function (bench) {
     bench('Magery', function (container, iter) {
         createTemplateNode('app',
               '<ul>' +
-                '<template-each name="item" in="items" key="id">' +
-                  '<li>{{item.name}}</li>' +
-                '</template-each>' +
+                '<li data-each="item in items" data-key="{{item.id}}">' +
+                  '{{item.name}}' +
+                '</li>' +
               '</ul>'
         );
         var data = {items: []};
@@ -222,9 +222,9 @@ section('Randomly remove elements from 100 length list, one at a time - no keys'
     bench('Magery', function (container, iter) {
         createTemplateNode('app',
                 '<ul>' +
-                    '<template-each name="item" in="items">' +
-                        '<li>{{item.name}}</li>' +
-                    '</template-each>' +
+                    '<li data-each="item in items">' +
+                        '{{item.name}}' +
+                    '</li>' +
                 '</ul>'
         );
         var data = {items: []};
@@ -298,9 +298,9 @@ section('Randomly remove elements from 100 length list, one at a time - keys', f
     bench('Magery', function (container, iter) {
         createTemplateNode('app',
                 '<ul>' +
-                    '<template-each name="item" in="items" key="id">' +
-                        '<li>{{item.name}}</li>' +
-                    '</template-each>' +
+                    '<li data-each="item in items" data-key="{{item.id}}">' +
+                        '{{item.name}}' +
+                    '</li>' +
                 '</ul>'
         );
         var data = {items: []};
