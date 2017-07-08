@@ -1,18 +1,25 @@
 # Magery
 
-The easiest JavaScript framework I can think of that could work with
-server-side rendering in _any_ language.
+An easy-to-use JavaScript framework that can work with server-side
+rendering in any language.
+
+Magery uses HTML5 templates and JSON data to render the page. On the
+server, these templates are simple enough to be rendered without a
+JavaScript runtime. On the client, they can be used to dynamically
+update the page simply by changing the JSON data.
 
 ## Aims
 
-* Make your progressive enhancement of multi-page websites easier
-* Be agnostic of your backend language
-* Provide clean separation between your data and markup
-* Be relatively small in filesize, because your enhancements may also be small
-* Prove that you don't _need_ a 'single page app' to write JavaScript that is sophisticated, yet maintainable
+* To make it easier to enhance your multi-page website with JavaScript
+* To work with your choice of back end language
+* To provide clean separation between your data and markup
+* To be relatively lightweight so you can use it for small (or large) enhancements without the commitment of a big dependency
 
-You might also like to read the [blog post][blog-post] that started
-this project (Magery syntax has since been updated).
+I wrote this library to prove that you don't _need_ a 'single page
+app' to build large dynamic websites. If you're interested in the
+motivations behind this framework, you might like to read the [blog
+post][blog-post] that started it (Magery's syntax has since been
+updated).
 
 ## Download
 
