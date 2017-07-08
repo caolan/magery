@@ -118,16 +118,13 @@ var render =
 	};
 
 	Renderer.prototype.children = function (parent, next_data, prev_data, inner) {
-	    console.log(['eachNode', parent.childNodes]);
 	    var self = this;
 	    utils.eachNode(parent.childNodes, function (node) {
-	        console.log(node);
 	        self.child(node, next_data, prev_data, inner);
 	    });
 	};
 
 	Renderer.prototype.flushText = function () {
-	    console.log(['flushText', this.text_buffer]);
 	    if (this.text_buffer) {
 	        this.patcher.text(this.text_buffer);
 	        this.text_buffer = null;
@@ -202,7 +199,6 @@ var render =
 
 	Renderer.prototype.text = function (node, data) {
 	    var str = this.expandVars(node.textContent, data);
-	    console.log(['text', str]);
 	    if (!this.text_buffer) {
 	        this.text_buffer = str;
 	    }
