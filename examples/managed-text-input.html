@@ -22,6 +22,9 @@
          var data = {
              number_str: ''
          };
+         
+         Magery.initTemplates();
+         
          window.app = Magery.bind('container', 'main', data, {
              addDigit: function (event) {
                  this.context.number_str = event.target.value.replace(/[^0-9]/g, '');

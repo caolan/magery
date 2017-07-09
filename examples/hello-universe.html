@@ -18,6 +18,8 @@
         <script>
          var data = {name: 'galaxy'};
 
+         Magery.initTemplates();
+         
          Magery.bind('container', 'myApp', data, {
              updateName: function (event) {
                  this.context.name = event.target.value;

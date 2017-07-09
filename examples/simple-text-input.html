@@ -16,6 +16,9 @@
          var data = {
              name: 'world'
          };
+         
+         Magery.initTemplates();
+         
          window.app = Magery.bind('container', 'main', data, {
              updateName: function (event) {
                  var form = event.target;

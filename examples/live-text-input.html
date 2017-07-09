@@ -13,6 +13,9 @@
          var data = {
              name: 'world'
          };
+
+         Magery.initTemplates();
+         
          window.app = Magery.bind('container', 'main', data, {
              updateName: function (event) {
                  this.context.name = event.target.value;

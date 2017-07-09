@@ -43,6 +43,9 @@
                  name: 'Example'
              }
          };
+         
+         Magery.initTemplates();
+         
          window.app = Magery.bind('container', 'main', data, {
              saveUser: function (event) {
                  event.preventDefault();

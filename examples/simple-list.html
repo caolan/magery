@@ -5,9 +5,9 @@
     <body>
         <template id="main">
             <ul>
-                <template-each name="item" in="app.items">
-                    <li>{{item.name}} <button onclick="removeItem(app, item)">X</button></li>
-                </template-each>
+                <li data-each="item in app.items">
+                    {{item.name}} <button onclick="removeItem(app, item)">X</button>
+                </li>
             </ul>
             <button onclick="addItem(app)">add item</button>
         </template>
@@ -19,6 +19,9 @@
                  items: []
              }
          };
+         
+         Magery.initTemplates();
+         
          window.app = Magery.bind('container', 'main', data, {
              addItem: function (app) {
                  app.items.push({name: '' + Math.random()});

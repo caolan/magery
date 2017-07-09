@@ -63,6 +63,7 @@ To display the "myApp" template we need a HTML page:
 
     <script src="magery.min.js"></script>
     <script>
+      Magery.initTemplates();
       Magery.bind('container', 'myApp', {}, {});
     </script>
   </body>
