@@ -10,6 +10,7 @@ suite('events', function () {
             el.id = id;
         }
         el.innerHTML = src;
+        Magery.initTemplates();
         return el;
     }
 

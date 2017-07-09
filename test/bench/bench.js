@@ -91,6 +91,7 @@ function createTemplateNode(id, src) {
         el.id = id;
     }
     el.innerHTML = src;
+    Magery.initTemplates();
     return el;
 }
 
@@ -169,19 +170,11 @@ section('Add 100 elements to a list, one at a time - keys', function (bench) {
     });
 
     bench('React', function (container, iter) {
-        var Item = React.createClass({
-            shouldComponentUpdate: function(nextProps, nextState) {
-                return nextProps.item.id !== this.props.item.id;
-            },
-            render: function () {
-                return React.createElement('li', null, this.props.item.name);
-            }
-        });
         var App = React.createClass({
             render: function () {
                 var items = this.props.items;
                 return React.createElement('ul', null, items.map(function (item) {
-                    return React.createElement(Item, {key: item.id, item: item});
+                    return React.createElement('li', {key: item.id}, item.name);
                 }));
             }
         });
@@ -239,19 +232,11 @@ section('Randomly remove elements from 100 length list, one at a time - no keys'
     });
 
     bench('React', function (container, iter) {
-        var Item = React.createClass({
-            shouldComponentUpdate: function(nextProps, nextState) {
-                return nextProps.item.id !== this.props.item.id;
-            },
-            render: function () {
-                return React.createElement('li', null, this.props.item.name);
-            }
-        });
         var App = React.createClass({
             render: function () {
                 var items = this.props.items;
                 return React.createElement('ul', null, items.map(function (item) {
-                    return React.createElement(Item, {item: item});
+                    return React.createElement('li', null, item.name);
                 }));
             }
         });
@@ -315,19 +300,11 @@ section('Randomly remove elements from 100 length list, one at a time - keys', f
     });
 
     bench('React', function (container, iter) {
-        var Item = React.createClass({
-            shouldComponentUpdate: function(nextProps, nextState) {
-                return nextProps.item.id !== this.props.item.id;
-            },
-            render: function () {
-                return React.createElement('li', null, this.props.item.name);
-            }
-        });
         var App = React.createClass({
             render: function () {
                 var items = this.props.items;
                 return React.createElement('ul', null, items.map(function (item) {
-                    return React.createElement(Item, {key: item.id, item: item});
+                    return React.createElement('li', {key: item.id}, item.name);
                 }));
             }
         });

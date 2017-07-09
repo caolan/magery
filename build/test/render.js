@@ -82,37 +82,42 @@ var render =
 	    if (!template) {
 	        throw new Error("Template not found: '" + template_id + "'");
 	    }
+	    if (!template.content.initialized) {
+	        throw new Error(
+	            "Template '" + template_id + "' has not been initialized, " +
+	                "call Magery.initTemplates() first"
+	        );
+	    }
 	    this.children(template.content, next_data, prev_data, inner);
 	};
 
 	Renderer.prototype.each = function (node, next_data, prev_data, inner) {
-	    var parts = node.dataset.each.split(' in ');
-	    var path = utils.propertyPath(parts[1]);
-	    var iterable = utils.lookup(next_data, path);
+	    var name = node._each_name;
+	    var iterable = utils.lookup(next_data, node._each_iterable);
 	    for (var i = 0, len = iterable.length; i < len; i++) {
 	        var item = iterable[i];
 	        var d = Object.assign({}, next_data);
-	        d[parts[0]] = item;
+	        d[name] = item;
 	        this.element(node, d, prev_data);
 	    }
 	};
 
 	Renderer.prototype.child = function (node, next_data, prev_data, inner) {
 	    if (utils.isTextNode(node)) {
-	        this.text(node, next_data);
+	        return this.text(node, next_data);
 	    }
 	    else if (utils.isElementNode(node)) {
-	        if (node.tagName == 'TEMPLATE-CALL') {
-	            this.templateCall(node, next_data, prev_data, inner);
+	        if (node._template_call) {
+	            return this.templateCall(node, next_data, prev_data, inner);
 	        }
-	        else if (node.tagName == 'TEMPLATE-CHILDREN') {
-	            inner();
+	        else if (node._template_children) {
+	            return inner();
 	        }
-	        else if (node.dataset.each) {
-	            this.each(node, next_data, prev_data, inner);
+	        else if (node._each_name) {
+	            return this.each(node, next_data, prev_data, inner);
 	        }
 	        else {
-	            this.element(node, next_data, prev_data, inner);
+	            return this.element(node, next_data, prev_data, inner);
 	        }
 	    }
 	};
@@ -140,15 +145,15 @@ var render =
 
 	Renderer.prototype.element = function (node, next_data, prev_data, inner) {
 	    var path, test;
-	    if (node.dataset['if']) {
-	        path = utils.propertyPath(node.dataset['if']);
+	    if (node._if) {
+	        path = node._if;
 	        test = utils.lookup(next_data, path);
 	        if (!isTruthy(test)) {
 	            return;
 	        }
 	    }
-	    if (node.dataset['unless']) {
-	        path = utils.propertyPath(node.dataset['unless']);
+	    if (node._unless) {
+	        path = node._unless;
 	        test = utils.lookup(next_data, path);
 	        if (isTruthy(test)) {
 	            return;
@@ -156,22 +161,16 @@ var render =
 	    }
 	    this.flushText();
 	    var key = null;
-	    if (node.dataset.key) {
-	        key = this.expandVars(node.dataset.key, next_data);
+	    if (node._key) {
+	        key = this.expandVars(node._key, next_data);
 	    }
 	    this.patcher.enterTag(node.tagName, key);
 	    for (var i = 0, len = node.attributes.length; i < len; i++) {
 	        var attr = node.attributes[i];
-	        if (attr.name == 'data-each' ||
-	            attr.name == 'data-if' ||
-	            attr.name == 'data-unless' ||
-	            attr.name == 'data-key') {
-	            continue;
-	        }
-	        var event_match = /^on([a-zA-Z]+)/.exec(attr.name);
-	        if (event_match) {
+	        var name = attr.name;
+	        if (name[0] == 'o' && name[1] == 'n') {
 	            this.patcher.eventListener(
-	                event_match[1],
+	                name.substr(2),
 	                attr.value,
 	                next_data,
 	                this.bound_template
@@ -179,7 +178,7 @@ var render =
 	        }
 	        else {
 	            this.patcher.attribute(
-	                attr.name,
+	                name,
 	                this.expandVars(attr.value, next_data)
 	            );
 	        }

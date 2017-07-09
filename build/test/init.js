@@ -253,6 +253,7 @@ var init =
 	exports.elementPaths = function (node) {
 	    var paths = {};
 	    var remove = null;
+	    var path;
 	    if (node.attributes) {
 	        for (var i = 0, len = node.attributes.length; i < len; i++) {
 	            var attr = node.attributes[i];
@@ -263,14 +264,34 @@ var init =
 	                        'Badly formed data-each attribute value: ' + attr.value
 	                    );
 	                }
-	                exports.markPath(paths, utils.propertyPath(parts[1]));
+	                path = utils.propertyPath(parts[1]);
+	                exports.markPath(paths, path);
 	                remove = parts[0];
+	                node._each_name = parts[0];
+	                node._each_iterable = path;
 	            }
-	            if (attr.name == 'data-if' || attr.name == 'data-unless') {
-	                exports.markPath(paths, utils.propertyPath(attr.value));
+	            if (attr.name == 'data-if') {
+	                path = utils.propertyPath(attr.value);
+	                exports.markPath(paths, path);
+	                node._if = path;
 	            }
-	            exports.mergePaths(paths, exports.stringPaths(attr.value));
+	            else if (attr.name == 'data-unless') {
+	                path = utils.propertyPath(attr.value);
+	                exports.markPath(paths, path);
+	                node._unless = path;
+	            }
+	            else if (attr.name == 'data-key') {
+	                exports.mergePaths(paths, exports.stringPaths(attr.value));
+	                node._key = attr.value;
+	            }
+	            else {
+	                exports.mergePaths(paths, exports.stringPaths(attr.value));
+	            }
 	        }
+	        node.removeAttribute('data-each');
+	        node.removeAttribute('data-if');
+	        node.removeAttribute('data-unless');
+	        node.removeAttribute('data-key');
 	    }
 	    paths = updateChildPaths(paths, node);
 	    if (remove) {
@@ -285,6 +306,7 @@ var init =
 	        var attr = node.attributes[i];
 	        if (attr.name === 'template') {
 	            exports.mergePaths(paths, exports.stringPaths(attr.value));
+	            node._template_call = attr.value;
 	        }
 	        else {
 	            exports.markPath(paths, utils.propertyPath(attr.value));
@@ -295,6 +317,7 @@ var init =
 	}
 
 	function templateChildrenPaths(node) {
+	    node._template_children = true;
 	    return false;
 	}
 
@@ -328,6 +351,7 @@ var init =
 	        var paths = initNode(tmpl);
 	        tmpl.static = (paths && Object.keys(paths).length === 0);
 	        tmpl.active_paths = paths;
+	        tmpl.initialized = true;
 	    }
 	};
 
