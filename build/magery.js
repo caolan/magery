@@ -48,9 +48,9 @@ var Magery =
 	"use strict";
 
 	var context = __webpack_require__(1);
-	var render = __webpack_require__(2);
-	var patch = __webpack_require__(4);
-	var init = __webpack_require__(7);
+	var patch = __webpack_require__(2);
+	var active_paths = __webpack_require__(6);
+	var compile = __webpack_require__(7);
 
 
 	/***** Public API *****/
@@ -77,23 +77,42 @@ var Magery =
 	    }
 	};
 
-	exports.bind = function (node, template, data, handlers) {
+	exports.bind = function (node, template_id, data, handlers) {
 	    if (typeof node === 'string') {
 	        node = document.getElementById(node);
 	    }
+	    var template = document.getElementById(template_id).content;
 	    var bound = new BoundTemplate(node, template, data, handlers);
 	    var patcher = new patch.Patcher(node);
-	    var renderer = new render.Renderer(patcher, bound);
+	    var render_state = {
+	        bound_template: bound,
+	        patcher: patcher,
+	        text_buffer: ""
+	    };
 	    bound.update = function () {
-	        renderer.render(this.template, this.context, null);
+	        var next_data = this.context;
+	        var prev_data = null;
+	        patcher.start();
+	        this.template.render(render_state, next_data, prev_data);
+	        patcher.end();
 	        this.update_queued = false;
 	    };
 	    bound.update();
 	    return bound;
 	};
 
+	exports.initTemplates = function () {
+	    var templates = document.getElementsByTagName('template');
+	    for (var i = 0, len = templates.length; i < len; i++) {
+	        var tmpl = templates[i].content;
+	        active_paths.markTemplatePaths(tmpl);
+	        var children = compile.compileChildren(tmpl);
+	        tmpl.render_children = children;
+	        tmpl.render = compile.wrapTemplate(children);
+	    }
+	};
+
 	exports.BoundTemplate = BoundTemplate;
-	exports.initTemplates = init.initTemplates;
 
 
 /***/ }),
@@ -221,261 +240,6 @@ var Magery =
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
-	 * Walks a template node tree, sending render events to the patcher via method
-	 * calls. All interaction with the DOM should be done in the patcher/transforms,
-	 * these functions only process template nodes and prev/next data in order to
-	 * emit events.
-	 */
-
-	var utils = __webpack_require__(3);
-
-
-	function Renderer(patcher, bound_template) {
-	    this.bound_template = bound_template;
-	    this.patcher = patcher;
-	    this.text_buffer = null;
-	}
-
-	Renderer.prototype.render = function (template_id, next_data, prev_data) {
-	    this.patcher.start();
-	    this.renderTemplate(template_id, next_data, prev_data, null);
-	    this.flushText();
-	    this.patcher.end(next_data);
-	};
-
-	Renderer.prototype.renderTemplate = function (template_id, next_data, prev_data, inner) {
-	    var template = document.getElementById(template_id);
-	    if (!template) {
-	        throw new Error("Template not found: '" + template_id + "'");
-	    }
-	    if (!template.content.initialized) {
-	        throw new Error(
-	            "Template '" + template_id + "' has not been initialized, " +
-	                "call Magery.initTemplates() first"
-	        );
-	    }
-	    this.children(template.content, next_data, prev_data, inner);
-	};
-
-	Renderer.prototype.each = function (node, next_data, prev_data, inner) {
-	    var name = node._each_name;
-	    var iterable = utils.lookup(next_data, node._each_iterable);
-	    for (var i = 0, len = iterable.length; i < len; i++) {
-	        var item = iterable[i];
-	        var d = Object.assign({}, next_data);
-	        d[name] = item;
-	        this.element(node, d, prev_data);
-	    }
-	};
-
-	Renderer.prototype.child = function (node, next_data, prev_data, inner) {
-	    if (utils.isTextNode(node)) {
-	        return this.text(node, next_data);
-	    }
-	    else if (utils.isElementNode(node)) {
-	        if (node._template_call) {
-	            return this.templateCall(node, next_data, prev_data, inner);
-	        }
-	        else if (node._template_children) {
-	            return inner();
-	        }
-	        else if (node._each_name) {
-	            return this.each(node, next_data, prev_data, inner);
-	        }
-	        else {
-	            return this.element(node, next_data, prev_data, inner);
-	        }
-	    }
-	};
-
-	Renderer.prototype.children = function (parent, next_data, prev_data, inner) {
-	    var self = this;
-	    utils.eachNode(parent.childNodes, function (node) {
-	        self.child(node, next_data, prev_data, inner);
-	    });
-	};
-
-	Renderer.prototype.flushText = function () {
-	    if (this.text_buffer) {
-	        this.patcher.text(this.text_buffer);
-	        this.text_buffer = null;
-	    }
-	};
-
-	function isTruthy(x) {
-	    if (Array.isArray(x)) {
-	        return x.length > 0;
-	    }
-	    return x;
-	}
-
-	Renderer.prototype.element = function (node, next_data, prev_data, inner) {
-	    var path, test;
-	    if (node._if) {
-	        path = node._if;
-	        test = utils.lookup(next_data, path);
-	        if (!isTruthy(test)) {
-	            return;
-	        }
-	    }
-	    if (node._unless) {
-	        path = node._unless;
-	        test = utils.lookup(next_data, path);
-	        if (isTruthy(test)) {
-	            return;
-	        }
-	    }
-	    this.flushText();
-	    var key = null;
-	    if (node._key) {
-	        key = this.expandVars(node._key, next_data);
-	    }
-	    this.patcher.enterTag(node.tagName, key);
-	    for (var i = 0, len = node.attributes.length; i < len; i++) {
-	        var attr = node.attributes[i];
-	        var name = attr.name;
-	        if (name[0] == 'o' && name[1] == 'n') {
-	            this.patcher.eventListener(
-	                name.substr(2),
-	                attr.value,
-	                next_data,
-	                this.bound_template
-	            );
-	        }
-	        else {
-	            this.patcher.attribute(
-	                name,
-	                this.expandVars(attr.value, next_data)
-	            );
-	        }
-	    }
-	    this.children(node, next_data, prev_data, inner);
-	    this.flushText();
-	    this.patcher.exitTag();
-	};
-
-	Renderer.prototype.expandVars = function (str, data) {
-	    return str.replace(/{{\s*([^}]+?)\s*}}/g,
-	        function (full, property) {
-	            return utils.lookup(data, utils.propertyPath(property));
-	        }
-	    );
-	};
-
-	Renderer.prototype.text = function (node, data) {
-	    var str = this.expandVars(node.textContent, data);
-	    if (!this.text_buffer) {
-	        this.text_buffer = str;
-	    }
-	    else {
-	        this.text_buffer += str;
-	    }
-	};
-
-	Renderer.prototype.templateCall = function (node, next_data, prev_data, inner) {
-	    var attr = node.getAttribute('template');
-	    if (!attr) {
-	        throw new Error("<template-call> tags must include a 'template' attribute");
-	    }
-	    var template_id = this.expandVars(attr, next_data);
-	    var nd = {};
-	    for (var i = 0, len = node.attributes.length; i < len; i++) {
-	        var name = node.attributes[i].name;
-	        if (name !== 'template') {
-	            var path = utils.propertyPath(node.attributes[i].value);
-	            var value = utils.lookup(next_data, path);
-	            nd[name] = value;
-	        }
-	    }
-	    var self = this;
-	    this.renderTemplate(template_id, nd, prev_data, function () {
-	        self.children(node, next_data, prev_data, inner);
-	    });
-	};
-
-	exports.Renderer = Renderer;
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports) {
-
-	var ELEMENT_NODE = 1;
-	var TEXT_NODE = 3;
-	var DOCUMENT_FRAGMENT = 11;
-
-	exports.isDocumentFragment = function (node) {
-	    return node.nodeType === DOCUMENT_FRAGMENT;
-	};
-
-	exports.isElementNode = function (node) {
-	    return node.nodeType === ELEMENT_NODE;
-	};
-
-	exports.isTextNode = function (node) {
-	    return node.nodeType === TEXT_NODE;
-	};
-
-	exports.eachNode = function (nodelist, f) {
-	    var i = 0;
-	    var node = nodelist[0];
-	    while (node) {
-	        var tmp = node;
-	        // need to call nextSibling before f() because f()
-	        // might remove the node from the DOM
-	        node = node.nextSibling;
-	        f(tmp, i++, nodelist);
-	    }
-	};
-
-	exports.mapNodes = function (nodelist, f) {
-	    var results = [];
-	    exports.eachNode(nodelist, function (node, i) {
-	        results[i] = f(node, i, nodelist);
-	    });
-	    return results;
-	};
-
-	exports.propertyPath = function (str) {
-	    return str.split('.').filter(function (x) {
-	        return x;
-	    });
-	};
-
-	// finds property path array (e.g. ['foo', 'bar']) in data object
-	exports.lookup = function (data, props) {
-	    var value = data;
-	    for(var i = 0, len = props.length; i < len; i++) {
-	        if (value === undefined || value === null) {
-	            return '';
-	        }
-	        value = value[props[i]];
-	    }
-	    return (value === undefined || value === null) ? '' : value;
-	};
-
-	exports.isTemplateTag = function (node) {
-	    return /^TEMPLATE-/.test(node.tagName);
-	};
-
-	exports.templateTagName = function (node) {
-	    if (node._template_tag) {
-	        return node._template_tag;
-	    }
-	    var m = /^TEMPLATE-([^\s/>]+)/.exec(node.tagName);
-	    if (!m) {
-	        throw new Error('Not a template tag: ' + node.tagName);
-	    }
-	    node._template_tag = m[1].toLowerCase();
-	    return node._template_tag;
-	};
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	/**
 	 * Processes render events (e.g. enterTag, exitTag) and matches them against the
 	 * current state of the DOM. Where there is a mismatch a transform function is
 	 * called to reconcile the differences. The Patcher code should only _read_ the
@@ -483,8 +247,8 @@ var Magery =
 	 */
 
 	var utils = __webpack_require__(3);
-	var transforms = __webpack_require__(5);
-	var Set = __webpack_require__(6);
+	var transforms = __webpack_require__(4);
+	var Set = __webpack_require__(5);
 
 	var ELEMENT_NODE = 1;
 	var TEXT_NODE = 3;
@@ -773,7 +537,75 @@ var Magery =
 
 
 /***/ }),
-/* 5 */
+/* 3 */
+/***/ (function(module, exports) {
+
+	var ELEMENT_NODE = 1;
+	var TEXT_NODE = 3;
+	var DOCUMENT_FRAGMENT = 11;
+
+	exports.isDocumentFragment = function (node) {
+	    return node.nodeType === DOCUMENT_FRAGMENT;
+	};
+
+	exports.isElementNode = function (node) {
+	    return node.nodeType === ELEMENT_NODE;
+	};
+
+	exports.isTextNode = function (node) {
+	    return node.nodeType === TEXT_NODE;
+	};
+
+	exports.eachNode = function (nodelist, f) {
+	    var i = 0;
+	    var node = nodelist[0];
+	    while (node) {
+	        var tmp = node;
+	        // need to call nextSibling before f() because f()
+	        // might remove the node from the DOM
+	        node = node.nextSibling;
+	        f(tmp, i++, nodelist);
+	    }
+	};
+
+	exports.mapNodes = function (nodelist, f) {
+	    var results = [];
+	    exports.eachNode(nodelist, function (node, i) {
+	        results[i] = f(node, i, nodelist);
+	    });
+	    return results;
+	};
+
+	exports.trim = function (str) {
+	    return str.replace(/^\s+|\s+$/g, '');
+	};
+
+	exports.propertyPath = function (str) {
+	    return str.split('.').filter(function (x) {
+	        return x;
+	    });
+	};
+
+	// finds property path array (e.g. ['foo', 'bar']) in data object
+	exports.lookup = function (data, props) {
+	    var value = data;
+	    for(var i = 0, len = props.length; i < len; i++) {
+	        if (value === undefined || value === null) {
+	            return '';
+	        }
+	        value = value[props[i]];
+	    }
+	    return (value === undefined || value === null) ? '' : value;
+	};
+
+	exports.templateTagName = function (node) {
+	    var m = /^TEMPLATE-([^\s/>]+)/.exec(node.tagName);
+	    return m && m[1].toLowerCase();
+	};
+
+
+/***/ }),
+/* 4 */
 /***/ (function(module, exports) {
 
 	/**
@@ -864,7 +696,7 @@ var Magery =
 
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ (function(module, exports) {
 
 	function Set() {
@@ -884,7 +716,7 @@ var Magery =
 
 
 /***/ }),
-/* 7 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var utils = __webpack_require__(3);
@@ -1024,31 +856,19 @@ var Magery =
 	                path = utils.propertyPath(parts[1]);
 	                exports.markPath(paths, path);
 	                remove = parts[0];
-	                node._each_name = parts[0];
-	                node._each_iterable = path;
 	            }
 	            if (attr.name == 'data-if') {
 	                path = utils.propertyPath(attr.value);
 	                exports.markPath(paths, path);
-	                node._if = path;
 	            }
 	            else if (attr.name == 'data-unless') {
 	                path = utils.propertyPath(attr.value);
 	                exports.markPath(paths, path);
-	                node._unless = path;
-	            }
-	            else if (attr.name == 'data-key') {
-	                exports.mergePaths(paths, exports.stringPaths(attr.value));
-	                node._key = attr.value;
 	            }
 	            else {
 	                exports.mergePaths(paths, exports.stringPaths(attr.value));
 	            }
 	        }
-	        node.removeAttribute('data-each');
-	        node.removeAttribute('data-if');
-	        node.removeAttribute('data-unless');
-	        node.removeAttribute('data-key');
 	    }
 	    paths = updateChildPaths(paths, node);
 	    if (remove) {
@@ -1063,7 +883,6 @@ var Magery =
 	        var attr = node.attributes[i];
 	        if (attr.name === 'template') {
 	            exports.mergePaths(paths, exports.stringPaths(attr.value));
-	            node._template_call = attr.value;
 	        }
 	        else {
 	            exports.markPath(paths, utils.propertyPath(attr.value));
@@ -1074,7 +893,6 @@ var Magery =
 	}
 
 	function templateChildrenPaths(node) {
-	    node._template_children = true;
 	    return false;
 	}
 
@@ -1087,29 +905,247 @@ var Magery =
 	    if (utils.isTextNode(node)) {
 	        return exports.stringPaths(node.textContent);
 	    }
-	    else if (utils.isTemplateTag(node)) {
+	    else {
 	        var name = utils.templateTagName(node);
-	        var f = templateTags[name];
-	        if (!f) {
-	            throw new Error('Unknown template tag: ' + node.tagName);
+	        if (name) {
+	            var f = templateTags[name];
+	            if (!f) {
+	                throw new Error('Unknown template tag: ' + node.tagName);
+	            }
+	            return f(node);
 	        }
-	        return f(node);
-	    }
-	    else if (utils.isElementNode(node) || utils.isDocumentFragment(node)) {
-	        return exports.elementPaths(node);
+	        else if (utils.isElementNode(node) || utils.isDocumentFragment(node)) {
+	            return exports.elementPaths(node);
+	        }
 	    }
 	    return false;
 	}
 
-	exports.initTemplates = function () {
-	    var templates = document.getElementsByTagName('template');
-	    for (var i = 0, len = templates.length; i < len; i++) {
-	        var tmpl = templates[i].content;
-	        var paths = initNode(tmpl);
-	        tmpl.static = (paths && Object.keys(paths).length === 0);
-	        tmpl.active_paths = paths;
-	        tmpl.initialized = true;
+	exports.markTemplatePaths = function (tmpl) {
+	    var paths = initNode(tmpl);
+	    tmpl.static = (paths && Object.keys(paths).length === 0);
+	    tmpl.active_paths = paths;
+	};
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	var utils = __webpack_require__(3);
+
+	function run_all(xs) {
+	    var funs = xs.filter(function (x) { return x; });
+	    var length = funs.length;
+	    return function (state, next_data, prev_data, inner) {
+	        var index = -1;
+	        while (++index < length) {
+	            funs[index](state, next_data, prev_data, inner);
+	        }
+	    };
+	}
+
+	function flushText(state) {
+	    if (state.text_buffer) {
+	        state.patcher.text(state.text_buffer);
+	        state.text_buffer = '';
 	    }
+	}
+
+	function compileExpandVars(str) {
+	    var parts = str.split(/{{|}}/);
+	    var length = parts.length;
+	    var i = -1;
+	    while (++i < length) {
+	        if (i % 2) {
+	            var path = utils.propertyPath(utils.trim(parts[i]));
+	            parts[i] = path;
+	        }
+	    }
+	    return function (data) {
+	        var result = '';
+	        var i = -1;
+	        while (++i < length) {
+	            result += (i % 2) ? utils.lookup(data, parts[i]) : parts[i];
+	        }
+	        return result;
+	    };
+	}
+
+	function compileText(node) {
+	    var txt = node.textContent;
+	    var expand = compileExpandVars(txt);
+	    return function (state, next_data, prev_data, inner) {
+	        state.text_buffer += expand(next_data);
+	    };
+	}
+
+	function compileElement(node) {
+	    var children = exports.compileChildren(node);
+	    var expand_key = null;
+	    if (node.dataset.key) {
+	        expand_key = compileExpandVars(node.dataset.key);
+	    }
+	    var events = {};
+	    var attrs = {};
+	    for (var i = 0, len = node.attributes.length; i < len; i++) {
+	        var attr = node.attributes[i];
+	        var name = attr.name;
+	        if (name == 'data-each' ||
+	            name == 'data-if' ||
+	            name == 'data-unless' ||
+	            name == 'data-key') {
+	            continue;
+	        }
+	        var event = name.match(/^on(.*)/, event);
+	        if (event) {
+	            var event_name = event[1];
+	            events[event_name] = attr.value;
+	        }
+	        else {
+	            attrs[name] = compileExpandVars(attr.value);
+	        }
+	    }
+	    var render = function (state, next_data, prev_data, inner) {
+	        var key = expand_key ? expand_key(next_data) : null;
+	        flushText(state);
+	        state.patcher.enterTag(node.tagName, key);
+	        for (var attr_name in attrs) {
+	            state.patcher.attribute(attr_name, attrs[attr_name](next_data));
+	        }
+	        for (var event_name in events) {
+	            state.patcher.eventListener(
+	                event_name,
+	                events[event_name],
+	                next_data,
+	                state.bound_template
+	            );
+	        }
+	        children(state, next_data, prev_data, inner);
+	        flushText(state);
+	        state.patcher.exitTag();
+	    };
+	    if (node.dataset.unless) {
+	        render = compileUnless(node, render);
+	    }
+	    if (node.dataset.if) {
+	        render = compileIf(node, render);
+	    }
+	    if (node.dataset.each) {
+	        render = compileEach(node, render);
+	    }
+	    return render;
+	}
+
+	function isTruthy(x) {
+	    if (Array.isArray(x)) {
+	        return x.length > 0;
+	    }
+	    return x;
+	}
+
+	function compileUnless(node, render) {
+	    var path = utils.propertyPath(node.dataset.unless);
+	    return function (state, next_data, prev_data, inner) {
+	        if (!isTruthy(utils.lookup(next_data, path))) {
+	            render(state, next_data, prev_data, inner);
+	        }
+	    };
+	}
+
+	function compileIf(node, render) {
+	    var path = utils.propertyPath(node.dataset.if);
+	    return function (state, next_data, prev_data, inner) {
+	        if (isTruthy(utils.lookup(next_data, path))) {
+	            render(state, next_data, prev_data, inner);
+	        }
+	    };
+	}
+
+	function compileEach(node, render) {
+	    var parts = node.dataset.each.split(' in ');
+	    var name = parts[0];
+	    var path = utils.propertyPath(parts[1]);
+	    return function (state, next_data, prev_data, inner) {
+	        var next_arr = utils.lookup(next_data, path);
+	        var prev_arr = utils.lookup(prev_data, path);
+	        var length = next_arr.length;
+	        var index = -1;
+	        while (++index < length) {
+	            var next_data2 = Object.assign({}, next_data);
+	            var prev_data2 = Object.assign({}, prev_data);
+	            next_data2[name] = next_arr[index];
+	            prev_data2[name] = prev_arr && prev_arr[index];
+	            render(state, next_data2, prev_data2, inner);
+	        }
+	    };
+	}
+
+	function compileTemplateCall(node) {
+	    var attr = node.getAttribute('template');
+	    if (!attr) {
+	        throw new Error("<template-call> tags must include a 'template' attribute");
+	    }
+	    var template_id_pattern = compileExpandVars(attr);
+	    var children = exports.compileChildren(node);
+	    return function (state, next_data, prev_data, inner) {
+	        var template_id = template_id_pattern(next_data);
+	        var template = document.getElementById(template_id);
+	        if (!template) {
+	            throw new Error("Template not found: '" + template_id + "'");
+	        }
+	        var next_data2 = {};
+	        var prev_data2 = {};
+	        for (var i = 0, len = node.attributes.length; i < len; i++) {
+	            var name = node.attributes[i].name;
+	            if (name !== 'template') {
+	                var path = utils.propertyPath(node.attributes[i].value);
+	                next_data2[name] = utils.lookup(next_data, path);
+	                prev_data2[name] = utils.lookup(prev_data, path);
+	            }
+	        }
+	        var self = this;
+	        template.content.render_children(state, next_data2, prev_data2, function () {
+	            children(state, next_data, prev_data, inner);
+	        });
+	    };
+	}
+
+	function compileNode(node) {
+	    if (utils.isTextNode(node)) {
+	        return compileText(node);
+	    }
+	    else if (utils.isElementNode(node)) {
+	        var name = utils.templateTagName(node);
+	        if (name) {
+	            if (name == 'call') {
+	                return compileTemplateCall(node);
+	            }
+	            else if (name == 'children') {
+	                return function (state, next_data, prev_data, inner) {
+	                    inner && inner();
+	                };
+	            }
+	            throw new Error(
+	                'Unkonwn template tag: <template-' + name + '>'
+	            );
+	        }
+	        return compileElement(node);
+	    }
+	    return null;
+	}
+
+	exports.compileChildren = function (parent) {
+	    return run_all(utils.mapNodes(parent.childNodes, compileNode));
+	}
+
+	exports.wrapTemplate = function (children) {
+	    return function (state, next_data, prev_data, inner) {
+	        state.patcher.start();
+	        children(state, next_data, prev_data, inner);
+	        flushText(state);
+	        state.patcher.end();
+	    };
 	};
 
 

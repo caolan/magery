@@ -7,15 +7,17 @@
 <body>
   <h1>Benchmarks</h1>
   <p>These are incredibly naive tests which exist only to sanity check the algorithm and it's performance. Please don't take them too seriously.</p>
-  <div id="results"></div>
-  <div id="container"></div>
+  <pre id="results"></pre>
   <div id="output" style="display: none;"></div>
-  <script src="chartist.min.js"></script>
+  <!-- <script src="chartist.min.js"></script> -->
   <!-- NOTE: use the minified production build of React to turn off its dev tooling for the benchmark -->
   <script src="react-15.6.1.min.js"></script>
   <script src="react-dom-15.6.1.min.js"></script>
   <script src="incremental-dom.js"></script>
   <script src="../../build/magery.js"></script>
-  <script src="bench.js"></script>
+  <script src="lodash.js"></script>
+  <script src="platform.js"></script>
+  <script src="benchmark.js"></script>
+  <script src="run.js"></script>
   </body>
 </html>

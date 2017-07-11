@@ -342,6 +342,85 @@ section('Randomly remove elements from 100 length list, one at a time - keys', f
 
 });
 
+section('Add 100 more complex elements to a list, one at a time', function (bench) {
+
+    bench('Magery', function (container, iter) {
+        createTemplateNode('app',
+                           '<div id="container">' +
+              '<ul>' +
+                '<li data-each="item in items" data-key="{{item.id}}">' +
+                   '<span data-if="item.published">Published</span>' +
+                   '<strong>{{item.name}}</strong>' +
+                '</li>' +
+              '</ul>' +
+            '</div>'
+        );
+        var data = {items: []};
+        var app = Magery.bind(container, 'app', data, {});
+        iter(100, function (i) {
+            app.context.items.push({id: i, name: 'item' + i});
+            app.update();
+        });
+    });
+
+    bench('React', function (container, iter) {
+        var App = React.createClass({
+            render: function () {
+                var items = this.props.items;
+                return React.createElement('div', {id: 'container'}, [
+                    React.createElement('ul', null, items.map(function (item) {
+                        var children = [];
+                        if (item.published) {
+                            children.push(
+                                React.createElement('span', null, 'Published')
+                            );
+                        }
+                        children.push(
+                            React.createElement('strong', null, item.name)
+                        );
+                        return React.createElement('li', {key: item.id}, children);
+                    }))
+                ]);
+            }
+        });
+        var data = {items: []};
+        iter(100, function (i) {
+            data.items.push({id: i, name: 'item' + i});
+            ReactDOM.render(React.createElement(App, data), container);
+        });
+    });
+
+    bench('IncrementalDOM', function (container, iter) {
+        function render(data) {
+            idom.elementOpen('div', null, null, 'id', 'container');
+            idom.elementOpen('ul', null, null);
+            data.items.forEach(function (item) {
+                idom.elementOpen('li', item.id, null);
+                if (item.published) {
+                    idom.elementOpen('span', null, null);
+                    idom.text('Published');
+                    idom.elementClose('span');
+                }
+                idom.elementOpen('strong', null, null);
+                idom.text(item.name);
+                idom.elementClose('strong');
+                idom.elementClose('li');
+            });
+            idom.elementClose('ul');
+            idom.elementClose('div');
+        }
+        var data = {items: []};
+        iter(100, function (i) {
+            data.items.push({id: i, name: 'item' + i});
+            idom.patch(container, function() {
+                render(data);
+            });
+        });
+    });
+
+});
+
+
 section('Live update a managed text box', function (bench) {
 
     function input(el, value){

@@ -1,4 +1,4 @@
-suite('initTemplates', function () {
+suite('active_paths', function () {
 
     var assert = chai.assert;
 
@@ -22,21 +22,21 @@ suite('initTemplates', function () {
 
     test('markPath', function () {
         var obj = {};
-        init.markPath(obj, ['foo', 'bar', 'baz']);
+        active_paths.markPath(obj, ['foo', 'bar', 'baz']);
         assert.deepEqual(obj, {foo: {bar: {baz: true}}});
-        init.markPath(obj, ['foo', 'bar', 'qux']);
+        active_paths.markPath(obj, ['foo', 'bar', 'qux']);
         assert.deepEqual(obj, {foo: {bar: true}});
-        init.markPath(obj, ['wibble', 'wobble']);
+        active_paths.markPath(obj, ['wibble', 'wobble']);
         assert.deepEqual(obj, {
             foo: {bar: true},
             wibble: {wobble: true}
         });
-        init.markPath(obj, ['wibble', 'wubble']);
+        active_paths.markPath(obj, ['wibble', 'wubble']);
         assert.deepEqual(obj, {
             foo: {bar: true},
             wibble: true
         });
-        init.markPath(obj, ['foo', 'quux']);
+        active_paths.markPath(obj, ['foo', 'quux']);
         assert.deepEqual(obj, {
             foo: true,
             wibble: true
@@ -46,16 +46,16 @@ suite('initTemplates', function () {
     test('mergePaths', function () {
         var a = {};
         var b = {};
-        init.mergePaths(a, b);
+        active_paths.mergePaths(a, b);
         assert.deepEqual(a, {});
         b = {foo: {bar: {baz: true}}};
-        init.mergePaths(a, b);
+        active_paths.mergePaths(a, b);
         assert.deepEqual(a, {foo: {bar: {baz: true}}});
         b = {foo: {bar: {qux: true}}, wibble: {wobble: true}};
-        init.mergePaths(a, b);
+        active_paths.mergePaths(a, b);
         assert.deepEqual(a, {foo: {bar: true}, wibble: {wobble: true}});
         b = {wibble: {wubble: true}, one: {two: true}};
-        init.mergePaths(a, b);
+        active_paths.mergePaths(a, b);
         assert.deepEqual(a, {
             foo: {bar: true},
             wibble: true,
@@ -64,15 +64,15 @@ suite('initTemplates', function () {
     });
 
     test('equivalentPathObjects', function () {
-        assert.ok(init.equivalentPathObjects(
+        assert.ok(active_paths.equivalentPathObjects(
             {foo: {bar: {baz: true}}},
             {foo: {bar: {baz: true}}}
         ));
-        assert.ok(!init.equivalentPathObjects(
+        assert.ok(!active_paths.equivalentPathObjects(
             {foo: {bar: {baz: true}}},
             {foo: {bar: true}}
         ));
-        assert.ok(init.equivalentPathObjects(
+        assert.ok(active_paths.equivalentPathObjects(
             {
                 foo: {bar: {baz: true}},
                 wibble: {wobble: true}
@@ -82,7 +82,7 @@ suite('initTemplates', function () {
                 wibble: {wobble: true}
             }
         ));
-        assert.ok(!init.equivalentPathObjects(
+        assert.ok(!active_paths.equivalentPathObjects(
             {
                 foo: {bar: {baz: true}},
                 wibble: {wobble: true}
@@ -92,7 +92,7 @@ suite('initTemplates', function () {
                 wibble: {wubble: true}
             }
         ));
-        assert.ok(!init.equivalentPathObjects(
+        assert.ok(!active_paths.equivalentPathObjects(
             {
                 foo: {bar: true},
                 baz: true
@@ -101,7 +101,7 @@ suite('initTemplates', function () {
                 foo: {bar: true}
             }
         ));
-        assert.ok(!init.equivalentPathObjects(
+        assert.ok(!active_paths.equivalentPathObjects(
             {
                 foo: {bar: true}
             },
@@ -114,22 +114,22 @@ suite('initTemplates', function () {
 
     test('stringPaths', function () {
         assert.deepEqual(
-            init.stringPaths("{{foo}}"),
+            active_paths.stringPaths("{{foo}}"),
             {foo: true}
         );
         assert.deepEqual(
-            init.stringPaths('Hello, {{user.name}}!'),
+            active_paths.stringPaths('Hello, {{user.name}}!'),
             {user: {name: true}}
         );
         assert.deepEqual(
-            init.stringPaths('{{article.title}} by {{user.name}}'),
+            active_paths.stringPaths('{{article.title}} by {{user.name}}'),
             {
                 article: {title: true},
                 user: {name: true}
             }
         );
         assert.deepEqual(
-            init.stringPaths('{{article.title}} by {{user.name}} ({{user.nick}})'),
+            active_paths.stringPaths('{{article.title}} by {{user.name}} ({{user.nick}})'),
             {
                 article: {title: true},
                 user: true
@@ -137,7 +137,7 @@ suite('initTemplates', function () {
         );
         // with spaces around property names
         assert.deepEqual(
-            init.stringPaths('{{  user.name  }}'),
+            active_paths.stringPaths('{{  user.name  }}'),
             {user: {name: true}}
         );
     });
@@ -147,13 +147,13 @@ suite('initTemplates', function () {
 
         container.innerHTML = '<span></span>';
         assert.deepEqual(
-            init.elementPaths(container.childNodes[0]),
+            active_paths.elementPaths(container.childNodes[0]),
             {}
         );
 
         container.innerHTML = '<h1>{{title}}</h1>';
         assert.deepEqual(
-            init.elementPaths(container.childNodes[0]),
+            active_paths.elementPaths(container.childNodes[0]),
             {title: true}
         );
         assert.ok(!container.childNodes[0].childNodes[0].static);
@@ -161,7 +161,7 @@ suite('initTemplates', function () {
         
         container.innerHTML = '<img src="{{user.avatar.url}}" />';
         assert.deepEqual(
-            init.elementPaths(container.childNodes[0]),
+            active_paths.elementPaths(container.childNodes[0]),
             {user: {avatar: {url: true}}}
         );
         
@@ -169,7 +169,7 @@ suite('initTemplates', function () {
             '{{title}} by <span class="author">{{user.name}}</span>' +
             '</h1>';
         assert.deepEqual(
-            init.elementPaths(container.childNodes[0]),
+            active_paths.elementPaths(container.childNodes[0]),
             {
                 type: true,
                 title: true,
@@ -193,7 +193,7 @@ suite('initTemplates', function () {
             '{{article.title}} by <a href="{{user.profile}}">{{user.name}}</a>' +
             '</h1>';
         assert.deepEqual(
-            init.elementPaths(container.childNodes[0]),
+            active_paths.elementPaths(container.childNodes[0]),
             {article: true, user: true}
         );
         assert.ok(!container.childNodes[0].childNodes[0].static);
@@ -215,21 +215,21 @@ suite('initTemplates', function () {
     });
 
     test('simple static markup', function () {
-        createTemplateNode('app',
-                           '<h1>Hello, world!</h1>');
-        init.initTemplates();
-        var tmpl = document.getElementById('app').content;
+        var el = createTemplateNode('app',
+                                      '<h1>Hello, world!</h1>');
+        var tmpl = el.content;
+        active_paths.markTemplatePaths(tmpl);
         assert.ok(tmpl.static);
     });
 
     test('nested static nodes', function () {
-        createTemplateNode('app',
-                           '<li>' +
-                             '<span class="user-icon">User:</span>' +
-                             '<strong>{{ name }}</strong>' +
-                           '</li>');
-        init.initTemplates();
-        var tmpl = document.getElementById('app').content;
+        var el = createTemplateNode('app',
+                                      '<li>' +
+                                      '<span class="user-icon">User:</span>' +
+                                      '<strong>{{ name }}</strong>' +
+                                    '</li>');
+        var tmpl = el.content;
+        active_paths.markTemplatePaths(tmpl);
         assert.ok(!tmpl.static);
         assert.ok(!child(tmpl, 0).static, true);
         assert.ok(child(tmpl, 0, 0).static, true);
@@ -239,15 +239,15 @@ suite('initTemplates', function () {
     });
 
     test('simple active_paths', function () {
-        createTemplateNode('app',
+        var el = createTemplateNode('app',
                            '<div class="site-name">Test</div>' +
                            '<h1>{{title}}</h1>' +
                            'by ' +
                            '<a href="{{ author.profile }}">' +
                              '{{ author.name }}' +
-                           '</a>');
-        init.initTemplates();
-        var tmpl = document.getElementById('app').content;
+                                    '</a>');
+        var tmpl = el.content;
+        active_paths.markTemplatePaths(tmpl);
         // template root element
         assert.ok(!tmpl.static);
         assert.deepEqual(tmpl.active_paths, {
@@ -279,12 +279,12 @@ suite('initTemplates', function () {
     });
     
     test('data-if active_paths', function () {
-        createTemplateNode('app',
-                           '<span data-if="article.published">' +
-                             'published' +
-                           '</span>');
-        init.initTemplates();
-        var tmpl = document.getElementById('app').content;
+        var el = createTemplateNode('app',
+                                    '<span data-if="article.published">' +
+                                    'published' +
+                                    '</span>');
+        var tmpl = el.content;
+        active_paths.markTemplatePaths(tmpl);
         // template root element
         assert.ok(!tmpl.static);
         assert.deepEqual(tmpl.active_paths, {
@@ -296,12 +296,12 @@ suite('initTemplates', function () {
         // published
         assert.ok(child(tmpl, 0, 0).static);
         
-        createTemplateNode('app',
-                           '<span data-if="article.published">' +
-                             '{{article.title}} is published' +
-                           '</span>');
-        init.initTemplates();
-        tmpl = document.getElementById('app').content;
+        el = createTemplateNode('app',
+                                '<span data-if="article.published">' +
+                                '{{article.title}} is published' +
+                                '</span>');
+        tmpl = el.content;
+        active_paths.markTemplatePaths(tmpl);
         // template root element
         assert.ok(!tmpl.static);
         assert.deepEqual(tmpl.active_paths, {
@@ -318,12 +318,12 @@ suite('initTemplates', function () {
     });
 
     test('data-unless active_paths', function () {
-        createTemplateNode('app',
-                           '<span data-unless="article.published">' +
-                             'draft' +
-                           '</span>');
-        init.initTemplates();
-        var tmpl = document.getElementById('app').content;
+        var el = createTemplateNode('app',
+                                    '<span data-unless="article.published">' +
+                                    'draft' +
+                                    '</span>');
+        var tmpl = el.content;
+        active_paths.markTemplatePaths(tmpl);
         // template root element
         assert.ok(!tmpl.static);
         assert.deepEqual(tmpl.active_paths, {
@@ -335,12 +335,12 @@ suite('initTemplates', function () {
         // draft
         assert.ok(child(tmpl, 0, 0).static);
         
-        createTemplateNode('app',
-                           '<span data-unless="article.published">' +
-                             '{{article.title}} is a draft' +
-                           '</span>');
-        init.initTemplates();
-        tmpl = document.getElementById('app').content;
+        el = createTemplateNode('app',
+                                '<span data-unless="article.published">' +
+                                '{{article.title}} is a draft' +
+                                '</span>');
+        tmpl = el.content;
+        active_paths.markTemplatePaths(tmpl);
         // template root element
         assert.ok(!tmpl.static);
         assert.deepEqual(tmpl.active_paths, {
@@ -357,12 +357,12 @@ suite('initTemplates', function () {
     });
     
     test('data-each active_paths', function () {
-        createTemplateNode('app',
+        var el = createTemplateNode('app',
                            '<span data-each="item in items">' +
                              '{{ item.name }}' +
-                           '</span>');
-        init.initTemplates();
-        var tmpl = document.getElementById('app').content;
+                                    '</span>');
+        var tmpl = el.content;
+        active_paths.markTemplatePaths(tmpl);
         // template root element
         assert.ok(!tmpl.static);
         assert.deepEqual(tmpl.active_paths, {
@@ -377,11 +377,12 @@ suite('initTemplates', function () {
             item: {name: true}
         });
 
-        createTemplateNode('app',
-                           '<span data-each="item in items">' +
-                             '{{ item.name }} added by {{ user.name }}' +
-                           '</span>');
-        init.initTemplates();
+        el = createTemplateNode('app',
+                                '<span data-each="item in items">' +
+                                '{{ item.name }} added by {{ user.name }}' +
+                                '</span>');
+        tmpl = el.content;
+        active_paths.markTemplatePaths(tmpl);
         tmpl = document.getElementById('app').content;
         // template root element
         assert.ok(!tmpl.static);
@@ -401,10 +402,10 @@ suite('initTemplates', function () {
     });
 
     test('static template-call active_paths', function () {
-        createTemplateNode('app',
-                           '<template-call template="profileInfo" user="article.author" title="title" />');
-        init.initTemplates();
-        var tmpl = document.getElementById('app').content;
+        var el = createTemplateNode('app',
+                                    '<template-call template="profileInfo" user="article.author" title="title" />');
+        var tmpl = el.content;
+        active_paths.markTemplatePaths(tmpl);
         // template root element
         assert.ok(!tmpl.static);
         assert.deepEqual(tmpl.active_paths, {
@@ -417,10 +418,10 @@ suite('initTemplates', function () {
     });
 
     test('dynamic template-call active_paths', function () {
-        createTemplateNode('app',
-                           '<template-call template="{{template}}" user="article.author" title="title" />');
-        init.initTemplates();
-        var tmpl = document.getElementById('app').content;
+        var el = createTemplateNode('app',
+                                    '<template-call template="{{template}}" user="article.author" title="title" />');
+        var tmpl = el.content;
+        active_paths.markTemplatePaths(tmpl);
         // template root element
         assert.ok(!tmpl.static);
         assert.deepEqual(tmpl.active_paths, {
@@ -434,12 +435,12 @@ suite('initTemplates', function () {
     });
 
     test('template-call with children active_paths', function () {
-        createTemplateNode('app',
-                           '<template-call template="example" author="article.author">' +
-                             '<p>{{ text }}</p>' +
-                           '</template-call>');
-        init.initTemplates();
-        var tmpl = document.getElementById('app').content;
+        var el = createTemplateNode('app',
+                                    '<template-call template="example" author="article.author">' +
+                                    '<p>{{ text }}</p>' +
+                                    '</template-call>');
+        var tmpl = el.content;
+        active_paths.markTemplatePaths(tmpl);
         // template root element
         assert.ok(!tmpl.static);
         assert.deepEqual(tmpl.active_paths, {
@@ -460,16 +461,16 @@ suite('initTemplates', function () {
     });
 
     test('template-children must wildcard active_paths to root of current template', function () {
-        createTemplateNode('app',
-                           '<div class="container">' +
-                             '<div class="main">' +
-                               '{{ test }}' +
-                               '<template-children></template-children>' +
-                               'foo' +
-                             '</div>' +
-                           '</div>');
-        init.initTemplates();
-        var tmpl = document.getElementById('app').content;
+        var el = createTemplateNode('app',
+                                    '<div class="container">' +
+                                    '<div class="main">' +
+                                    '{{ test }}' +
+                                    '<template-children></template-children>' +
+                                    'foo' +
+                                    '</div>' +
+                                    '</div>');
+        var tmpl = el.content;
+        active_paths.markTemplatePaths(tmpl);
         // template root element
         assert.ok(!tmpl.static);
         assert.equal(tmpl.active_paths, false);
@@ -492,12 +493,12 @@ suite('initTemplates', function () {
     });
     
     test('template-children inside data-each', function () {
-        createTemplateNode('app',
-                           '<div data-each="item in items">' +
-                             '<p><template-children/></p>' +
-                           '</div>');
-        init.initTemplates();
-        var tmpl = document.getElementById('app').content;
+        var el = createTemplateNode('app',
+                                    '<div data-each="item in items">' +
+                                    '<p><template-children/></p>' +
+                                    '</div>');
+        var tmpl = el.content;
+        active_paths.markTemplatePaths(tmpl);
         // template root element
         assert.ok(!tmpl.static);
         assert.ok(!tmpl.active_paths);

@@ -1,9 +1,9 @@
 "use strict";
 
 var context = require('./context');
-var render = require('./render');
 var patch = require('./patch');
-var init = require('./init');
+var active_paths = require('./active_paths');
+var compile = require('./compile');
 
 
 /***** Public API *****/
@@ -30,20 +30,39 @@ BoundTemplate.prototype.applyHandler = function (name, args) {
     }
 };
 
-exports.bind = function (node, template, data, handlers) {
+exports.bind = function (node, template_id, data, handlers) {
     if (typeof node === 'string') {
         node = document.getElementById(node);
     }
+    var template = document.getElementById(template_id).content;
     var bound = new BoundTemplate(node, template, data, handlers);
     var patcher = new patch.Patcher(node);
-    var renderer = new render.Renderer(patcher, bound);
+    var render_state = {
+        bound_template: bound,
+        patcher: patcher,
+        text_buffer: ""
+    };
     bound.update = function () {
-        renderer.render(this.template, this.context, null);
+        var next_data = this.context;
+        var prev_data = null;
+        patcher.start();
+        this.template.render(render_state, next_data, prev_data);
+        patcher.end();
         this.update_queued = false;
     };
     bound.update();
     return bound;
 };
 
+exports.initTemplates = function () {
+    var templates = document.getElementsByTagName('template');
+    for (var i = 0, len = templates.length; i < len; i++) {
+        var tmpl = templates[i].content;
+        active_paths.markTemplatePaths(tmpl);
+        var children = compile.compileChildren(tmpl);
+        tmpl.render_children = children;
+        tmpl.render = compile.wrapTemplate(children);
+    }
+};
+
 exports.BoundTemplate = BoundTemplate;
-exports.initTemplates = init.initTemplates;

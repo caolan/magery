@@ -1,8 +1,8 @@
 module.exports = {
     entry: {
-        'init': ['./init.js'],
+        'active_paths': ['./active_paths.js'],
         'context': ['./context.js'],
-        'render': ['./render.js'],
+        'compile': ['./compile.js'],
         'patch': ['./patch.js'],
         'transforms': ['./transforms.js'],
         'utils': ['./utils.js'],

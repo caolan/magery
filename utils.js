@@ -34,6 +34,10 @@ exports.mapNodes = function (nodelist, f) {
     return results;
 };
 
+exports.trim = function (str) {
+    return str.replace(/^\s+|\s+$/g, '');
+};
+
 exports.propertyPath = function (str) {
     return str.split('.').filter(function (x) {
         return x;
@@ -52,18 +56,7 @@ exports.lookup = function (data, props) {
     return (value === undefined || value === null) ? '' : value;
 };
 
-exports.isTemplateTag = function (node) {
-    return /^TEMPLATE-/.test(node.tagName);
-};
-
 exports.templateTagName = function (node) {
-    if (node._template_tag) {
-        return node._template_tag;
-    }
     var m = /^TEMPLATE-([^\s/>]+)/.exec(node.tagName);
-    if (!m) {
-        throw new Error('Not a template tag: ' + node.tagName);
-    }
-    node._template_tag = m[1].toLowerCase();
-    return node._template_tag;
+    return m && m[1].toLowerCase();
 };

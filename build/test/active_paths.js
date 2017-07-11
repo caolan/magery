@@ -1,4 +1,4 @@
-var init =
+var active_paths =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -41,17 +41,18 @@ var init =
 /******/ 	return __webpack_require__(0);
 /******/ })
 /************************************************************************/
-/******/ ({
-
-/***/ 0:
+/******/ ([
+/* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(8);
+	module.exports = __webpack_require__(7);
 
 
 /***/ }),
-
-/***/ 4:
+/* 1 */,
+/* 2 */,
+/* 3 */,
+/* 4 */
 /***/ (function(module, exports) {
 
 	var ELEMENT_NODE = 1;
@@ -90,6 +91,10 @@ var init =
 	    return results;
 	};
 
+	exports.trim = function (str) {
+	    return str.replace(/^\s+|\s+$/g, '');
+	};
+
 	exports.propertyPath = function (str) {
 	    return str.split('.').filter(function (x) {
 	        return x;
@@ -108,26 +113,16 @@ var init =
 	    return (value === undefined || value === null) ? '' : value;
 	};
 
-	exports.isTemplateTag = function (node) {
-	    return /^TEMPLATE-/.test(node.tagName);
-	};
-
 	exports.templateTagName = function (node) {
-	    if (node._template_tag) {
-	        return node._template_tag;
-	    }
 	    var m = /^TEMPLATE-([^\s/>]+)/.exec(node.tagName);
-	    if (!m) {
-	        throw new Error('Not a template tag: ' + node.tagName);
-	    }
-	    node._template_tag = m[1].toLowerCase();
-	    return node._template_tag;
+	    return m && m[1].toLowerCase();
 	};
 
 
 /***/ }),
-
-/***/ 8:
+/* 5 */,
+/* 6 */,
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var utils = __webpack_require__(4);
@@ -267,31 +262,19 @@ var init =
 	                path = utils.propertyPath(parts[1]);
 	                exports.markPath(paths, path);
 	                remove = parts[0];
-	                node._each_name = parts[0];
-	                node._each_iterable = path;
 	            }
 	            if (attr.name == 'data-if') {
 	                path = utils.propertyPath(attr.value);
 	                exports.markPath(paths, path);
-	                node._if = path;
 	            }
 	            else if (attr.name == 'data-unless') {
 	                path = utils.propertyPath(attr.value);
 	                exports.markPath(paths, path);
-	                node._unless = path;
-	            }
-	            else if (attr.name == 'data-key') {
-	                exports.mergePaths(paths, exports.stringPaths(attr.value));
-	                node._key = attr.value;
 	            }
 	            else {
 	                exports.mergePaths(paths, exports.stringPaths(attr.value));
 	            }
 	        }
-	        node.removeAttribute('data-each');
-	        node.removeAttribute('data-if');
-	        node.removeAttribute('data-unless');
-	        node.removeAttribute('data-key');
 	    }
 	    paths = updateChildPaths(paths, node);
 	    if (remove) {
@@ -306,7 +289,6 @@ var init =
 	        var attr = node.attributes[i];
 	        if (attr.name === 'template') {
 	            exports.mergePaths(paths, exports.stringPaths(attr.value));
-	            node._template_call = attr.value;
 	        }
 	        else {
 	            exports.markPath(paths, utils.propertyPath(attr.value));
@@ -317,7 +299,6 @@ var init =
 	}
 
 	function templateChildrenPaths(node) {
-	    node._template_children = true;
 	    return false;
 	}
 
@@ -330,32 +311,28 @@ var init =
 	    if (utils.isTextNode(node)) {
 	        return exports.stringPaths(node.textContent);
 	    }
-	    else if (utils.isTemplateTag(node)) {
+	    else {
 	        var name = utils.templateTagName(node);
-	        var f = templateTags[name];
-	        if (!f) {
-	            throw new Error('Unknown template tag: ' + node.tagName);
+	        if (name) {
+	            var f = templateTags[name];
+	            if (!f) {
+	                throw new Error('Unknown template tag: ' + node.tagName);
+	            }
+	            return f(node);
 	        }
-	        return f(node);
-	    }
-	    else if (utils.isElementNode(node) || utils.isDocumentFragment(node)) {
-	        return exports.elementPaths(node);
+	        else if (utils.isElementNode(node) || utils.isDocumentFragment(node)) {
+	            return exports.elementPaths(node);
+	        }
 	    }
 	    return false;
 	}
 
-	exports.initTemplates = function () {
-	    var templates = document.getElementsByTagName('template');
-	    for (var i = 0, len = templates.length; i < len; i++) {
-	        var tmpl = templates[i].content;
-	        var paths = initNode(tmpl);
-	        tmpl.static = (paths && Object.keys(paths).length === 0);
-	        tmpl.active_paths = paths;
-	        tmpl.initialized = true;
-	    }
+	exports.markTemplatePaths = function (tmpl) {
+	    var paths = initNode(tmpl);
+	    tmpl.static = (paths && Object.keys(paths).length === 0);
+	    tmpl.active_paths = paths;
 	};
 
 
 /***/ })
-
-/******/ });
+/******/ ]);
