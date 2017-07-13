@@ -86,21 +86,21 @@ suite('events', function () {
         click(child(container, 0));
     });
 
-    test('click event with nested context data and literal values', function (done) {
-        var container = document.createElement('div');
-        createTemplateNode('main',
-                           '<button onclick="clicked(user.name, \'foo\', 123)">click me</button>');
-        var data = {user: {name: 'test'}};
-        Magery.bind(container, 'main', data, {
-            clicked: function (name, str, num) {
-                assert.equal(name, 'test');
-                assert.equal(str, 'foo');
-                assert.equal(num, 123);
-                done();
-            }
-        });
-        click(child(container, 0));
-    });
+    // test('click event with nested context data and literal values', function (done) {
+    //     var container = document.createElement('div');
+    //     createTemplateNode('main',
+    //                        '<button onclick="clicked(user.name, \'foo\', 123)">click me</button>');
+    //     var data = {user: {name: 'test'}};
+    //     Magery.bind(container, 'main', data, {
+    //         clicked: function (name, str, num) {
+    //             assert.equal(name, 'test');
+    //             assert.equal(str, 'foo');
+    //             assert.equal(num, 123);
+    //             done();
+    //         }
+    //     });
+    //     click(child(container, 0));
+    // });
 
     test('page is updated after event handler returns', function (done) {
         var container = document.createElement('div');
