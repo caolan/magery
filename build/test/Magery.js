@@ -52,8 +52,6 @@ var Magery =
 /* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	"use strict";
-
 	var context = __webpack_require__(2);
 	var patch = __webpack_require__(3);
 	var active_paths = __webpack_require__(7);
@@ -316,13 +314,13 @@ var Magery =
 
 	// deletes children not marked as visited during patch
 	function deleteUnvisitedEvents(transforms, node) {
-	    if (!node.event_handlers) {
+	    if (!node.handlers) {
 	        return;
 	    }
-	    for (var type in node.event_handlers) {
+	    for (var type in node.handlers) {
 	        if (!node.visited_events.has(type)) {
-	            transforms.removeEventListener(node, type, node.event_handlers[type]);
-	            delete node.event_handlers[type];
+	            transforms.removeEventListener(node, type, node.handlers[type]);
+	            delete node.handlers[type];
 	        }
 	    }
 	};
@@ -369,44 +367,15 @@ var Magery =
 	    this.stepInto(node);
 	};
 
-	function getListener(node, type) {
-	    return node.event_handlers && node.event_handlers[type];
-	}
-
-	function setListener(transforms, node, type, handler) {
-	    transforms.addEventListener(node, type, handler);
-	    node.visited_events.add(type);
-	    if (!node.event_handlers) {
-	        node.event_handlers = {};
-	    }
-	    node.event_handlers[type] = handler;
-	}
-
-	function replaceListener(transforms, node, type, handler) {
-	    var old_handler = getListener(node, type);
-	    if (old_handler) {
-	        // remove existing event handler
-	        transforms.removeEventListener(node, type, old_handler);
-	    }
-	    setListener(transforms, node, type, handler);
-	}
-
-	// TODO: these get re-bound every render of an element because
-	// the context etc may have changed - probably a better to do this
-	Patcher.prototype.eventListener = function (type, value, data, bound_template) {
-	    var start = value.indexOf('(');
-	    var end = value.lastIndexOf(')');
-	    var name = value.substring(0, start);
-	    var src = '[' + value.substring(start + 1, end) + ']';
-	    var container = this.container;
-	    var f = function (event) {
-	        if (start !== -1) {
-	            with (data) {
-	                var args = eval(src);
-	            }
-	            bound_template.applyHandler(name, args);
-	        }
+	function makeHandler(type) {
+	    return function (event) {
 	        var node = event.target;
+	        var handler = node.handlers[type];
+	        node.data['event'] = event;
+	        var args = handler.args.map(function (arg) {
+	            return utils.lookup(node.data, arg);
+	        });
+	        node.bound_template.applyHandler(handler.name, args);
 	        if (node.tagName === 'INPUT') {
 	            var nodeType = node.getAttribute('type');
 	            if (type == 'change') {
@@ -425,7 +394,40 @@ var Magery =
 	            resetSelected(event);
 	        }
 	    };
-	    replaceListener(this.transforms, this.parent, type, f);
+	}
+
+	function setListener(node, type) {
+	    if (!node.handlers) {
+	        node.handlers = {};
+	    }
+	    if (!node.handlers.hasOwnProperty(type)) {
+	        var fn = makeHandler(type);
+	        node.handlers[type] = {fn: fn};
+	        node.addEventListener(type, fn);
+	    }
+	}
+
+	Patcher.prototype.eventListener = function (type, value, data, bound_template) {
+	    var node = this.parent;
+	    if (node.data !== data) {
+	        node.data = data;
+	    }
+	    if (node.bound_template !== bound_template) {
+	        node.bound_template = bound_template;
+	    }
+	    setListener(node, type);
+	    var handler = node.handlers[type];
+	    if (handler.value !== value) {
+	        handler.value = value;
+	        var start = value.indexOf('(');
+	        var end = value.lastIndexOf(')');
+	        handler.name = value.substring(0, start);
+	        var parts = value.substring(start + 1, end).split(',');
+	        handler.args = parts.map(function (part) {
+	            return utils.propertyPath(utils.trim(part));
+	        });
+	    }
+	    node.visited_events.add(type);
 	};
 
 	// force checkbox node checked property to match last rendered attribute
@@ -501,6 +503,10 @@ var Magery =
 	    this.current = node.nextSibling;
 	};
 
+	function getListener(node, type) {
+	    return node.handlers && node.handlers[type] && node.handlers[type].fn;
+	}
+
 	Patcher.prototype.exitTag = function () {
 	    // delete unvisited child nodes
 	    deleteChildren(this.transforms, this.parent, this.current);
@@ -511,18 +517,15 @@ var Magery =
 	    deleteUnvisitedEvents(this.transforms, node);
 	    if (node.tagName === 'INPUT') {
 	        var type = node.getAttribute('type');
-	        if (type === 'checkbox' && !getListener(node, 'change')) {
-	            setListener(this.transforms, node, 'change', resetCheckbox);
-	        }
-	        else if (type === 'radio' && !getListener(node, 'change')) {
-	            setListener(this.transforms, node, 'change', resetRadio);
+	        if ((type === 'checkbox' || type == 'radio') && !getListener(node, 'change')) {
+	            setListener(node, 'change');
 	        }
 	        else if (node.hasAttribute('value') && !getListener(node, 'input')) {
-	            setListener(this.transforms, node, 'input', resetInput);
+	            setListener(node, 'input');
 	        }
 	    }
 	    else if (node.tagName === 'SELECT') {
-	        setListener(this.transforms, node, 'change', resetSelected);
+	        setListener(node, 'change');
 	    }
 	};
 

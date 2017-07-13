@@ -1,12 +1,12 @@
 module.exports = {
     entry: {
-        'active_paths': ['./active_paths.js'],
-        'context': ['./context.js'],
-        'compile': ['./compile.js'],
-        'patch': ['./patch.js'],
-        'transforms': ['./transforms.js'],
-        'utils': ['./utils.js'],
-        'Magery': ['./magery.js']
+        'active_paths': ['./src/active_paths.js'],
+        'context': ['./src/context.js'],
+        'compile': ['./src/compile.js'],
+        'patch': ['./src/patch.js'],
+        'transforms': ['./src/transforms.js'],
+        'utils': ['./src/utils.js'],
+        'Magery': ['./src/magery.js']
     },
     output: {
         path: 'build/test',

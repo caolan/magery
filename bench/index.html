@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html><body>
+    <link  href="runner/runner.css" rel='stylesheet'>
+
+    <h1>Magery benchmarks</h1>
+    <div style="display: inline-block; border: 1px solid #ccc; background: #eee; padding: 1em;">
+        <strong>Please note:</strong> these are very naive tests which
+        only exist to sanity check the concept and it's performance.
+        Don't take them too seriously.
+    </div>
+    <p><a href="https://github.com/caolan/magery/blob/master/bench/bench.js">View source</a></p>
+
+	<!-- undercore template for suite header -->
+	<script id="tmplSuiteHead" type="text/template">
+		<div class="head <%- state %>">
+			<h2><%= suite.name %> <span class="run">(run)</span></h2>
+		</div>
+	</script>
+	<!-- undercore template for benchmark -->
+	<script id="tmplBenchItem" type="text/template">
+		<div class="bench <%- state %>">
+			<span class='name'> <%- bench.name %> </span> :
+			<%= (bench.hz === 0 ? '' :  Math.floor(bench.hz)+' ops/sec') %> 
+			<%= (ratio === null ? '' : Math.floor(ratio*10000)/100+' %') %>
+			<span class='viewsource'>(view source)</span>
+			<div>
+				<pre class="source" style="display: none;"><code><%- fnStr %></code></pre>
+			</div>
+		</div>
+	</script>
+	<!-- runner container -->
+	<div id="runner">		
+		<ul class="stats">
+			<li class="runall">run all</li>
+			<li>suites: <span class='nSuites'></span></li>
+			<li>benchmarks: <span class='nBenchmarks'></span></li>
+		</ul>
+		<!-- lots of suite container go here -->
+		<div class="suites"></div>
+	</div>
+
+	<script src="vendor/jquery.js"></script>
+	<script src="vendor/underscore.js"></script>
+        <script>
+         window.underscore = _.noConflict();
+        </script>
+	<script src="vendor/lodash.js"></script>
+	<script src="vendor/benchmark.js"></script>
+	<script src="runner/runner.js"></script>
+	<script src="react-15.6.1.min.js"></script>
+	<script src="react-dom-15.6.1.min.js"></script>
+	<script src="../build/magery.js"></script>
+	<script>
+	 jQuery(function(){
+	     jQuery('#runner .bench').live('click', function(event){
+		 jQuery('.source', event.currentTarget).slideToggle();
+	     });
+	 });
+	</script>
+
+	<!-- here put all your bench script -->
+	<script src="bench.js"></script>
+
+</body></html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Example</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <div class="editor-container">
+            <div class="editor open">
+                <h2 onclick="toggleEditor">Templates (<a href="https://github.com/caolan/magery">syntax</a>)</h2>
+                <div id="templates">&lt;template id=&quot;main&quot;&gt;
+    &lt;h1&gt;Hello, {{name}}!&lt;/h1&gt;
+&lt;/template&gt;</div>
+            </div>
+            <div class="editor open">
+                <h2 onclick="toggleEditor">Data</h2>
+                <div id="data">{
+    "name": "World"
+}</div>
+            </div>
+        </div>
+        <div class="result-container">
+            <div id="result"></div>
+        </div>
+        <div style="display:none" id="active-templates"></div>
+        <script src="../build/magery.js"></script>
+        <script src="ace/ace.js"></script>
+        <script src="app.js"></script>
+    </body>
+</html>

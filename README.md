@@ -8,12 +8,24 @@ server, these templates are simple enough to be rendered without a
 JavaScript runtime. On the client, they can be used to dynamically
 update the page simply by changing the JSON data.
 
+* [Aims](#aims)
+* [Download](#download)
+* Documentation
+  - [Getting started](#getting-started)
+  - [Attributes](#attributes)
+  - [Tags](#tags)
+* [Examples](https://github.com/caolan/magery/tree/master/examples)
+* [Test suite](https://caolan.github.io/magery/test/)
+* [Benchmarks](https://caolan.github.io/magery/bench/)
+* [Live editor](https://caolan.github.io/magery/editor/)
+
 ## Aims
 
 * To make it easier to enhance your multi-page website with JavaScript
 * To work with your choice of back end language
 * To provide clean separation between your data and markup
-* To be relatively lightweight so you can use it for small (or large) enhancements without the commitment of a big dependency
+* To be [relatively lightweight](#file-size) so you can use it for small
+  (or large) enhancements without the commitment of a big dependency
 
 I wrote this library to prove that you don't _need_ a 'single page
 app' to build large dynamic websites. If you're interested in the
@@ -30,6 +42,22 @@ Include one of the above in your HTML:
 
 ```html
 <script src="magery.min.js"></script>
+```
+
+### File size
+
+While there are smaller frameworks out there, Magery aims to sit on
+the more lightweight end of the file size range. This is to encourage
+it's use for relatively small improvements to server-generated pages.
+
+A comparison of some minified production builds:
+
+```
+Angular v1.6.5:              ########################################  165 kb
+React + React DOM v15.6.1:   ####################################      150 kb
+jQuery v3.2.1:               #####################                      85 kb
+jQuery (slim build) v3.2.1:  #################                          68 kb
+Magery (2017-08-13):         ###                                        14 kb
 ```
 
 ## Getting started
@@ -446,6 +474,7 @@ Result:
   <p>Popchop, Fuzzable, Deathmop</p>
 </div>
 ```
+
 
 [magery-js]: https://raw.githubusercontent.com/caolan/magery/master/build/magery.js
 [magery-min-js]: https://raw.githubusercontent.com/caolan/magery/master/build/magery.min.js

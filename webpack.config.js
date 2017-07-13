@@ -1,5 +1,5 @@
 module.exports = {
-    entry: "./magery.js",
+    entry: "./src/magery.js",
     output: {
         path: "build",
         filename: "magery.js",
