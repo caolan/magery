@@ -1,23 +1,56 @@
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Benchmarks</title>
-  <link rel="stylesheet" href="chartist.min.css">
-</head>
-<body>
-  <h1>Benchmarks</h1>
-  <p>These are incredibly naive tests which exist only to sanity check the algorithm and it's performance. Please don't take them too seriously.</p>
-  <pre id="results"></pre>
-  <div id="output" style="display: none;"></div>
-  <!-- <script src="chartist.min.js"></script> -->
-  <!-- NOTE: use the minified production build of React to turn off its dev tooling for the benchmark -->
-  <script src="react-15.6.1.min.js"></script>
-  <script src="react-dom-15.6.1.min.js"></script>
-  <script src="incremental-dom.js"></script>
-  <script src="../../build/magery.js"></script>
-  <script src="lodash.js"></script>
-  <script src="platform.js"></script>
-  <script src="benchmark.js"></script>
-  <script src="run.js"></script>
-  </body>
-</html>
+<!DOCTYPE html>
+<html><body>
+	<link  href="runner/runner.css" rel='stylesheet'>
+
+	<!-- undercore template for suite header -->
+	<script id="tmplSuiteHead" type="text/template">
+		<div class="head <%- state %>">
+			<h1><%= suite.name %> <span class="run">(run)</span></h1>
+		</div>
+	</script>
+	<!-- undercore template for benchmark -->
+	<script id="tmplBenchItem" type="text/template">
+		<div class="bench <%- state %>">
+			<span class='name'> <%- bench.name %> </span> :
+			<%= (bench.hz === 0 ? '' :  Math.floor(bench.hz)+' ops/sec') %> 
+			<%= (ratio === null ? '' : Math.floor(ratio*10000)/100+' %') %>
+			<span class='viewsource'>(view source)</span>
+			<div>
+				<pre class="source" style="display: none;"><code><%- fnStr %></code></pre>
+			</div>
+		</div>
+	</script>
+	<!-- runner container -->
+	<div id="runner">		
+		<ul class="stats">
+			<li class="runall">run all</li>
+			<li>suites: <span class='nSuites'></span></li>
+			<li>benchmarks: <span class='nBenchmarks'></span></li>
+		</ul>
+		<!-- lots of suite container go here -->
+		<div class="suites"></div>
+	</div>
+
+	<script src="vendor/jquery.js"></script>
+	<script src="vendor/underscore.js"></script>
+        <script>
+         window.underscore = _.noConflict();
+        </script>
+	<script src="vendor/lodash.js"></script>
+	<script src="vendor/benchmark.js"></script>
+	<script src="runner/runner.js"></script>
+	<script src="react-15.6.1.min.js"></script>
+	<script src="react-dom-15.6.1.min.js"></script>
+	<script src="../../build/magery.js"></script>
+	<script>
+	 jQuery(function(){
+	     jQuery('#runner .bench').live('click', function(event){
+		 jQuery('.source', event.currentTarget).slideToggle();
+	     });
+	 });
+	</script>
+
+	<!-- here put all your bench script -->
+	<script src="bench.js"></script>
+
+</body></html>

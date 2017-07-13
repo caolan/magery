@@ -1,88 +1,3 @@
-var idom = IncrementalDOM;
-
-var now;
-if (window.performance) {
-    now = function () {
-        return window.performance.now();
-    };
-}
-else {
-    now = function () {
-        return new Date().getTime();
-    };
-}
-
-function section(heading, f) {
-    var section = document.createElement('section');
-    var h2 = document.createElement('h2');
-    h2.textContent = heading;
-    section.appendChild(h2);
-    var span = document.createElement('span');
-    span.textContent = 'Running...';
-    section.appendChild(span);
-    var container = document.getElementById('results');
-    container.appendChild(section);
-    var results = {};
-    function bench(name, f) {
-        var container = document.getElementById('output');
-        f(container, function (iterations, patch) {
-            var sample = [];
-            var fastest = Infinity;
-            var slowest = 0;
-            var start = now();
-            for (var i = 0; i < iterations; i++) {
-                var istart = now();
-                patch(i);
-                var iend = now();
-                var iduration = iend - istart;
-                if (i % 10 === 0) {
-                    sample.push(iduration);
-                }
-                if (iduration > slowest) {
-                    slowest = iduration;
-                }
-                if (iduration < fastest) {
-                    fastest = iduration;
-                }
-            }
-            var end = now();
-            var data = {
-                fastest: fastest,
-                slowest: slowest,
-                total: (end - start),
-                average: (end - start) / iterations,
-                iterations: iterations,
-                sample: sample
-            };
-            results[name] = data;
-        });
-    }
-    f(bench);
-    span.textContent = 'Total time (ms)';
-    var responsiveOptions = {};
-    var chart = document.createElement('div');
-    chart.style = 'height: 200px; width: 80%;';
-    container.appendChild(chart);
-    chart.className = 'ct-chart ct-perfect-fourth';
-    var data = {
-        labels: Object.keys(results),
-        series: [
-            Object.keys(results).map(function (name) {
-                return results[name].total;
-            })
-        ]
-    };
-    var options = {
-        seriesBarDistance: 1,
-        reverseData: true,
-        horizontalBars: true,
-        axisY: {
-            offset: 100
-        }
-    };
-    new Chartist.Bar(chart, data, options, responsiveOptions);
-}
-
 function createTemplateNode(id, src) {
     var el = document.getElementById(id);
     if (!el) {
@@ -95,379 +10,333 @@ function createTemplateNode(id, src) {
     return el;
 }
 
-section('Add 100 elements to a list, one at a time - no keys', function (bench) {
-    bench('Magery', function (container, iter) {
-        createTemplateNode('app',
-              '<ul>' +
-                '<li data-each="item in items">' +
-                  '{{item.name}}' +
-                '</li>' +
-              '</ul>'
-        );
-        var data = {items: []};
-        var app = Magery.bind(container, 'app', data, {});
-        iter(100, function (i) {
-            app.context.items.push({name: 'item' + i});
-            app.update();
-        });
-    });
+function random (max) {
+    return Math.floor(Math.random() * (max + 1));
+};
 
-    bench('React', function (container, iter) {
-        var App = React.createClass({
-            render: function () {
-                var items = this.props.items;
-                return React.createElement('ul', null, items.map(function (item) {
-                    return React.createElement('li', null, item.name);
-                }));
+// NOTE: setup() is called once for _multiple_ invocations of the benchmark loop (fn)
+
+benchsuite('Add 100 elements to a list, one at a time (no keys)', function () {
+    bench({
+        name: 'React',
+        setup: function () {
+            this.App = React.createClass({
+                render: function () {
+                    var items = this.props.items;
+                    return React.createElement('ul', null, items.map(function (item) {
+                        return React.createElement('li', null, item.name);
+                    }));
+                }
+            });
+        },
+        fn: function () {
+            var container = document.createElement('div');
+            var data = {items: []};
+            ReactDOM.render(React.createElement(this.App, data), container);
+            for (var i = 0; i < 100; i++) {
+                data.items.push({name: 'item' + i});
+                ReactDOM.render(React.createElement(this.App, data), container);
             }
-        });
-        var data = {items: []};
-        iter(100, function (i) {
-            data.items.push({name: 'item' + i});
-            ReactDOM.render(React.createElement(App, data), container);
-        });
-    });
-
-    bench('IncrementalDOM', function (container, iter) {
-        function render(data) {
-            idom.elementOpen('ul', '', null);
-            data.items.forEach(function (item) {
-                idom.elementOpen('li', '', null);
-                idom.text(item.name);
-                idom.elementClose('li');
-            });
-            idom.elementClose('ul');
         }
-        var data = {items: []};
-        iter(100, function (i) {
-            data.items.push({name: 'item' + i});
-            idom.patch(container, function() {
-                render(data);
-            });
-        });
     });
-
-});
-
-
-
-section('Add 100 elements to a list, one at a time - keys', function (bench) {
-
-    bench('Magery', function (container, iter) {
-        createTemplateNode('app',
-              '<ul>' +
-                '<li data-each="item in items" data-key="{{item.id}}">' +
-                  '{{item.name}}' +
-                '</li>' +
-              '</ul>'
-        );
-        var data = {items: []};
-        var app = Magery.bind(container, 'app', data, {});
-        iter(100, function (i) {
-            app.context.items.push({id: i, name: 'item' + i});
-            app.update();
-        });
-    });
-
-    bench('React', function (container, iter) {
-        var App = React.createClass({
-            render: function () {
-                var items = this.props.items;
-                return React.createElement('ul', null, items.map(function (item) {
-                    return React.createElement('li', {key: item.id}, item.name);
-                }));
-            }
-        });
-        var data = {items: []};
-        iter(100, function (i) {
-            data.items.push({id: i, name: 'item' + i});
-            ReactDOM.render(React.createElement(App, data), container);
-        });
-    });
-
-    bench('IncrementalDOM', function (container, iter) {
-        function render(data) {
-            idom.elementOpen('ul', '', null);
-            data.items.forEach(function (item) {
-                idom.elementOpen('li', item.id, null);
-                idom.text(item.name);
-                idom.elementClose('li');
-            });
-            idom.elementClose('ul');
-        }
-        var data = {items: []};
-        iter(100, function (i) {
-            data.items.push({id: i, name: 'item' + i});
-            idom.patch(container, function() {
-                render(data);
-            });
-        });
-    });
-
-});
-
-section('Randomly remove elements from 100 length list, one at a time - no keys', function (bench) {
-
-    function random(max) {
-        return Math.floor(Math.random() * (max + 1));
-    }
-
-    bench('Magery', function (container, iter) {
-        createTemplateNode('app',
+    bench({
+        name: 'Magery',
+        setup: function () {
+            createTemplateNode(
+                'app',
                 '<ul>' +
                     '<li data-each="item in items">' +
-                        '{{item.name}}' +
+                    '{{item.name}}' +
                     '</li>' +
-                '</ul>'
-        );
-        var data = {items: []};
-        for (var i = 0; i < 100; i++) {
-            data.items.push({name: 'item' + i});
-        }
-        var app = Magery.bind(container, 'app', data, {});
-        iter(100, function (i) {
-            app.context.items.splice(random(app.context.items.length - 1), 1);
-            app.update();
-        });
-    });
-
-    bench('React', function (container, iter) {
-        var App = React.createClass({
-            render: function () {
-                var items = this.props.items;
-                return React.createElement('ul', null, items.map(function (item) {
-                    return React.createElement('li', null, item.name);
-                }));
+                    '</ul>'
+            );
+        },
+        fn: function () {
+            var container = document.createElement('div');
+            var data = {items: []};
+            var app = Magery.bind(container, 'app', data, {});
+            for (var i = 0; i < 100; i++) {
+                app.context.items.push({name: 'item' + i});
+                app.update();
             }
-        });
-        var data = {items: []};
-        for (var i = 0; i < 100; i++) {
-            data.items.push({name: 'item' + i});
         }
-        iter(100, function (i) {
-            data.items.splice(random(data.items.length), 1);
-            ReactDOM.render(React.createElement(App, data), container);
-        });
     });
-
-    bench('IncrementalDOM', function (container, iter) {
-        function render(data) {
-            idom.elementOpen('ul', '', null);
-            data.items.forEach(function (item) {
-                idom.elementOpen('li', '', null);
-                idom.text(item.name);
-                idom.elementClose('li');
-            });
-            idom.elementClose('ul');
-        }
-        var data = {items: []};
-        for (var i = 0; i < 100; i++) {
-            data.items.push({name: 'item' + i});
-        }
-        iter(100, function (i) {
-            data.items.splice(random(data.items.length), 1);
-            idom.patch(container, function() {
-                render(data);
-            });
-        });
-    });
-
 });
 
-section('Randomly remove elements from 100 length list, one at a time - keys', function (bench) {
-
-    function random(max) {
-        return Math.floor(Math.random() * (max + 1));
-    }
-
-    bench('Magery', function (container, iter) {
-        createTemplateNode('app',
-                '<ul>' +
-                    '<li data-each="item in items" data-key="{{item.id}}">' +
-                        '{{item.name}}' +
-                    '</li>' +
-                '</ul>'
-        );
-        var data = {items: []};
-        for (var i = 0; i < 100; i++) {
-            data.items.push({id: i, name: 'item' + i});
-        }
-        var app = Magery.bind(container, 'app', data, {});
-        iter(100, function (i) {
-            app.context.items.splice(random(app.context.items.length - 1), 1);
-            app.update();
-        });
-    });
-
-    bench('React', function (container, iter) {
-        var App = React.createClass({
-            render: function () {
-                var items = this.props.items;
-                return React.createElement('ul', null, items.map(function (item) {
-                    return React.createElement('li', {key: item.id}, item.name);
-                }));
-            }
-        });
-        var data = {items: []};
-        for (var i = 0; i < 100; i++) {
-            data.items.push({id: i, name: 'item' + i});
-        }
-        iter(100, function (i) {
-            data.items.splice(random(data.items.length), 1);
-            ReactDOM.render(React.createElement(App, data), container);
-        });
-    });
-
-    bench('IncrementalDOM', function (container, iter) {
-        function render(data) {
-            idom.elementOpen('ul', '', null);
-            data.items.forEach(function (item) {
-                idom.elementOpen('li', item.id, null);
-                idom.text(item.name);
-                idom.elementClose('li');
-            });
-            idom.elementClose('ul');
-        }
-        var data = {items: []};
-        for (var i = 0; i < 100; i++) {
-            data.items.push({id: i, name: 'item' + i});
-        }
-        iter(100, function (i) {
-            data.items.splice(random(data.items.length), 1);
-            idom.patch(container, function() {
-                render(data);
-            });
-        });
-    });
-
-});
-
-section('Add 100 more complex elements to a list, one at a time', function (bench) {
-
-    bench('Magery', function (container, iter) {
-        createTemplateNode('app',
-                           '<div id="container">' +
-              '<ul>' +
-                '<li data-each="item in items" data-key="{{item.id}}">' +
-                   '<span data-if="item.published">Published</span>' +
-                   '<strong>{{item.name}}</strong>' +
-                '</li>' +
-              '</ul>' +
-            '</div>'
-        );
-        var data = {items: []};
-        var app = Magery.bind(container, 'app', data, {});
-        iter(100, function (i) {
-            app.context.items.push({id: i, name: 'item' + i});
-            app.update();
-        });
-    });
-
-    bench('React', function (container, iter) {
-        var App = React.createClass({
-            render: function () {
-                var items = this.props.items;
-                return React.createElement('div', {id: 'container'}, [
-                    React.createElement('ul', null, items.map(function (item) {
-                        var children = [];
-                        if (item.published) {
-                            children.push(
-                                React.createElement('span', null, 'Published')
-                            );
-                        }
-                        children.push(
-                            React.createElement('strong', null, item.name)
-                        );
-                        return React.createElement('li', {key: item.id}, children);
-                    }))
-                ]);
-            }
-        });
-        var data = {items: []};
-        iter(100, function (i) {
-            data.items.push({id: i, name: 'item' + i});
-            ReactDOM.render(React.createElement(App, data), container);
-        });
-    });
-
-    bench('IncrementalDOM', function (container, iter) {
-        function render(data) {
-            idom.elementOpen('div', null, null, 'id', 'container');
-            idom.elementOpen('ul', null, null);
-            data.items.forEach(function (item) {
-                idom.elementOpen('li', item.id, null);
-                if (item.published) {
-                    idom.elementOpen('span', null, null);
-                    idom.text('Published');
-                    idom.elementClose('span');
+benchsuite('Add 100 elements to a list, one at a time (keys)', function () {
+    bench({
+        name: 'React',
+        setup: function () {
+            this.App = React.createClass({
+                render: function () {
+                    var items = this.props.items;
+                    return React.createElement('ul', null, items.map(function (item) {
+                        return React.createElement('li', {key: item.id}, item.name);
+                    }));
                 }
-                idom.elementOpen('strong', null, null);
-                idom.text(item.name);
-                idom.elementClose('strong');
-                idom.elementClose('li');
             });
-            idom.elementClose('ul');
-            idom.elementClose('div');
+        },
+        fn: function () {
+            var container = document.createElement('div');
+            var data = {items: []};
+            ReactDOM.render(React.createElement(this.App, data), container);
+            for (var i = 0; i < 100; i++) {
+                data.items.push({id: i, name: 'item' + i});
+                ReactDOM.render(React.createElement(this.App, data), container);
+            }
         }
-        var data = {items: []};
-        iter(100, function (i) {
-            data.items.push({id: i, name: 'item' + i});
-            idom.patch(container, function() {
-                render(data);
-            });
-        });
     });
-
+    bench({
+        name: 'Magery',
+        setup: function () {
+            createTemplateNode('app',
+                               '<ul>' +
+                               '<li data-each="item in items" data-key="{{item.id}}">' +
+                               '{{item.name}}' +
+                               '</li>' +
+                               '</ul>'
+                              );
+        },
+        fn: function () {
+            var container = document.createElement('div');
+            var data = {items: []};
+            var app = Magery.bind(container, 'app', data, {});
+            for (var i = 0; i < 100; i++) {
+                app.context.items.push({id: i, name: 'item' + i});
+                app.update();
+            }
+        }
+    });
+});
+ 
+benchsuite('Randomly remove elements from 100 length list, one at a time (no keys)', function () {
+    bench({
+        name: 'React',
+        setup: function () {
+            this.App = React.createClass({
+                render: function () {
+                    var items = this.props.items;
+                    return React.createElement('ul', null, items.map(function (item) {
+                        return React.createElement('li', null, item.name);
+                    }));
+                }
+            });
+            this.items = [];
+            for (var i = 0; i < 100; i++) {
+                this.items.push({name: 'item' + i});
+            }
+        },
+        fn: function () {
+            var container = document.createElement('div');
+            var data = {items: this.items.slice()};
+            ReactDOM.render(React.createElement(this.App, data), container);
+            for (var i = 0; i < 100; i++) {
+                data.items.splice(random(data.items.length), 1);
+                ReactDOM.render(React.createElement(this.App, data), container);
+            }
+        }
+    });
+    bench({
+        name: 'Magery',
+        setup: function () {
+            createTemplateNode('app',
+                               '<ul>' +
+                               '<li data-each="item in items">' +
+                               '{{item.name}}' +
+                               '</li>' +
+                               '</ul>'
+                              );
+            this.items = [];
+            for (var i = 0; i < 100; i++) {
+                this.items.push({name: 'item' + i});
+            }
+        },
+        fn: function () {
+            var container = document.createElement('div');
+            var data = {items: this.items.slice()};
+            var app = Magery.bind(container, 'app', data, {});
+            for (var i = 0; i < 100; i++) {
+                app.context.items.splice(random(app.context.items.length - 1), 1);
+                app.update();
+            }
+        }
+    });
 });
 
-
-section('Live update a managed text box', function (bench) {
-
-    function input(el, value){
-        var ev = new InputEvent('input');
-        el.value = value;
-        el.dispatchEvent(ev);
-    }
-    
-    var test_string = 'This is a test of how quickly input events update a textbox';
-    
-    bench('Magery', function (container, iter) {
-        createTemplateNode(
-            'app',
-            '<input type="text" id="testInput" value="{{name}}" oninput="updateInput(event)" />'
-        );
-        var data = {name: ''};
-        var app = Magery.bind(container, 'app', data, {
-            updateInput: function (ev) {
-                this.context.name = ev.target.value;
+benchsuite('Randomly remove elements from 100 length list, one at a time (keys)', function () {
+    bench({
+        name: 'React',
+        setup: function () {
+            this.App = React.createClass({
+                render: function () {
+                    var items = this.props.items;
+                    return React.createElement('ul', null, items.map(function (item) {
+                        return React.createElement('li', {key: item.id}, item.name);
+                    }));
+                }
+            });
+            this.items = [];
+            for (var i = 0; i < 100; i++) {
+                this.items.push({name: 'item' + i});
             }
-        });
-        var el = document.getElementById('testInput');
-        iter(test_string.length, function (i) {
-            input(el, test_string.substring(0, i + 1));
-        });
-    });
-
-    bench('React', function (container, iter) {
-        var data = {name: ''};
-        var App = React.createClass({
-            render: function () {
-                return React.createElement('input', {
-                    type: 'text',
-                    id: 'testInput',
-                    value: this.props.name,
-                    onInput: this.props.updateInput
-                });
+        },
+        fn: function () {
+            var container = document.createElement('div');
+            var data = {items: this.items.slice()};
+            ReactDOM.render(React.createElement(this.App, data), container);
+            for (var i = 0; i < 100; i++) {
+                data.items.splice(random(data.items.length), 1);
+                ReactDOM.render(React.createElement(this.App, data), container);
             }
-        });
-        var updateInput = function (ev) {
-            data.name = ev.target.value;
-            ReactDOM.render(React.createElement(App, {name: data.name, updateInput: updateInput}), container);
-        };
-        var el = document.getElementById('testInput');
-        iter(100, function (i) {
-            input(el, test_string.substring(0, i + 1));
-        });
+        }
     });
-    
+    bench({
+        name: 'Magery',
+        setup: function () {
+            createTemplateNode('app',
+                               '<ul>' +
+                               '<li data-each="item in items" data-key="{{item.id}}">' +
+                               '{{item.name}}' +
+                               '</li>' +
+                               '</ul>'
+                              );
+            this.items = [];
+            for (var i = 0; i < 100; i++) {
+                this.items.push({id: i, name: 'item' + i});
+            }
+        },
+        fn: function () {
+            var container = document.createElement('div');
+            var data = {items: this.items.slice()};
+            var app = Magery.bind(container, 'app', data, {});
+            for (var i = 0; i < 100; i++) {
+                app.context.items.splice(random(app.context.items.length - 1), 1);
+                app.update();
+            }
+        }
+    });
+});
+
+benchsuite('Add 100 more complex elements to a list, one at a time', function () {
+    bench({
+        name: 'React',
+        setup: function () {
+            this.App = React.createClass({
+                render: function () {
+                    var items = this.props.items;
+                    return React.createElement('div', {id: 'container'}, [
+                        React.createElement('ul', null, items.map(function (item) {
+                            var children = [];
+                            if (item.published) {
+                                children.push(
+                                    React.createElement('span', null, 'Published')
+                                );
+                            }
+                            children.push(
+                                React.createElement('strong', null, item.name)
+                            );
+                            return React.createElement('li', {key: item.id}, children);
+                        }))
+                    ]);
+                }
+            });
+        },
+        fn: function () {
+            var container = document.createElement('container');
+            var data = {items: []};
+            ReactDOM.render(React.createElement(this.App, data), container);
+            for (var i = 0; i < 100; i++) {
+                data.items.push({id: i, name: 'item' + i});
+                ReactDOM.render(React.createElement(this.App, data), container);
+            }
+        }
+    });
+    bench({
+        name: 'Magery',
+        setup: function () {
+            createTemplateNode('app',
+                               '<div id="container">' +
+                               '<ul>' +
+                               '<li data-each="item in items" data-key="{{item.id}}">' +
+                               '<span data-if="item.published">Published</span>' +
+                               '<strong>{{item.name}}</strong>' +
+                               '</li>' +
+                               '</ul>' +
+                               '</div>'
+                              );
+        },
+        fn: function () {
+            var container = document.createElement('div');
+            var data = {items: []};
+            var app = Magery.bind(container, 'app', data, {});
+            for (var i = 0; i < 100; i++) {
+                app.context.items.push({id: i, name: 'item' + i});
+                app.update();
+            }
+        }
+    });
+});
+
+function input(el, value) {
+    el.value = value;
+    el.dispatchEvent(new Event('input'));
+}
+
+var test_string = 'This is a test of how quickly input events update a managed textbox';
+
+benchsuite('Live update a managed text box', function () {
+    bench({
+        name: 'React',
+        setup: function () {
+            this.App = React.createClass({
+                getInitialState: function () {
+                    return {name: ''};
+                },
+                updateInput: function (ev) {
+                    this.setState({name: ev.target.value});
+                },
+                render: function () {
+                    return React.createElement('input', {
+                        type: 'text',
+                        value: this.state.name,
+                        onInput: this.updateInput.bind(this)
+                    });
+                }
+            });
+        },
+        fn: function () {
+            var container = document.createElement('div');
+            ReactDOM.render(React.createElement(this.App, {}), container);
+            var el = container.querySelector('input');
+            for (var i = 0; i < 100; i++) {
+                var str = test_string.substring(0, i + 1);
+                el.value = str;
+                input(el, str);
+            }
+        }
+    });
+    bench({
+        name: 'Magery',
+        setup: function () {
+            createTemplateNode(
+                'app',
+                '<input type="text" value="{{name}}" data-managed="true" oninput="updateInput(event)" />'
+            );
+        },
+        fn: function () {
+            var container = document.createElement('div');
+            var data = {name: ''};
+            var app = Magery.bind(container, 'app', data, {
+                updateInput: function (ev) {
+                    this.context.name = ev.target.value;
+                }
+            });
+            var el = container.querySelector('input');
+            for (var i = 0; i < 100; i++) {
+                var str = test_string.substring(0, i + 1);
+                el.value = str;
+                input(el, str);
+            }
+        }
+    });
 });
