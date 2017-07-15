@@ -2,30 +2,42 @@ suite('compile', function () {
 
     var assert = chai.assert;
 
-    var patcher_calls = [];
-    var test_patcher = {
-        start: function () {
-            patcher_calls.push(['start']);
-        },
-        enterTag: function (tag, key) {
-            patcher_calls.push(['enterTag', tag, key]);
-        },
-        attribute: function (name, value) {
-            patcher_calls.push(['attribute', name, value]);
-        },
-        text: function (text) {
-            patcher_calls.push(['text', text]);
-        },
-        exitTag: function () {
-            patcher_calls.push(['exitTag']);
-        },
-        skip: function (tag, key) {
-            patcher_calls.push(['skip', tag, key]);
-        },
-        end: function () {
-            patcher_calls.push(['end']);
-        }
-    };
+    function test_patcher(calls) {
+        return {
+            start: function () {
+                calls.push(['start']);
+            },
+            enterTag: function (tag, key) {
+                calls.push(['enterTag', tag, key]);
+            },
+            attribute: function (name, value) {
+                calls.push(['attribute', name, value]);
+            },
+            text: function (text) {
+                calls.push(['text', text]);
+            },
+            exitTag: function () {
+                calls.push(['exitTag']);
+            },
+            skip: function (tag, key) {
+                calls.push(['skip', tag, key]);
+            },
+            end: function () {
+                calls.push(['end']);
+            }
+        };
+    }
+
+    function patch(tmpl, next_data, prev_data) {
+        var calls = [];
+        var state = {
+            patcher: test_patcher(calls),
+            bound_template: null,
+            text_buffer: ''
+        };
+        tmpl.content.render(state, next_data, prev_data);
+        return calls;
+    }
 
     function createTemplateNode(id, src) {
         var el = document.getElementById(id);
@@ -91,13 +103,7 @@ suite('compile', function () {
                                       '<em>baz</em>');
         var prev_data = {};
         var next_data = {};
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'I', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'foo']);
@@ -121,13 +127,7 @@ suite('compile', function () {
                                       '</p>\n');
         var prev_data = {};
         var next_data = {};
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'I', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'foo']);
@@ -153,13 +153,7 @@ suite('compile', function () {
         var tmpl = createTemplateNode('foo', '<i>Hello, {{name}}!</i>');
         var prev_data = {};
         var next_data = {name: 'world'};
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'I', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'Hello, world!']);
@@ -172,13 +166,7 @@ suite('compile', function () {
         var tmpl = createTemplateNode('foo', '{{names}}');
         var prev_data = {};
         var next_data = {names: ['foo', 'bar', 'baz']};
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['text', 'foo,bar,baz']);
         assert.deepEqual(patcher_calls[2], ['end']);
@@ -189,13 +177,7 @@ suite('compile', function () {
         var tmpl = createTemplateNode('foo', 'Hello, {{name}}');
         var prev_data = {};
         var next_data = {};
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['text', 'Hello, ']);
         assert.deepEqual(patcher_calls[2], ['end']);
@@ -207,13 +189,7 @@ suite('compile', function () {
         var prev_data = {};
         var next_data = {name: null};
         var changes = true;
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['text', 'Hello, ']);
         assert.deepEqual(patcher_calls[2], ['end']);
@@ -225,13 +201,7 @@ suite('compile', function () {
         var prev_data = {};
         var next_data = {name: true};
         var changes = true;
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['text', 'Hello, true']);
         assert.deepEqual(patcher_calls[2], ['end']);
@@ -243,13 +213,7 @@ suite('compile', function () {
         var prev_data = {};
         var next_data = {name: false};
         var changes = true;
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['text', 'Hello, false']);
         assert.deepEqual(patcher_calls[2], ['end']);
@@ -261,13 +225,7 @@ suite('compile', function () {
         var prev_data = {};
         var next_data = {name: {first: 'a', last: 'b'}};
         var changes = true;
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['text', 'Hello, [object Object]']);
         assert.deepEqual(patcher_calls[2], ['end']);
@@ -279,13 +237,7 @@ suite('compile', function () {
         var prev_data = {};
         var next_data = {items: ['a', 'b', 'c']};
         var changes = true;
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['text', 'Total: 3']);
         assert.deepEqual(patcher_calls[2], ['end']);
@@ -390,13 +342,7 @@ suite('compile', function () {
         var prev_data = {};
         var next_data = {items: [{name: 'one'}, {name: 'two'}, {name: 'three'}]};
         var changes = true;
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -468,13 +414,7 @@ suite('compile', function () {
         var prev_data = {};
         var next_data = {items: [{name: 'one'}, {name: 'two'}, {name: 'three'}]};
         var changes = true;
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -504,13 +444,7 @@ suite('compile', function () {
         var prev_data = {};
         var next_data = {items: [{name: 'one'}, {name: 'two'}, {name: 'three'}]};
         var changes = true;
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -617,13 +551,7 @@ suite('compile', function () {
                                       '<b data-if="published">published</b>');
         var next_data = {published: true};
         var prev_data = {};
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -635,8 +563,7 @@ suite('compile', function () {
         assert.equal(patcher_calls.length, 8);
         prev_data = next_data;
         next_data = {published: false};
-        patcher_calls = [];
-        tmpl.content.render(state, next_data, prev_data);
+        patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -645,8 +572,7 @@ suite('compile', function () {
         assert.equal(patcher_calls.length, 5);
         // empty array is falsy
         next_data = {published: []};
-        patcher_calls = [];
-        tmpl.content.render(state, next_data, prev_data);
+        patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -655,8 +581,7 @@ suite('compile', function () {
         assert.equal(patcher_calls.length, 5);
         // empty string is falsy
         next_data = {published: ''};
-        patcher_calls = [];
-        tmpl.content.render(state, next_data, prev_data);
+        patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -665,8 +590,7 @@ suite('compile', function () {
         assert.equal(patcher_calls.length, 5);
         // zero is falsy
         next_data = {published: 0};
-        patcher_calls = [];
-        tmpl.content.render(state, next_data, prev_data);
+        patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -675,8 +599,7 @@ suite('compile', function () {
         assert.equal(patcher_calls.length, 5);
         // undefined is falsy
         next_data = {};
-        patcher_calls = [];
-        tmpl.content.render(state, next_data, prev_data);
+        patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -691,13 +614,7 @@ suite('compile', function () {
                                       '<b data-unless="published">published</b>');
         var next_data = {published: true};
         var prev_data = {};
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -706,8 +623,7 @@ suite('compile', function () {
         assert.equal(patcher_calls.length, 5);
         prev_data = next_data;
         next_data = {published: false};
-        patcher_calls = [];
-        tmpl.content.render(state, next_data, prev_data);
+        patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -720,8 +636,7 @@ suite('compile', function () {
         // empty array is falsy
         prev_data = next_data;
         next_data = {published: []};
-        patcher_calls = [];
-        tmpl.content.render(state, next_data, prev_data);
+        patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -734,8 +649,7 @@ suite('compile', function () {
         // empty string is falsy
         prev_data = next_data;
         next_data = {published: ''};
-        patcher_calls = [];
-        tmpl.content.render(state, next_data, prev_data);
+        patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -748,8 +662,7 @@ suite('compile', function () {
         // zero is falsy
         prev_data = next_data;
         next_data = {published: 0};
-        patcher_calls = [];
-        tmpl.content.render(state, next_data, prev_data);
+        patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -762,8 +675,7 @@ suite('compile', function () {
         // undefined is falsy
         prev_data = next_data;
         next_data = {};
-        patcher_calls = [];
-        tmpl.content.render(state, next_data, prev_data);
+        patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -789,13 +701,7 @@ suite('compile', function () {
                 }
             }
         };
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -822,13 +728,7 @@ suite('compile', function () {
                 }
             }
         };
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -860,13 +760,7 @@ suite('compile', function () {
                 }
             }
         };
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -903,13 +797,7 @@ suite('compile', function () {
                 }
             }
         };
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -955,13 +843,7 @@ suite('compile', function () {
                 }
             }
         };
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
@@ -993,13 +875,7 @@ suite('compile', function () {
                                       '<em>baz</em>');
         var prev_data = {};
         var next_data = {};
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'I', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'foo']);
@@ -1019,13 +895,7 @@ suite('compile', function () {
                                       '<a href="#" class="btn">foo</a>');
         var prev_data = {};
         var next_data = {};
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'A', null]);
         // order of these events is browser dependant
@@ -1039,18 +909,40 @@ suite('compile', function () {
         assert.equal(patcher_calls.length, 7);
     });
 
+    test('boolean attributes - allowfullscreen', function () {
+        var tmpl = createTemplateNode('foo',
+                                      '<iframe allowfullscreen="{{fs}}"></iframe>' +
+                                      '<div allowfullscreen="{{fs}}"></div>');
+        var prev_data = {};
+        var next_data = {fs: true};
+        var patcher_calls = patch(tmpl, next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['start']);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'IFRAME', null]);
+        assert.deepEqual(patcher_calls[2], ['attribute', 'allowfullscreen', true]);
+        assert.deepEqual(patcher_calls[3], ['exitTag']);
+        assert.deepEqual(patcher_calls[4], ['enterTag', 'div', null]);
+        assert.deepEqual(patcher_calls[5], ['attribute', 'allowfullscreen', 'true']);
+        assert.deepEqual(patcher_calls[6], ['exitTag']);
+        assert.deepEqual(patcher_calls[7], ['end']);
+        assert.equal(patcher_calls.length, 8);
+        next_data = {fs: false};
+        patcher_calls = patch(tmpl, next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['start']);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'IFRAME', null]);
+        assert.deepEqual(patcher_calls[3], ['exitTag']);
+        assert.deepEqual(patcher_calls[4], ['enterTag', 'div', null]);
+        assert.deepEqual(patcher_calls[5], ['attribute', 'allowfullscreen', 'false']);
+        assert.deepEqual(patcher_calls[6], ['exitTag']);
+        assert.deepEqual(patcher_calls[7], ['end']);
+        assert.equal(patcher_calls.length, 8);
+    });
+
     test('expand variables in node attributes', function () {
         var tmpl = createTemplateNode('foo',
                                       '<a href="{{url}}" class="btn">foo</a>');
         var prev_data = {};
         var next_data = {url: 'http://example.com'};
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'A', null]);
         // order of these events is browser dependant
@@ -1072,13 +964,7 @@ suite('compile', function () {
                                       'END');
         var prev_data = {};
         var next_data = {};
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['text', 'MESSAGE Hello, ']);
         assert.deepEqual(patcher_calls[2], ['enterTag', 'B', null]);
@@ -1665,13 +1551,7 @@ suite('compile', function () {
                                       '<h1>Hello, {{user.name}}!</h1>');
         var prev_data = {};
         var next_data = {};
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'Hello, !']);
@@ -1685,13 +1565,7 @@ suite('compile', function () {
                                       '<a href="{{url}}">link</a>');
         var prev_data = {};
         var next_data = {};
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'A', null]);
         assert.deepEqual(patcher_calls[2], ['attribute', 'href', '']);
@@ -1714,13 +1588,7 @@ suite('compile', function () {
                 {value: 3, label: 'three'},
             ]
         };
-        patcher_calls = [];
-        var state = {
-            patcher: test_patcher,
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'SELECT', null]);
         assert.deepEqual(patcher_calls[2], ['enterTag', 'OPTION', null]);

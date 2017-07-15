@@ -364,11 +364,15 @@ var Magery =
 	    return function (event) {
 	        var node = event.target;
 	        var handler = node.handlers[type];
-	        node.data['event'] = event;
-	        var args = handler.args.map(function (arg) {
-	            return utils.lookup(node.data, arg);
-	        });
-	        node.bound_template.applyHandler(handler.name, args);
+	        if (handler.name) {
+	            var args = handler.args.map(function (arg) {
+	                if (arg.length == 1 && arg[0] == 'event') {
+	                    return event;
+	                }
+	                return utils.lookup(node.data, arg);
+	            });
+	            node.bound_template.applyHandler(handler.name, args);
+	        }
 	        if (node.tagName === 'INPUT') {
 	            var nodeType = node.getAttribute('type');
 	            if (type == 'change') {

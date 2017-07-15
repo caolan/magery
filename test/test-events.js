@@ -198,273 +198,236 @@ suite('events', function () {
         assert.equal(calls, 1);
     });
 
-    // test('text input value reset to match template data on input', function () {
-    //     var container = document.createElement('div');
-    //     var src = '' +
-    //             '{{#define main}}' +
-    //               '<input type="text" value="{{name}}">' +
-    //             '{{/define}}';
-    //     var templates = Magery.loadTemplates(src);
-    //     var data = {name: 'testing'};
-    //     Magery.patch(templates, 'main', container, data);
-    //     var input = child(container, 0);
-    //     input.value = 'foo';
-    //     assert.equal(input.value, 'foo');
-    //     // input event fires synchronously
-    //     var event = document.createEvent('Event');
-    //     event.initEvent('input', true, true);
-    //     input.dispatchEvent(event);
-    //     assert.equal(input.value, 'testing');
-    // });
+    test('text input value reset to match template data on input', function () {
+        var container = document.createElement('div');
+        createTemplateNode('main', '<input data-managed="true" type="text" value="{{name}}">');
+        var data = {name: 'testing'};
+        Magery.bind(container, 'main', data, {});
+        var input = child(container, 0);
+        input.value = 'foo';
+        assert.equal(input.value, 'foo');
+        // input event fires synchronously
+        var event = document.createEvent('Event');
+        event.initEvent('input', true, true);
+        input.dispatchEvent(event);
+        assert.equal(input.value, 'testing');
+    });
 
-    // test('update input value via dispatch + patch', function () {
-    //     var container = document.createElement('div');
-    //     var src = '' +
-    //             '{{#define main}}' +
-    //               '<input type="text" value="{{name}}" oninput="updateInput">' +
-    //             '{{/define}}';
-    //     var templates = Magery.loadTemplates(src);
-    //     var data = {name: 'testing'};
-    //     Magery.patch(templates, 'main', container, data);
-    //     container.dispatch = function (name, event, context, path) {
-    //         if (name == 'updateInput') {
-    //             data.name = 'bar';
-    //             Magery.patch(templates, 'main', container, data);
-    //         }
-    //     };
-    //     var input = child(container, 0);
-    //     input.value = 'foo';
-    //     assert.equal(input.value, 'foo');
-    //     // input event fires synchronously
-    //     var event = document.createEvent('Event');
-    //     event.initEvent('input', true, true);
-    //     input.dispatchEvent(event);
-    //     assert.equal(input.value, 'bar');
-    // });
+    test('update input value via dispatch + patch', function () {
+        var container = document.createElement('div');
+        createTemplateNode('main', '<input data-managed="true" type="text" value="{{name}}" oninput="updateInput()">');
+        var data = {name: 'testing'};
+        Magery.bind(container, 'main', data, {
+            updateInput: function () {
+                this.context.name = 'bar';
+            }
+        });
+        var input = child(container, 0);
+        input.value = 'foo';
+        assert.equal(input.value, 'foo');
+        // input event fires synchronously
+        var event = document.createEvent('Event');
+        event.initEvent('input', true, true);
+        input.dispatchEvent(event);
+        assert.equal(input.value, 'bar');
+    });
 
-    // // TODO: check this in other browsers and confirm it actually tests cursor position changes
-    // /*
-    // test('maintain text cursor position if patch results in expected event value', function () {
-    //     var container = document.createElement('div');
-    //     var src = '' +
-    //             '{{#define main}}' +
-    //               '<input type="text" value="{{name}}" oninput="updateInput">' +
-    //             '{{/define}}';
-    //     var templates = Magery.loadTemplates(src);
-    //     var data = {name: 'testing'};
-    //     Magery.patch(templates, 'main', container, data);
-    //     container.dispatch = function (name, event, context, path) {
-    //         if (name == 'updateInput') {
-    //             data.name = event.target.value;
-    //             Magery.patch(templates, 'main', container, data);
-    //         }
-    //     };
-    //     var input = child(container, 0);
-    //     document.body.appendChild(container);
-    //     input.focus();
-    //     input.value = 'test-ing';
-    //     input.selectionStart = 5;
-    //     input.selectionEnd = 5;
-    //     // input event fires synchronously
-    //     var event = document.createEvent('Event');
-    //     event.initEvent('input', true, true);
-    //     input.dispatchEvent(event);
-    //     assert.equal(input.value, 'test-ing');
-    //     assert.equal(input.selectionStart, 5);
-    //     assert.equal(input.selectionEnd, 5);
-    //     document.body.removeChild(container);
-    // });
-    //  */
+    // TODO: check this in other browsers and confirm it actually tests cursor position changes
+    /*
+    test('maintain text cursor position if patch results in expected event value', function () {
+        var container = document.createElement('div');
+        var src = '' +
+                '{{#define main}}' +
+                  '<input type="text" value="{{name}}" oninput="updateInput">' +
+                '{{/define}}';
+        var templates = Magery.loadTemplates(src);
+        var data = {name: 'testing'};
+        Magery.patch(templates, 'main', container, data);
+        container.dispatch = function (name, event, context, path) {
+            if (name == 'updateInput') {
+                data.name = event.target.value;
+                Magery.patch(templates, 'main', container, data);
+            }
+        };
+        var input = child(container, 0);
+        document.body.appendChild(container);
+        input.focus();
+        input.value = 'test-ing';
+        input.selectionStart = 5;
+        input.selectionEnd = 5;
+        // input event fires synchronously
+        var event = document.createEvent('Event');
+        event.initEvent('input', true, true);
+        input.dispatchEvent(event);
+        assert.equal(input.value, 'test-ing');
+        assert.equal(input.selectionStart, 5);
+        assert.equal(input.selectionEnd, 5);
+        document.body.removeChild(container);
+    });
+     */
 
-    // test('reset checkbox to match template data', function (done) {
-    //     var container = document.createElement('div');
-    //     var src = '' +
-    //             '{{#define main}}' +
-    //               '{{#if checked}}' +
-    //                 '<input type="checkbox" checked>' +
-    //               '{{else}}' +
-    //                 '<input type="checkbox">' +
-    //               '{{/if}}' +
-    //             '{{/define}}';
-    //     var templates = Magery.loadTemplates(src);
-    //     var data = {checked: true};
-    //     Magery.patch(templates, 'main', container, data);
-    //     var input = child(container, 0);
-    //     document.body.appendChild(container);
-    //     assert.ok(input.checked);
-    //     click(input);
-    //     setTimeout(function () {
-    //         assert.ok(input.checked);
-    //         document.body.removeChild(container);
-    //         done();
-    //     }, 0);
-    // });
+    test('reset checkbox to match template data', function (done) {
+        var container = document.createElement('div');
+        createTemplateNode('main',
+                           '<input data-managed="true" data-if="checked" type="checkbox" checked>' +
+                           '<input data-managed="true" data-unless="checked" type="checkbox">');
+        var data = {checked: true};
+        Magery.bind(container, 'main', data, {});
+        var input = child(container, 0);
+        document.body.appendChild(container);
+        assert.ok(input.checked);
+        click(input);
+        setTimeout(function () {
+            assert.ok(input.checked);
+            document.body.removeChild(container);
+            done();
+        }, 0);
+    });
 
-    // test('update checkbox via dispatch', function (done) {
-    //     var container = document.createElement('div');
-    //     var src = '' +
-    //             '{{#define main}}' +
-    //               '{{#if checked}}' +
-    //                 '<input type="checkbox" onclick="toggle" checked>' +
-    //               '{{else}}' +
-    //                 '<input type="checkbox" onclick="toggle">' +
-    //               '{{/if}}' +
-    //             '{{/define}}';
-    //     var templates = Magery.loadTemplates(src);
-    //     var data = {checked: true};
-    //     Magery.patch(templates, 'main', container, data);
-    //     container.dispatch = function (name, event, context, path) {
-    //         data.checked = !data.checked;
-    //         Magery.patch(templates, 'main', container, data);
-    //     };
-    //     var input = child(container, 0);
-    //     document.body.appendChild(container);
-    //     assert.ok(input.checked);
-    //     click(input);
-    //     setTimeout(function () {
-    //         assert.ok(!input.checked);
-    //         click(input);
-    //         setTimeout(function () {
-    //             assert.ok(input.checked);
-    //             document.body.removeChild(container);
-    //             done();
-    //         }, 0);
-    //     }, 0);
-    // });
+    test('update checkbox via dispatch', function (done) {
+        var container = document.createElement('div');
+        createTemplateNode('main',
+                           '<input data-if="checked" type="checkbox" onclick="toggle()" checked>' +
+                           '<input data-unless="checked" type="checkbox" onclick="toggle()">');
+        var data = {checked: true};
+        Magery.bind(container, 'main', data, {
+            toggle: function () {
+                this.context.checked = !this.context.checked;
+            }
+        });
+        var input = child(container, 0);
+        document.body.appendChild(container);
+        assert.ok(input.checked);
+        click(input);
+        setTimeout(function () {
+            assert.ok(!input.checked);
+            click(input);
+            setTimeout(function () {
+                assert.ok(input.checked);
+                document.body.removeChild(container);
+                done();
+            }, 0);
+        }, 0);
+    });
     
-    // test('reset radio to match template data', function (done) {
-    //     var container = document.createElement('div');
-    //     var src = '' +
-    //             '{{#define main}}' +
-    //               '{{#each options}}' +
-    //                 '{{#if checked}}' +
-    //                   '<input type="radio" name="example" value="{{value}}" checked>' +
-    //                 '{{else}}' +
-    //                   '<input type="radio" name="example" value="{{value}}">' +
-    //                 '{{/if}}' +
-    //               '{{/each}}' +
-    //             '{{/define}}';
-    //     var templates = Magery.loadTemplates(src);
-    //     var data = {
-    //         options: [
-    //             {value: 'one', checked: false},
-    //             {value: 'two', checked: true},
-    //             {value: 'three', checked: false}
-    //         ]
-    //     };
-    //     Magery.patch(templates, 'main', container, data);
-    //     var radioOne = child(container, 0);
-    //     var radioTwo = child(container, 1);
-    //     var radioThree = child(container, 2);
-    //     document.body.appendChild(container);
-    //     assert.ok(!radioOne.checked, 'radio one (pre)');
-    //     assert.ok(radioTwo.checked, 'radio two (pre)');
-    //     assert.ok(!radioThree.checked, 'radio three (pre)');
-    //     click(radioThree);
-    //     setTimeout(function () {
-    //         assert.ok(!radioOne.checked, 'radio one (post)');
-    //         assert.ok(radioTwo.checked, 'radio two (post)');
-    //         assert.ok(!radioThree.checked, 'radio three (post)');
-    //         document.body.removeChild(container);
-    //         done();
-    //     }, 0);
-    // });
+    test('reset radio to match template data', function (done) {
+        var container = document.createElement('div');
+        createTemplateNode('main',
+                           '<div data-each="option in options">' +
+                           '<input data-if="option.checked" data-managed="true" type="radio" name="example" value="{{option.value}}" checked>' +
+                           '<input data-unless="option.checked" data-managed="true" type="radio" name="example" value="{{option.value}}">' +
+                           '</div>');
+        var data = {
+            options: [
+                {value: 'one', checked: false},
+                {value: 'two', checked: true},
+                {value: 'three', checked: false}
+            ]
+        };
+        Magery.bind(container, 'main', data, {});
+        var radioOne = child(container, 0, 0);
+        var radioTwo = child(container, 1, 0);
+        var radioThree = child(container, 2, 0);
+        document.body.appendChild(container);
+        assert.ok(!radioOne.checked, 'radio one (pre)');
+        assert.ok(radioTwo.checked, 'radio two (pre)');
+        assert.ok(!radioThree.checked, 'radio three (pre)');
+        click(radioThree);
+        setTimeout(function () {
+            assert.ok(!radioOne.checked, 'radio one (post)');
+            assert.ok(radioTwo.checked, 'radio two (post)');
+            assert.ok(!radioThree.checked, 'radio three (post)');
+            document.body.removeChild(container);
+            done();
+        }, 0);
+    });
 
-    // test('update radio via dispatch', function (done) {
-    //     var container = document.createElement('div');
-    //     var src = '' +
-    //             '{{#define main}}' +
-    //               '{{#each options}}' +
-    //                 '{{#if checked}}' +
-    //                   '<input type="radio" onclick="pick" name="example" value="{{value}}" checked>' +
-    //                 '{{else}}' +
-    //                   '<input type="radio" onclick="pick" name="example" value="{{value}}">' +
-    //                 '{{/if}}' +
-    //               '{{/each}}' +
-    //             '{{/define}}';
-    //     var templates = Magery.loadTemplates(src);
-    //     var data = {
-    //         options: [
-    //             {value: 'one', checked: false},
-    //             {value: 'two', checked: true},
-    //             {value: 'three', checked: false}
-    //         ]
-    //     };
-    //     Magery.patch(templates, 'main', container, data);
-    //     container.dispatch = function (name, event, context, path) {
-    //         if (name === 'pick') {
-    //             data.options = data.options.map(function (opt) {
-    //                 opt.checked = (opt.value == context.value);
-    //                 return opt;
-    //             });
-    //         }
-    //         Magery.patch(templates, 'main', container, data);
-    //     };
-    //     var radioOne = child(container, 0);
-    //     var radioTwo = child(container, 1);
-    //     var radioThree = child(container, 2);
-    //     document.body.appendChild(container);
-    //     assert.ok(!radioOne.checked);
-    //     assert.ok(radioTwo.checked);
-    //     assert.ok(!radioThree.checked);
-    //     click(radioThree);
-    //     setTimeout(function () {
-    //         assert.ok(!radioOne.checked);
-    //         assert.ok(!radioTwo.checked);
-    //         assert.ok(radioThree.checked);
-    //         click(radioOne);
-    //         setTimeout(function () {
-    //             assert.ok(radioOne.checked);
-    //             assert.ok(!radioTwo.checked);
-    //             assert.ok(!radioThree.checked);
-    //             document.body.removeChild(container);
-    //             done();
-    //         }, 0);
-    //     }, 0);
-    // });
+    test('update radio via event handler', function (done) {
+        var container = document.createElement('div');
+        createTemplateNode('main',
+                           '<div data-each="option in options">' +
+                           '<input data-if="option.checked" data-managed="true" type="radio" onclick="pick(option.value)" name="example" value="{{option.value}}" checked>' +
+                           '<input data-unless="option.checked" data-managed="true" type="radio" onclick="pick(option.value)" name="example" value="{{option.value}}">' +
+                           '</div>');
+        var data = {
+            options: [
+                {value: 'one', checked: false},
+                {value: 'two', checked: true},
+                {value: 'three', checked: false}
+            ]
+        };
+        Magery.bind(container, 'main', data, {
+            pick: function (value) {
+                this.context.options.forEach(function (option) {
+                    option.checked = (option.value === value);
+                });
+            }
+        });
+        var radioOne = child(container, 0, 0);
+        var radioTwo = child(container, 1, 0);
+        var radioThree = child(container, 2, 0);
+        document.body.appendChild(container);
+        assert.ok(!radioOne.checked, 'radioOne (0)');
+        assert.ok(radioTwo.checked, 'radioTwo (0)');
+        assert.ok(!radioThree.checked, 'radioThree (0)');
+        click(radioThree);
+        setTimeout(function () {
+            assert.ok(!radioOne.checked, 'radioOne (1)');
+            assert.ok(!radioTwo.checked, 'radioTwo (1)');
+            assert.ok(radioThree.checked, 'radioThree (1)');
+            click(radioOne);
+            setTimeout(function () {
+                assert.ok(radioOne.checked, 'radioOne (2)');
+                assert.ok(!radioTwo.checked, 'radioTwo (2)');
+                assert.ok(!radioThree.checked, 'radioThree (2)');
+                document.body.removeChild(container);
+                done();
+            }, 0);
+        }, 0);
+    });
 
-    // test('reset select to match template data', function (done) {
-    //     var container = document.createElement('div');
-    //     var src = '' +
-    //             '{{#define main}}' +
-    //               '<select>' +
-    //                 '{{#each options}}' +
-    //                   '{{#if selected}}' +
-    //                     '<option value="{{value}}" selected>{{label}}</option>' +
-    //                   '{{else}}' +
-    //                     '<option value="{{value}}">{{label}}</option>' +
-    //                   '{{/if}}' +
-    //                 '{{/each}}' +
-    //               '</select>' +
-    //             '{{/define}}';
-    //     var templates = Magery.loadTemplates(src);
-    //     var data = {
-    //         options: [
-    //             {value: 1, label: 'one', selected: false},
-    //             {value: 2, label: 'two', selected: true},
-    //             {value: 3, label: 'three', selected: false}
-    //         ]
-    //     };
-    //     Magery.patch(templates, 'main', container, data);
-    //     var select = child(container, 0);
-    //     var optionOne = child(select, 0);
-    //     var optionTwo = child(select, 1);
-    //     var optionThree = child(select, 2);
-    //     document.body.appendChild(container);
-    //     assert.ok(!optionOne.selected, 'option one (pre)');
-    //     assert.ok(optionTwo.selected, 'option two (pre)');
-    //     assert.ok(!optionThree.selected, 'option three (pre)');
-    //     assert.equal(select.value, 2);
-    //     click(optionThree);
-    //     setTimeout(function () {
-    //         assert.ok(!optionOne.selected, 'option one (pre)');
-    //         assert.ok(optionTwo.selected, 'option two (pre)');
-    //         assert.ok(!optionThree.selected, 'option three (pre)');
-    //         assert.equal(select.value, 2);
-    //         document.body.removeChild(container);
-    //         done();
-    //     }, 0);
-    // });
+    test('reset select to match template data', function (done) {
+        var container = document.createElement('div');
+        createTemplateNode('main',
+                           '<select>' +
+                           // TODO: how to handle an each loop over <option>s which may or may not be selected?
+                           '<option data-each="option in optinos" data-if="option.selected" value="{{option.value}}" selected>{{option.label}}</option>' +
+                           '<option data-unless="option.selected" value="{{option.value}}">{{option.label}}</option>' +
+                           '</select>');
+        var data = {
+            options: [
+                {value: 1, label: 'one', selected: false},
+                {value: 2, label: 'two', selected: true},
+                {value: 3, label: 'three', selected: false}
+            ]
+        };
+        Magery.bind(container, 'main', data, {});
+        var select = child(container, 0);
+        var optionOne = child(select, 0);
+        var optionTwo = child(select, 1);
+        var optionThree = child(select, 2);
+        document.body.appendChild(container);
+        console.log(document.getElementById('main').content);
+        console.log(document.getElementById('main').content.childNodes[0].innerHTML);
+        console.log(container);
+        console.log(select);
+        console.log(optionOne);
+        console.log(optionTwo);
+        console.log(optionThree);
+        assert.ok(!optionOne.selected, 'option one (pre)');
+        assert.ok(optionTwo.selected, 'option two (pre)');
+        assert.ok(!optionThree.selected, 'option three (pre)');
+        assert.equal(select.value, 2);
+        click(optionThree);
+        setTimeout(function () {
+            assert.ok(!optionOne.selected, 'option one (pre)');
+            assert.ok(optionTwo.selected, 'option two (pre)');
+            assert.ok(!optionThree.selected, 'option three (pre)');
+            assert.equal(select.value, 2);
+            document.body.removeChild(container);
+            done();
+        }, 0);
+    });
 
     // test('update select via dispatch', function (done) {
     //     var container = document.createElement('div');
