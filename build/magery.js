@@ -45,10 +45,9 @@ var Magery =
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var context = __webpack_require__(1);
-	var patch = __webpack_require__(2);
-	var active_paths = __webpack_require__(7);
-	var compile = __webpack_require__(8);
+	var patch = __webpack_require__(1);
+	var active_paths = __webpack_require__(6);
+	var compile = __webpack_require__(7);
 
 
 	/***** Public API *****/
@@ -56,7 +55,7 @@ var Magery =
 	function BoundTemplate(node, template, data, handlers) {
 	    this.node = node;
 	    this.template = template;
-	    this.context = data;
+	    this.data = data;
 	    this.handlers = handlers;
 	}
 
@@ -88,13 +87,11 @@ var Magery =
 	        text_buffer: ""
 	    };
 	    bound.update = function () {
-	        // this.context = context.toContext(this.context);
-	        var next_data = this.context;
+	        var next_data = this.data;
 	        var prev_data = null;
 	        patcher.start();
 	        this.template.render(render_state, next_data, prev_data);
 	        patcher.end();
-	        // context.markClean(this.context);
 	        this.update_queued = false;
 	    };
 	    bound.update();
@@ -117,126 +114,6 @@ var Magery =
 
 /***/ }),
 /* 1 */
-/***/ (function(module, exports) {
-
-	function Context(data, parents) {
-	    parents = parents || new Set();
-	    var dirty = true;
-	    var ctx = new Proxy(data, {
-	        get: function (target, property, receiver) {
-	            switch (property) {
-	            case '.dirty': return dirty;
-	            case '.parents': return parents;
-	            default:
-	                return target[property];
-	            }
-	        },
-	        set: function (target, property, value, receiver) {
-	            switch (property) {
-	            case '.dirty': dirty = value; break;
-	            case '.parents': parents = value; break;
-	            default:
-	                if (isContext(value)) {
-	                    addParent(value, ctx);
-	                }
-	                target[property] = value;
-	                markDirty(ctx);
-	            }
-	            return true;
-	        },
-	        deleteProperty: function (target, property) {
-	            switch (property) {
-	            case '.dirty': return false;
-	            case '.parents': return false;
-	            default:
-	                var value = target[property];
-	                if (isContext(value)) {
-	                    removeParent(value, ctx);
-	                }
-	                delete target[property];
-	                markDirty(ctx);
-	                return true;
-	            }
-	        }
-	    });
-	    return ctx;
-	}
-
-	function isContext(obj) {
-	    return typeof obj === 'object' && obj['.parents'];
-	}
-
-	function addParent(target, parent) {
-	    return target['.parents'].add(parent);
-	}
-
-	function removeParent(target, parent) {
-	    return target['.parents'].delete(parent);
-	}
-
-	function isDirty(obj) {
-	    return obj['.dirty'];
-	}
-
-	function markClean(obj) {
-	    if (isDirty(obj)) {
-	        obj['.dirty'] = false;
-	        for (var k in obj) {
-	            var v = obj[k];
-	            if (isContext(v)) {
-	                markClean(v);
-	            }
-	        }
-	    }
-	}
-
-	function markDirty(obj) {
-	    if (!isDirty(obj)) {
-	        obj['.dirty'] = true;
-	        obj['.parents'].forEach(markDirty);
-	    }
-	}
-
-	function toContext(obj, parent, converts) {
-	    converts = converts || new WeakMap();
-	    if (typeof obj === 'object') {
-	        if (isContext(obj)) {
-	            if (!isDirty(obj)) {
-	                return obj;
-	            }
-	        }
-	        else {
-	            // if we previously converted this object, use that. this
-	            // way the converted references will still compare equal
-	            // to each other
-	            if (converts.has(obj)) {
-	                obj = converts.get(obj);
-	            }
-	            // otherwise convert to a new context object
-	            else {
-	                var original = obj;
-	                obj = Context(original);
-	                converts.set(original, obj);
-	            }
-	            if (parent) {
-	                addParent(obj, parent);
-	            }
-	        }
-	        for (var k in obj) {
-	            obj[k] = toContext(obj[k], obj, converts);
-	        }
-	    }
-	    return obj;
-	}
-
-	// exports.Context = Context;
-	exports.isDirty = isDirty;
-	exports.toContext = toContext;
-	exports.markClean = markClean;
-
-
-/***/ }),
-/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -246,9 +123,9 @@ var Magery =
 	 * DOM, performing DOM mutation only through transform calls.
 	 */
 
-	var transforms = __webpack_require__(3);
-	var utils = __webpack_require__(5);
-	var Set = __webpack_require__(6);
+	var transforms = __webpack_require__(2);
+	var utils = __webpack_require__(4);
+	var Set = __webpack_require__(5);
 
 	var ELEMENT_NODE = 1;
 	var TEXT_NODE = 3;
@@ -280,18 +157,7 @@ var Magery =
 	    }
 	}
 
-	// // includes some virtual attributes (e.g. 'checked')
-	// function getAttributes(node) {
-	//     var attrs = node.attributes;
-	//     if (node.checked) {
-	//         attrs = Array.prototype.slice.call(attrs);
-	//         attrs.push({name: 'checked', value: node.checked});
-	//     }
-	//     return attrs;
-	// }
-
 	function deleteUnvisitedAttributes(transforms, node) {
-	    // var attrs = getAttributes(node);
 	    var attrs = node.attributes;
 	    var remove = [];
 	    var i, len;
@@ -548,7 +414,7 @@ var Magery =
 
 
 /***/ }),
-/* 3 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -557,7 +423,7 @@ var Magery =
 	 * monitor mutations during testing.
 	 */
 
-	var html = __webpack_require__(4);
+	var html = __webpack_require__(3);
 
 
 	exports.insertTextNode = function (parent, before, str) {
@@ -596,20 +462,6 @@ var Magery =
 	    if (html.attributes[name] & html.USE_PROPERTY) {
 	        node[name] = value;
 	    }
-	    // switch (name) {
-	    //     case 'checked':
-	    //         node.checked = true;
-	    //         break;
-	    //     case 'selected':
-	    //         node.selected = true;
-	    //         break;
-	    //     case 'value':
-	    //         node.value = value;
-	    //         break;
-	    //     case 'autofocus':
-	    //         node.focus();
-	    //         break;
-	    // }
 	    node.setAttribute(name, value);
 	    return node;
 	};
@@ -618,20 +470,6 @@ var Magery =
 	    if (html.attributes[name] & html.USE_PROPERTY) {
 	        node[name] = false;
 	    }
-	    // switch (name) {
-	    //     case 'checked':
-	    //         node.checked = false;
-	    //         break;
-	    //     case 'selected':
-	    //         node.selected = false;
-	    //         break;
-	    //     case 'value':
-	    //         node.value = '';
-	    //         break;
-	    //     case 'autofocus':
-	    //         node.blur();
-	    //         break;
-	    // }
 	    node.removeAttribute(name);
 	    return node;
 	};
@@ -648,7 +486,7 @@ var Magery =
 
 
 /***/ }),
-/* 4 */
+/* 3 */
 /***/ (function(module, exports) {
 
 	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
@@ -663,7 +501,7 @@ var Magery =
 
 
 /***/ }),
-/* 5 */
+/* 4 */
 /***/ (function(module, exports) {
 
 	var ELEMENT_NODE = 1;
@@ -731,7 +569,7 @@ var Magery =
 
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ (function(module, exports) {
 
 	function Set() {
@@ -751,10 +589,10 @@ var Magery =
 
 
 /***/ }),
-/* 7 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var utils = __webpack_require__(5);
+	var utils = __webpack_require__(4);
 
 	exports.markPath = function (obj, props) {
 	    switch (props.length) {
@@ -964,11 +802,11 @@ var Magery =
 
 
 /***/ }),
-/* 8 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var html = __webpack_require__(4);
-	var utils = __webpack_require__(5);
+	var html = __webpack_require__(3);
+	var utils = __webpack_require__(4);
 
 
 	function run_all(xs) {

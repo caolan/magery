@@ -45,15 +45,14 @@ var compile =
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(9);
+	module.exports = __webpack_require__(8);
 
 
 /***/ }),
 /* 1 */,
 /* 2 */,
 /* 3 */,
-/* 4 */,
-/* 5 */
+/* 4 */
 /***/ (function(module, exports) {
 
 	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
@@ -68,7 +67,7 @@ var compile =
 
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ (function(module, exports) {
 
 	var ELEMENT_NODE = 1;
@@ -136,13 +135,13 @@ var compile =
 
 
 /***/ }),
+/* 6 */,
 /* 7 */,
-/* 8 */,
-/* 9 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var html = __webpack_require__(5);
-	var utils = __webpack_require__(6);
+	var html = __webpack_require__(4);
+	var utils = __webpack_require__(5);
 
 
 	function run_all(xs) {

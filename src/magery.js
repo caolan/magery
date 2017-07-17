@@ -1,4 +1,3 @@
-var context = require('./context');
 var patch = require('./patch');
 var active_paths = require('./active_paths');
 var compile = require('./compile');
@@ -9,7 +8,7 @@ var compile = require('./compile');
 function BoundTemplate(node, template, data, handlers) {
     this.node = node;
     this.template = template;
-    this.context = data;
+    this.data = data;
     this.handlers = handlers;
 }
 
@@ -41,13 +40,11 @@ exports.bind = function (node, template_id, data, handlers) {
         text_buffer: ""
     };
     bound.update = function () {
-        // this.context = context.toContext(this.context);
-        var next_data = this.context;
+        var next_data = this.data;
         var prev_data = null;
         patcher.start();
         this.template.render(render_state, next_data, prev_data);
         patcher.end();
-        // context.markClean(this.context);
         this.update_queued = false;
     };
     bound.update();

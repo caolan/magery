@@ -1,7 +1,6 @@
 module.exports = {
     entry: {
         'active_paths': ['./src/active_paths.js'],
-        'context': ['./src/context.js'],
         'compile': ['./src/compile.js'],
         'patch': ['./src/patch.js'],
         'transforms': ['./src/transforms.js'],

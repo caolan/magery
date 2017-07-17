@@ -45,14 +45,13 @@ var transforms =
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(4);
+	module.exports = __webpack_require__(3);
 
 
 /***/ }),
 /* 1 */,
 /* 2 */,
-/* 3 */,
-/* 4 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -61,7 +60,7 @@ var transforms =
 	 * monitor mutations during testing.
 	 */
 
-	var html = __webpack_require__(5);
+	var html = __webpack_require__(4);
 
 
 	exports.insertTextNode = function (parent, before, str) {
@@ -100,20 +99,6 @@ var transforms =
 	    if (html.attributes[name] & html.USE_PROPERTY) {
 	        node[name] = value;
 	    }
-	    // switch (name) {
-	    //     case 'checked':
-	    //         node.checked = true;
-	    //         break;
-	    //     case 'selected':
-	    //         node.selected = true;
-	    //         break;
-	    //     case 'value':
-	    //         node.value = value;
-	    //         break;
-	    //     case 'autofocus':
-	    //         node.focus();
-	    //         break;
-	    // }
 	    node.setAttribute(name, value);
 	    return node;
 	};
@@ -122,20 +107,6 @@ var transforms =
 	    if (html.attributes[name] & html.USE_PROPERTY) {
 	        node[name] = false;
 	    }
-	    // switch (name) {
-	    //     case 'checked':
-	    //         node.checked = false;
-	    //         break;
-	    //     case 'selected':
-	    //         node.selected = false;
-	    //         break;
-	    //     case 'value':
-	    //         node.value = '';
-	    //         break;
-	    //     case 'autofocus':
-	    //         node.blur();
-	    //         break;
-	    // }
 	    node.removeAttribute(name);
 	    return node;
 	};
@@ -152,7 +123,7 @@ var transforms =
 
 
 /***/ }),
-/* 5 */
+/* 4 */
 /***/ (function(module, exports) {
 
 	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;

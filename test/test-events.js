@@ -50,7 +50,7 @@ suite('events', function () {
         Magery.bind(container, 'main', data, {
             clicked: function (event) {
                 assert.equal(event.target, child(container, 0));
-                assert.deepEqual(this.context, data);
+                assert.deepEqual(this.data, data);
                 done();
             }
         });
@@ -185,7 +185,7 @@ suite('events', function () {
                 this.trigger('clearInput');
             },
             clearInput: function () {
-                this.context.input = '';
+                this.data.input = '';
             }
         });
         var calls = 0;
@@ -219,7 +219,7 @@ suite('events', function () {
         var data = {name: 'testing'};
         Magery.bind(container, 'main', data, {
             updateInput: function () {
-                this.context.name = 'bar';
+                this.data.name = 'bar';
             }
         });
         var input = child(container, 0);
@@ -292,7 +292,7 @@ suite('events', function () {
         var data = {checked: true};
         Magery.bind(container, 'main', data, {
             toggle: function () {
-                this.context.checked = !this.context.checked;
+                this.data.checked = !this.data.checked;
             }
         });
         var input = child(container, 0);
@@ -358,7 +358,7 @@ suite('events', function () {
         };
         Magery.bind(container, 'main', data, {
             pick: function (value) {
-                this.context.options.forEach(function (option) {
+                this.data.options.forEach(function (option) {
                     option.checked = (option.value === value);
                 });
             }

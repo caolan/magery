@@ -45,13 +45,12 @@ var patch =
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(3);
+	module.exports = __webpack_require__(2);
 
 
 /***/ }),
 /* 1 */,
-/* 2 */,
-/* 3 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -61,9 +60,9 @@ var patch =
 	 * DOM, performing DOM mutation only through transform calls.
 	 */
 
-	var transforms = __webpack_require__(4);
-	var utils = __webpack_require__(6);
-	var Set = __webpack_require__(7);
+	var transforms = __webpack_require__(3);
+	var utils = __webpack_require__(5);
+	var Set = __webpack_require__(6);
 
 	var ELEMENT_NODE = 1;
 	var TEXT_NODE = 3;
@@ -95,18 +94,7 @@ var patch =
 	    }
 	}
 
-	// // includes some virtual attributes (e.g. 'checked')
-	// function getAttributes(node) {
-	//     var attrs = node.attributes;
-	//     if (node.checked) {
-	//         attrs = Array.prototype.slice.call(attrs);
-	//         attrs.push({name: 'checked', value: node.checked});
-	//     }
-	//     return attrs;
-	// }
-
 	function deleteUnvisitedAttributes(transforms, node) {
-	    // var attrs = getAttributes(node);
 	    var attrs = node.attributes;
 	    var remove = [];
 	    var i, len;
@@ -363,7 +351,7 @@ var patch =
 
 
 /***/ }),
-/* 4 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -372,7 +360,7 @@ var patch =
 	 * monitor mutations during testing.
 	 */
 
-	var html = __webpack_require__(5);
+	var html = __webpack_require__(4);
 
 
 	exports.insertTextNode = function (parent, before, str) {
@@ -411,20 +399,6 @@ var patch =
 	    if (html.attributes[name] & html.USE_PROPERTY) {
 	        node[name] = value;
 	    }
-	    // switch (name) {
-	    //     case 'checked':
-	    //         node.checked = true;
-	    //         break;
-	    //     case 'selected':
-	    //         node.selected = true;
-	    //         break;
-	    //     case 'value':
-	    //         node.value = value;
-	    //         break;
-	    //     case 'autofocus':
-	    //         node.focus();
-	    //         break;
-	    // }
 	    node.setAttribute(name, value);
 	    return node;
 	};
@@ -433,20 +407,6 @@ var patch =
 	    if (html.attributes[name] & html.USE_PROPERTY) {
 	        node[name] = false;
 	    }
-	    // switch (name) {
-	    //     case 'checked':
-	    //         node.checked = false;
-	    //         break;
-	    //     case 'selected':
-	    //         node.selected = false;
-	    //         break;
-	    //     case 'value':
-	    //         node.value = '';
-	    //         break;
-	    //     case 'autofocus':
-	    //         node.blur();
-	    //         break;
-	    // }
 	    node.removeAttribute(name);
 	    return node;
 	};
@@ -463,7 +423,7 @@ var patch =
 
 
 /***/ }),
-/* 5 */
+/* 4 */
 /***/ (function(module, exports) {
 
 	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
@@ -478,7 +438,7 @@ var patch =
 
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ (function(module, exports) {
 
 	var ELEMENT_NODE = 1;
@@ -546,7 +506,7 @@ var patch =
 
 
 /***/ }),
-/* 7 */
+/* 6 */
 /***/ (function(module, exports) {
 
 	function Set() {
