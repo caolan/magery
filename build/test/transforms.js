@@ -41,24 +41,28 @@ var transforms =
 /******/ 	return __webpack_require__(0);
 /******/ })
 /************************************************************************/
-/******/ ({
-
-/***/ 0:
+/******/ ([
+/* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(5);
+	module.exports = __webpack_require__(4);
 
 
 /***/ }),
-
-/***/ 5:
-/***/ (function(module, exports) {
+/* 1 */,
+/* 2 */,
+/* 3 */,
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * DOM mutation procedures called by the patcher. This module provides
 	 * a cleaner API for our purposes and a place to intercept and
 	 * monitor mutations during testing.
 	 */
+
+	var html = __webpack_require__(5);
+
 
 	exports.insertTextNode = function (parent, before, str) {
 	    var node = document.createTextNode(str);
@@ -93,39 +97,45 @@ var transforms =
 	};
 
 	exports.setAttribute = function (node, name, value) {
-	    switch (name) {
-	        case 'checked':
-	            node.checked = true;
-	            break;
-	        case 'selected':
-	            node.selected = true;
-	            break;
-	        case 'value':
-	            node.value = value;
-	            break;
-	        case 'autofocus':
-	            node.focus();
-	            break;
+	    if (html.attributes[name] & html.USE_PROPERTY) {
+	        node[name] = value;
 	    }
+	    // switch (name) {
+	    //     case 'checked':
+	    //         node.checked = true;
+	    //         break;
+	    //     case 'selected':
+	    //         node.selected = true;
+	    //         break;
+	    //     case 'value':
+	    //         node.value = value;
+	    //         break;
+	    //     case 'autofocus':
+	    //         node.focus();
+	    //         break;
+	    // }
 	    node.setAttribute(name, value);
 	    return node;
 	};
 
 	exports.removeAttribute = function (node, name) {
-	    switch (name) {
-	        case 'checked':
-	            node.checked = false;
-	            break;
-	        case 'selected':
-	            node.selected = false;
-	            break;
-	        case 'value':
-	            node.value = '';
-	            break;
-	        case 'autofocus':
-	            node.blur();
-	            break;
+	    if (html.attributes[name] & html.USE_PROPERTY) {
+	        node[name] = false;
 	    }
+	    // switch (name) {
+	    //     case 'checked':
+	    //         node.checked = false;
+	    //         break;
+	    //     case 'selected':
+	    //         node.selected = false;
+	    //         break;
+	    //     case 'value':
+	    //         node.value = '';
+	    //         break;
+	    //     case 'autofocus':
+	    //         node.blur();
+	    //         break;
+	    // }
 	    node.removeAttribute(name);
 	    return node;
 	};
@@ -141,6 +151,20 @@ var transforms =
 	};
 
 
-/***/ })
+/***/ }),
+/* 5 */
+/***/ (function(module, exports) {
 
-/******/ });
+	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
+	var USE_PROPERTY = exports.USE_PROPERTY = 2;
+
+	exports.attributes = {
+	    'checked': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'value': USE_PROPERTY
+	};
+
+
+
+/***/ })
+/******/ ]);

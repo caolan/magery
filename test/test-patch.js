@@ -964,34 +964,34 @@ suite('patch', function () {
         assert.strictEqual(child(div, 0).value, "asdf");
     });
 
-    test('autofocus on conditional causes focus', function () {
-        var div = document.createElement('div');
-        var tmpl = createTemplateNode('app',
-                           '<input data-if="active" type="text" autofocus />' +
-                           '<input data-unless="active" type="text" rel="test" />');
-        // need to place this in the body so it can receive focus
-        document.body.appendChild(div);
-        var prev_data = {};
-        var next_data = {};
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'app', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
-        assert.notEqual(document.activeElement, child(div, 0));
-        prev_data = next_data;
-        next_data = {active: true};
-        tmpl.content.render(state, next_data, prev_data);
-        assert.equal(document.activeElement, child(div, 0));
-        prev_data = next_data;
-        next_data = {active: false};
-        tmpl.content.render(state, next_data, prev_data);
-        assert.notEqual(document.activeElement, child(div, 0));
-        document.body.removeChild(div);
-    });
+    // test('autofocus on conditional causes focus', function () {
+    //     var div = document.createElement('div');
+    //     var tmpl = createTemplateNode('app',
+    //                        '<input data-if="active" type="text" autofocus />' +
+    //                        '<input data-unless="active" type="text" rel="test" />');
+    //     // need to place this in the body so it can receive focus
+    //     document.body.appendChild(div);
+    //     var prev_data = {};
+    //     var next_data = {};
+    //     var patcher = new patch.Patcher(div, test_transforms);
+    //     var bound = new Magery.BoundTemplate(div, 'app', next_data, {});
+    //     var state = {
+    //         patcher: patcher,
+    //         bound_template: bound,
+    //         text_buffer: ''
+    //     };
+    //     tmpl.content.render(state, next_data, prev_data);
+    //     assert.notEqual(document.activeElement, child(div, 0));
+    //     prev_data = next_data;
+    //     next_data = {active: true};
+    //     tmpl.content.render(state, next_data, prev_data);
+    //     assert.equal(document.activeElement, child(div, 0));
+    //     prev_data = next_data;
+    //     next_data = {active: false};
+    //     tmpl.content.render(state, next_data, prev_data);
+    //     assert.notEqual(document.activeElement, child(div, 0));
+    //     document.body.removeChild(div);
+    // });
 
     test("don't remove attributes on container", function () {
         var div = document.createElement('div');

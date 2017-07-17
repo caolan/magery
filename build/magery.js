@@ -47,8 +47,8 @@ var Magery =
 
 	var context = __webpack_require__(1);
 	var patch = __webpack_require__(2);
-	var active_paths = __webpack_require__(6);
-	var compile = __webpack_require__(7);
+	var active_paths = __webpack_require__(7);
+	var compile = __webpack_require__(8);
 
 
 	/***** Public API *****/
@@ -88,11 +88,13 @@ var Magery =
 	        text_buffer: ""
 	    };
 	    bound.update = function () {
+	        // this.context = context.toContext(this.context);
 	        var next_data = this.context;
 	        var prev_data = null;
 	        patcher.start();
 	        this.template.render(render_state, next_data, prev_data);
 	        patcher.end();
+	        // context.markClean(this.context);
 	        this.update_queued = false;
 	    };
 	    bound.update();
@@ -244,12 +246,13 @@ var Magery =
 	 * DOM, performing DOM mutation only through transform calls.
 	 */
 
-	var utils = __webpack_require__(3);
-	var transforms = __webpack_require__(4);
-	var Set = __webpack_require__(5);
+	var transforms = __webpack_require__(3);
+	var utils = __webpack_require__(5);
+	var Set = __webpack_require__(6);
 
 	var ELEMENT_NODE = 1;
 	var TEXT_NODE = 3;
+
 
 	function matches(node, tag, key) {
 	    return (
@@ -277,18 +280,19 @@ var Magery =
 	    }
 	}
 
-	// includes some virtual attributes (e.g. 'checked')
-	function getAttributes(node) {
-	    var attrs = node.attributes;
-	    if (node.checked) {
-	        attrs = Array.prototype.slice.call(attrs);
-	        attrs.push({name: 'checked', value: node.checked});
-	    }
-	    return attrs;
-	}
+	// // includes some virtual attributes (e.g. 'checked')
+	// function getAttributes(node) {
+	//     var attrs = node.attributes;
+	//     if (node.checked) {
+	//         attrs = Array.prototype.slice.call(attrs);
+	//         attrs.push({name: 'checked', value: node.checked});
+	//     }
+	//     return attrs;
+	// }
 
 	function deleteUnvisitedAttributes(transforms, node) {
-	    var attrs = getAttributes(node);
+	    // var attrs = getAttributes(node);
+	    var attrs = node.attributes;
 	    var remove = [];
 	    var i, len;
 	    for (i = 0, len = attrs.length; i < len; i++) {
@@ -545,6 +549,121 @@ var Magery =
 
 /***/ }),
 /* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	/**
+	 * DOM mutation procedures called by the patcher. This module provides
+	 * a cleaner API for our purposes and a place to intercept and
+	 * monitor mutations during testing.
+	 */
+
+	var html = __webpack_require__(4);
+
+
+	exports.insertTextNode = function (parent, before, str) {
+	    var node = document.createTextNode(str);
+	    parent.insertBefore(node, before);
+	    return node;
+	};
+
+	exports.replaceText = function (node, str) {
+	    node.textContent = str;
+	    return node;
+	};
+
+	exports.replaceChild = function (parent, node, old) {
+	    parent.replaceChild(node, old);
+	    return node;
+	};
+
+	exports.appendChild = function (parent, node) {
+	    parent.appendChild(node);
+	    return node;
+	};
+
+	exports.insertElement = function (parent, before, tag) {
+	    var node = document.createElement(tag);
+	    parent.insertBefore(node, before);
+	    return node;
+	};
+
+	exports.removeChild = function (parent, node) {
+	    parent.removeChild(node);
+	    return node;
+	};
+
+	exports.setAttribute = function (node, name, value) {
+	    if (html.attributes[name] & html.USE_PROPERTY) {
+	        node[name] = value;
+	    }
+	    // switch (name) {
+	    //     case 'checked':
+	    //         node.checked = true;
+	    //         break;
+	    //     case 'selected':
+	    //         node.selected = true;
+	    //         break;
+	    //     case 'value':
+	    //         node.value = value;
+	    //         break;
+	    //     case 'autofocus':
+	    //         node.focus();
+	    //         break;
+	    // }
+	    node.setAttribute(name, value);
+	    return node;
+	};
+
+	exports.removeAttribute = function (node, name) {
+	    if (html.attributes[name] & html.USE_PROPERTY) {
+	        node[name] = false;
+	    }
+	    // switch (name) {
+	    //     case 'checked':
+	    //         node.checked = false;
+	    //         break;
+	    //     case 'selected':
+	    //         node.selected = false;
+	    //         break;
+	    //     case 'value':
+	    //         node.value = '';
+	    //         break;
+	    //     case 'autofocus':
+	    //         node.blur();
+	    //         break;
+	    // }
+	    node.removeAttribute(name);
+	    return node;
+	};
+
+	exports.addEventListener = function (node, name, handler) {
+	    node.addEventListener(name, handler, false);
+	    return node;
+	};
+
+	exports.removeEventListener = function (node, name, handler) {
+	    node.removeEventListener(name, handler);
+	    return node;
+	};
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports) {
+
+	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
+	var USE_PROPERTY = exports.USE_PROPERTY = 2;
+
+	exports.attributes = {
+	    'checked': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'value': USE_PROPERTY
+	};
+
+
+
+/***/ }),
+/* 5 */
 /***/ (function(module, exports) {
 
 	var ELEMENT_NODE = 1;
@@ -612,98 +731,7 @@ var Magery =
 
 
 /***/ }),
-/* 4 */
-/***/ (function(module, exports) {
-
-	/**
-	 * DOM mutation procedures called by the patcher. This module provides
-	 * a cleaner API for our purposes and a place to intercept and
-	 * monitor mutations during testing.
-	 */
-
-	exports.insertTextNode = function (parent, before, str) {
-	    var node = document.createTextNode(str);
-	    parent.insertBefore(node, before);
-	    return node;
-	};
-
-	exports.replaceText = function (node, str) {
-	    node.textContent = str;
-	    return node;
-	};
-
-	exports.replaceChild = function (parent, node, old) {
-	    parent.replaceChild(node, old);
-	    return node;
-	};
-
-	exports.appendChild = function (parent, node) {
-	    parent.appendChild(node);
-	    return node;
-	};
-
-	exports.insertElement = function (parent, before, tag) {
-	    var node = document.createElement(tag);
-	    parent.insertBefore(node, before);
-	    return node;
-	};
-
-	exports.removeChild = function (parent, node) {
-	    parent.removeChild(node);
-	    return node;
-	};
-
-	exports.setAttribute = function (node, name, value) {
-	    switch (name) {
-	        case 'checked':
-	            node.checked = true;
-	            break;
-	        case 'selected':
-	            node.selected = true;
-	            break;
-	        case 'value':
-	            node.value = value;
-	            break;
-	        case 'autofocus':
-	            node.focus();
-	            break;
-	    }
-	    node.setAttribute(name, value);
-	    return node;
-	};
-
-	exports.removeAttribute = function (node, name) {
-	    switch (name) {
-	        case 'checked':
-	            node.checked = false;
-	            break;
-	        case 'selected':
-	            node.selected = false;
-	            break;
-	        case 'value':
-	            node.value = '';
-	            break;
-	        case 'autofocus':
-	            node.blur();
-	            break;
-	    }
-	    node.removeAttribute(name);
-	    return node;
-	};
-
-	exports.addEventListener = function (node, name, handler) {
-	    node.addEventListener(name, handler, false);
-	    return node;
-	};
-
-	exports.removeEventListener = function (node, name, handler) {
-	    node.removeEventListener(name, handler);
-	    return node;
-	};
-
-
-/***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports) {
 
 	function Set() {
@@ -723,10 +751,10 @@ var Magery =
 
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var utils = __webpack_require__(3);
+	var utils = __webpack_require__(5);
 
 	exports.markPath = function (obj, props) {
 	    switch (props.length) {
@@ -936,10 +964,12 @@ var Magery =
 
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var utils = __webpack_require__(3);
+	var html = __webpack_require__(4);
+	var utils = __webpack_require__(5);
+
 
 	function run_all(xs) {
 	    var funs = xs.filter(function (x) { return x; });
@@ -959,7 +989,7 @@ var Magery =
 	    }
 	}
 
-	function compileExpandVars(str) {
+	function compileExpandVars(str, boolean) {
 	    var parts = str.split(/{{|}}/);
 	    var length = parts.length;
 	    var i = -1;
@@ -969,6 +999,19 @@ var Magery =
 	            parts[i] = path;
 	        }
 	    }
+	    // presence of empty boolean property is actually truthy
+	    if (length == 1 && !parts[0] && boolean) {
+	        return function () {
+	            return true;
+	        };
+	    }
+	    // if the string has only one value expanded, return it directly
+	    else if (length == 3 && !parts[0] && !parts[2]) {
+	        return function (data) {
+	            return utils.lookup(data, parts[1]);
+	        };
+	    }
+	    // otherwise build a result string by expanding nested variables
 	    return function (data) {
 	        var result = '';
 	        var i = -1;
@@ -1010,7 +1053,10 @@ var Magery =
 	            events[event_name] = attr.value;
 	        }
 	        else {
-	            attrs[name] = compileExpandVars(attr.value);
+	            attrs[name] = compileExpandVars(
+	                attr.value,
+	                html.attributes[name] & html.BOOLEAN_ATTRIBUTE
+	            );
 	        }
 	    }
 	    var render = function (state, next_data, prev_data, inner) {
@@ -1018,7 +1064,10 @@ var Magery =
 	        flushText(state);
 	        state.patcher.enterTag(node.tagName, key);
 	        for (var attr_name in attrs) {
-	            state.patcher.attribute(attr_name, attrs[attr_name](next_data));
+	            var value = attrs[attr_name](next_data);
+	            if (value || !(html.attributes[attr_name] & html.BOOLEAN_ATTRIBUTE)) {
+	                state.patcher.attribute(attr_name, value);
+	            }
 	        }
 	        for (var event_name in events) {
 	            state.patcher.eventListener(

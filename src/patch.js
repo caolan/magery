@@ -5,12 +5,13 @@
  * DOM, performing DOM mutation only through transform calls.
  */
 
-var utils = require('./utils');
 var transforms = require('./transforms');
+var utils = require('./utils');
 var Set = require('./set-polyfill');
 
 var ELEMENT_NODE = 1;
 var TEXT_NODE = 3;
+
 
 function matches(node, tag, key) {
     return (
@@ -38,18 +39,8 @@ function deleteChildren(transforms, parent, node) {
     }
 }
 
-// includes some virtual attributes (e.g. 'checked')
-function getAttributes(node) {
-    var attrs = node.attributes;
-    if (node.checked) {
-        attrs = Array.prototype.slice.call(attrs);
-        attrs.push({name: 'checked', value: node.checked});
-    }
-    return attrs;
-}
-
 function deleteUnvisitedAttributes(transforms, node) {
-    var attrs = getAttributes(node);
+    var attrs = node.attributes;
     var remove = [];
     var i, len;
     for (i = 0, len = attrs.length; i < len; i++) {

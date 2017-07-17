@@ -1,4 +1,6 @@
+var html = require('./html');
 var utils = require('./utils');
+
 
 function run_all(xs) {
     var funs = xs.filter(function (x) { return x; });
@@ -18,7 +20,7 @@ function flushText(state) {
     }
 }
 
-function compileExpandVars(str) {
+function compileExpandVars(str, boolean) {
     var parts = str.split(/{{|}}/);
     var length = parts.length;
     var i = -1;
@@ -28,6 +30,19 @@ function compileExpandVars(str) {
             parts[i] = path;
         }
     }
+    // presence of empty boolean property is actually truthy
+    if (length == 1 && !parts[0] && boolean) {
+        return function () {
+            return true;
+        };
+    }
+    // if the string has only one value expanded, return it directly
+    else if (length == 3 && !parts[0] && !parts[2]) {
+        return function (data) {
+            return utils.lookup(data, parts[1]);
+        };
+    }
+    // otherwise build a result string by expanding nested variables
     return function (data) {
         var result = '';
         var i = -1;
@@ -69,7 +84,10 @@ function compileElement(node) {
             events[event_name] = attr.value;
         }
         else {
-            attrs[name] = compileExpandVars(attr.value);
+            attrs[name] = compileExpandVars(
+                attr.value,
+                html.attributes[name] & html.BOOLEAN_ATTRIBUTE
+            );
         }
     }
     var render = function (state, next_data, prev_data, inner) {
@@ -77,7 +95,10 @@ function compileElement(node) {
         flushText(state);
         state.patcher.enterTag(node.tagName, key);
         for (var attr_name in attrs) {
-            state.patcher.attribute(attr_name, attrs[attr_name](next_data));
+            var value = attrs[attr_name](next_data);
+            if (value || !(html.attributes[attr_name] & html.BOOLEAN_ATTRIBUTE)) {
+                state.patcher.attribute(attr_name, value);
+            }
         }
         for (var event_name in events) {
             state.patcher.eventListener(

@@ -390,9 +390,9 @@ suite('events', function () {
         var container = document.createElement('div');
         createTemplateNode('main',
                            '<select>' +
-                           // TODO: how to handle an each loop over <option>s which may or may not be selected?
-                           '<option data-each="option in optinos" data-if="option.selected" value="{{option.value}}" selected>{{option.label}}</option>' +
-                           '<option data-unless="option.selected" value="{{option.value}}">{{option.label}}</option>' +
+                             '<option data-each="option in options" value="{{option.value}}" selected="{{option.selected}}">' +
+                               '{{option.label}}' +
+                             '</option>' +
                            '</select>');
         var data = {
             options: [

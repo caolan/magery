@@ -909,32 +909,29 @@ suite('compile', function () {
         assert.equal(patcher_calls.length, 7);
     });
 
-    test('boolean attributes - allowfullscreen', function () {
+    test('boolean attributes - checked', function () {
         var tmpl = createTemplateNode('foo',
-                                      '<iframe allowfullscreen="{{fs}}"></iframe>' +
-                                      '<div allowfullscreen="{{fs}}"></div>');
+                                      '<input type="checkbox" checked="{{fs}}"></input>');
         var prev_data = {};
         var next_data = {fs: true};
         var patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
-        assert.deepEqual(patcher_calls[1], ['enterTag', 'IFRAME', null]);
-        assert.deepEqual(patcher_calls[2], ['attribute', 'allowfullscreen', true]);
-        assert.deepEqual(patcher_calls[3], ['exitTag']);
-        assert.deepEqual(patcher_calls[4], ['enterTag', 'div', null]);
-        assert.deepEqual(patcher_calls[5], ['attribute', 'allowfullscreen', 'true']);
-        assert.deepEqual(patcher_calls[6], ['exitTag']);
-        assert.deepEqual(patcher_calls[7], ['end']);
-        assert.equal(patcher_calls.length, 8);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls.slice(2, 4).sort(), [
+            ['attribute', 'checked', true],
+            ['attribute', 'type', 'checkbox']
+        ]);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['end']);
+        assert.equal(patcher_calls.length, 6);
         next_data = {fs: false};
         patcher_calls = patch(tmpl, next_data, prev_data);
         assert.deepEqual(patcher_calls[0], ['start']);
-        assert.deepEqual(patcher_calls[1], ['enterTag', 'IFRAME', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls[2], ['attribute', 'type', 'checkbox']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
-        assert.deepEqual(patcher_calls[4], ['enterTag', 'div', null]);
-        assert.deepEqual(patcher_calls[5], ['attribute', 'allowfullscreen', 'false']);
-        assert.deepEqual(patcher_calls[6], ['exitTag']);
-        assert.deepEqual(patcher_calls[7], ['end']);
-        assert.equal(patcher_calls.length, 8);
+        assert.deepEqual(patcher_calls[4], ['end']);
+        assert.equal(patcher_calls.length, 5);
     });
 
     test('expand variables in node attributes', function () {
@@ -1592,15 +1589,15 @@ suite('compile', function () {
         assert.deepEqual(patcher_calls[0], ['start']);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'SELECT', null]);
         assert.deepEqual(patcher_calls[2], ['enterTag', 'OPTION', null]);
-        assert.deepEqual(patcher_calls[3], ['attribute', 'value', '1']);
+        assert.deepEqual(patcher_calls[3], ['attribute', 'value', 1]);
         assert.deepEqual(patcher_calls[4], ['text', 'one']);
         assert.deepEqual(patcher_calls[5], ['exitTag']);
         assert.deepEqual(patcher_calls[6], ['enterTag', 'OPTION', null]);
-        assert.deepEqual(patcher_calls[7], ['attribute', 'value', '2']);
+        assert.deepEqual(patcher_calls[7], ['attribute', 'value', 2]);
         assert.deepEqual(patcher_calls[8], ['text', 'two']);
         assert.deepEqual(patcher_calls[9], ['exitTag']);
         assert.deepEqual(patcher_calls[10], ['enterTag', 'OPTION', null]);
-        assert.deepEqual(patcher_calls[11], ['attribute', 'value', '3']);
+        assert.deepEqual(patcher_calls[11], ['attribute', 'value', 3]);
         assert.deepEqual(patcher_calls[12], ['text', 'three']);
         assert.deepEqual(patcher_calls[13], ['exitTag']);
         assert.deepEqual(patcher_calls[14], ['exitTag']);

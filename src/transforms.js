@@ -4,6 +4,9 @@
  * monitor mutations during testing.
  */
 
+var html = require('./html');
+
+
 exports.insertTextNode = function (parent, before, str) {
     var node = document.createTextNode(str);
     parent.insertBefore(node, before);
@@ -37,38 +40,16 @@ exports.removeChild = function (parent, node) {
 };
 
 exports.setAttribute = function (node, name, value) {
-    switch (name) {
-        case 'checked':
-            node.checked = true;
-            break;
-        case 'selected':
-            node.selected = true;
-            break;
-        case 'value':
-            node.value = value;
-            break;
-        case 'autofocus':
-            node.focus();
-            break;
+    if (html.attributes[name] & html.USE_PROPERTY) {
+        node[name] = value;
     }
     node.setAttribute(name, value);
     return node;
 };
 
 exports.removeAttribute = function (node, name) {
-    switch (name) {
-        case 'checked':
-            node.checked = false;
-            break;
-        case 'selected':
-            node.selected = false;
-            break;
-        case 'value':
-            node.value = '';
-            break;
-        case 'autofocus':
-            node.blur();
-            break;
+    if (html.attributes[name] & html.USE_PROPERTY) {
+        node[name] = false;
     }
     node.removeAttribute(name);
     return node;

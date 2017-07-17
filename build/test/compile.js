@@ -41,17 +41,34 @@ var compile =
 /******/ 	return __webpack_require__(0);
 /******/ })
 /************************************************************************/
-/******/ ({
-
-/***/ 0:
+/******/ ([
+/* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(8);
+	module.exports = __webpack_require__(9);
 
 
 /***/ }),
+/* 1 */,
+/* 2 */,
+/* 3 */,
+/* 4 */,
+/* 5 */
+/***/ (function(module, exports) {
 
-/***/ 4:
+	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
+	var USE_PROPERTY = exports.USE_PROPERTY = 2;
+
+	exports.attributes = {
+	    'checked': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'value': USE_PROPERTY
+	};
+
+
+
+/***/ }),
+/* 6 */
 /***/ (function(module, exports) {
 
 	var ELEMENT_NODE = 1;
@@ -119,11 +136,14 @@ var compile =
 
 
 /***/ }),
-
-/***/ 8:
+/* 7 */,
+/* 8 */,
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var utils = __webpack_require__(4);
+	var html = __webpack_require__(5);
+	var utils = __webpack_require__(6);
+
 
 	function run_all(xs) {
 	    var funs = xs.filter(function (x) { return x; });
@@ -143,7 +163,7 @@ var compile =
 	    }
 	}
 
-	function compileExpandVars(str) {
+	function compileExpandVars(str, boolean) {
 	    var parts = str.split(/{{|}}/);
 	    var length = parts.length;
 	    var i = -1;
@@ -153,6 +173,19 @@ var compile =
 	            parts[i] = path;
 	        }
 	    }
+	    // presence of empty boolean property is actually truthy
+	    if (length == 1 && !parts[0] && boolean) {
+	        return function () {
+	            return true;
+	        };
+	    }
+	    // if the string has only one value expanded, return it directly
+	    else if (length == 3 && !parts[0] && !parts[2]) {
+	        return function (data) {
+	            return utils.lookup(data, parts[1]);
+	        };
+	    }
+	    // otherwise build a result string by expanding nested variables
 	    return function (data) {
 	        var result = '';
 	        var i = -1;
@@ -194,7 +227,10 @@ var compile =
 	            events[event_name] = attr.value;
 	        }
 	        else {
-	            attrs[name] = compileExpandVars(attr.value);
+	            attrs[name] = compileExpandVars(
+	                attr.value,
+	                html.attributes[name] & html.BOOLEAN_ATTRIBUTE
+	            );
 	        }
 	    }
 	    var render = function (state, next_data, prev_data, inner) {
@@ -202,7 +238,10 @@ var compile =
 	        flushText(state);
 	        state.patcher.enterTag(node.tagName, key);
 	        for (var attr_name in attrs) {
-	            state.patcher.attribute(attr_name, attrs[attr_name](next_data));
+	            var value = attrs[attr_name](next_data);
+	            if (value || !(html.attributes[attr_name] & html.BOOLEAN_ATTRIBUTE)) {
+	                state.patcher.attribute(attr_name, value);
+	            }
 	        }
 	        for (var event_name in events) {
 	            state.patcher.eventListener(
@@ -341,5 +380,4 @@ var compile =
 
 
 /***/ })
-
-/******/ });
+/******/ ]);

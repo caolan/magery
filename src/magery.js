@@ -41,11 +41,13 @@ exports.bind = function (node, template_id, data, handlers) {
         text_buffer: ""
     };
     bound.update = function () {
+        // this.context = context.toContext(this.context);
         var next_data = this.context;
         var prev_data = null;
         patcher.start();
         this.template.render(render_state, next_data, prev_data);
         patcher.end();
+        // context.markClean(this.context);
         this.update_queued = false;
     };
     bound.update();
