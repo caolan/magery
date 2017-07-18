@@ -2,16 +2,15 @@ suite('patch', function () {
 
     var assert = chai.assert;
 
-    function createTemplateNode(id, src) {
-        var el = document.getElementById(id);
+    function createTemplateNode(src) {
+        var el = document.getElementById('test-templates');
         if (!el) {
             el = document.createElement('template');
             document.body.appendChild(el);
-            el.id = id;
+            el.id = 'test-templates';
         }
         el.innerHTML = src;
-        Magery.initTemplates();
-        return el;
+        return Magery.compileTemplates(el);
     }
 
     function child(node /*...*/) {
@@ -49,32 +48,30 @@ suite('patch', function () {
 
     var patcher = new patch.Patcher(test_transforms);
 
-    function makeElement(str) {
+    function makeElement(html) {
         var el = document.createElement('div');
-        el.innerHTML = str;
-        return el;
+        el.innerHTML = html;
+        return el.childNodes[0];
     };
 
     test('flat children', function () {
         var div = makeElement(
-            '<i>asdf</i>' +
-            '<em>baz</em>'
+            '<div>' +
+                '<i>asdf</i>' +
+                '<em>baz</em>' +
+                '</div>'
         );
-        var tmpl = createTemplateNode('foo',
-                                    '<i>foo</i>' +
-                                    '<b>bar</b>' +
-                                    '<em>baz</em>');
-        var prev_data = {};
-        var next_data = {};
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<i>foo</i>' +
+                '<b>bar</b>' +
+                '<em>baz</em>' +
+                '</div>');
         transform_log = [];
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var patcher = new patch.Patcher(div, test_transforms);
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: {},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(div.innerHTML, '<i>foo</i><b>bar</b><em>baz</em>');
         assert.deepEqual(transform_log, [
             'replaceText',
@@ -85,28 +82,26 @@ suite('patch', function () {
 
     test('nested children', function () {
         var div = makeElement(
-            '<i>foo</i>' +
-            '<p>' +
-              '<em>qux</em>' +
-            '</p>'
+            '<div>' +
+                '<i>foo</i>' +
+                '<p>' +
+                '<em>qux</em>' +
+                '</p>' +
+                '</div>'
         );
-        var tmpl = createTemplateNode('foo',
-                                      '<i>foo</i>' +
-                                      '<p>' +
-                                      '<b>bar</b>' +
-                                      '<em>baz</em>' +
-                                      '</p>');
-        var prev_data = {};
-        var next_data = {};
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<i>foo</i>' +
+                '<p>' +
+                '<b>bar</b>' +
+                '<em>baz</em>' +
+                '</p>' +
+                '</div>');
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: {},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(div.innerHTML, '<i>foo</i><p><b>bar</b><em>baz</em></p>');
         assert.deepEqual(transform_log, [
             'insertElement',
@@ -117,21 +112,19 @@ suite('patch', function () {
 
     test('single span vs div', function () {
         var div = makeElement(
-            '<span>Hello</span>'
+            '<div>' +
+                '<span>Hello</span>' +
+                '</div>'
         );
-        var tmpl = createTemplateNode('foo',
-                                      '<b>Hello</b>');
-        var prev_data = {};
-        var next_data = {};
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<b>Hello</b>' +
+                '</div>');
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: {},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(div.innerHTML, '<b>Hello</b>');
         assert.deepEqual(transform_log, [
             'insertElement',
@@ -142,23 +135,21 @@ suite('patch', function () {
 
     test('comment nodes in DOM', function () {
         var div = makeElement(
-            '<!-- comment -->' +
-            '<span>Hello</span>' +
-            '<!-- comment2 -->'
+            '<div>' +
+                '<!-- comment -->' +
+                '<span>Hello</span>' +
+                '<!-- comment2 -->' +
+                '</div>'
         );
-        var tmpl = createTemplateNode('foo',
-                                      '<b>Hello</b>');
-        var prev_data = {};
-        var next_data = {};
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<b>Hello</b>' +
+                '</div>');
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: {},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(div.innerHTML, '<b>Hello</b>');
         assert.deepEqual(transform_log, [
             'insertElement',
@@ -171,21 +162,17 @@ suite('patch', function () {
 
     test('same outer element, different inner', function () {
         var div = makeElement(
-            '<div><b>Hello</b></div>'
+            '<div><div><b>Hello</b></div></div>'
         );
-        var tmpl = createTemplateNode('foo',
-                                      '<div><i>Hello</i></div>');
-        var prev_data = {};
-        var next_data = {};
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<div><i>Hello</i></div>' +
+                '</div>');
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: {},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(div.innerHTML, '<div><i>Hello</i></div>');
         assert.deepEqual(transform_log, [
             'insertElement',
@@ -196,21 +183,19 @@ suite('patch', function () {
 
     test('different inner text', function () {
         var div = makeElement(
-            '<b>Hello</b>'
+            '<div>' +
+                '<b>Hello</b>' +
+                '</div>'
         );
-        var tmpl = createTemplateNode('foo',
-                                      '<b>Hi</b>');
-        var prev_data = {};
-        var next_data = {};
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<b>Hi</b>' +
+                '</div>');
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: {},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(div.innerHTML, '<b>Hi</b>');
         assert.deepEqual(transform_log, [
             'replaceText'
@@ -219,21 +204,19 @@ suite('patch', function () {
 
     test('different element class', function () {
         var div = makeElement(
-            '<b class="one">Hello</b>'
+            '<div>' +
+                '<b class="one">Hello</b>' +
+                '</div>'
         );
-        var tmpl = createTemplateNode('foo',
-                                      '<b class="two">Hello</b>');
-        var prev_data = {};
-        var next_data = {};
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<b class="two">Hello</b>' +
+                '</div>');
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: {},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(div.innerHTML, '<b class="two">Hello</b>');
         assert.deepEqual(transform_log, [
             'setAttribute'
@@ -242,21 +225,19 @@ suite('patch', function () {
 
     test('remove attributes not rendered', function () {
         var div = makeElement(
-            '<a class="btn" href="#" rel="me">test</a>'
+            '<div>' +
+                '<a class="btn" href="#" rel="me">test</a>' +
+                '</div>'
         );
-        var tmpl = createTemplateNode('foo',
-                                      '<a href="http://example.com">test</a>');
-        var prev_data = {};
-        var next_data = {};
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<a href="http://example.com">test</a>' +
+                '</div>');
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: {},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(div.innerHTML, '<a href="http://example.com">test</a>');
         assert.deepEqual(transform_log, [
             'setAttribute',
@@ -267,32 +248,31 @@ suite('patch', function () {
 
     test('managing attributes across multiple renders', function () {
         var div = makeElement(
-            '<a class="btn" href="#" rel="me">test</a>'
+            '<div>' +
+                '<a class="btn" href="#" rel="me">test</a>' +
+                '</div>'
         );
-        var tmpl = createTemplateNode('foo',
-                                      '<a data-if="me" class="btn" href="#" rel="me">test</a>' +
-                                      '<a data-unless="me" class="btn" href="#">test</a>');
-        var prev_data = {me: true};
-        var next_data = {me: true};
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<a data-if="me" class="btn" href="#" rel="me">test</a>' +
+                '<a data-unless="me" class="btn" href="#">test</a>' +
+                '</div>');
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: {me: true},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(
             div.innerHTML,
             '<a class="btn" href="#" rel="me">test</a>'
         );
         assert.deepEqual(transform_log, [
         ]);
-        prev_data = next_data;
-        next_data = {me: false};
         transform_log = [];
-        tmpl.content.render(state, next_data, prev_data);
+        bound = templates['foo'].bind({
+            data: {me: false},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(
             div.innerHTML,
             '<a class="btn" href="#">test</a>'
@@ -304,21 +284,20 @@ suite('patch', function () {
 
     test('same DOM means no change', function () {
         var div = makeElement(
-            '<b class="one">test</b>'
+            '<div>' +
+                '<b class="one">test</b>' +
+                '</div>'
         );
-        var tmpl = createTemplateNode('foo',
-                                      '<b class="one">{{name}}</b>');
-        var prev_data = {};
-        var next_data = {name: 'test'};
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<b class="one">{{name}}</b>' +
+                '</div>'
+        );
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: {name: 'test'},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(div.innerHTML, '<b class="one">test</b>');
         assert.deepEqual(transform_log, [
         ]);
@@ -326,25 +305,23 @@ suite('patch', function () {
 
     test('multiple siblings', function () {
         var div = makeElement(
-            '<b>one</b>' +
-            '<i>two</i>' +
-            '<em>three</em>'
+            '<div>' +
+                '<b>one</b>' +
+                '<i>two</i>' +
+                '<em>three</em>' +
+                '</div>'
         );
-        var tmpl = createTemplateNode('foo',
-                                      '<b>one</b>' +
-                                      '<i class="test">two</i>' +
-                                      '<em>three</em>');
-        var prev_data = {};
-        var next_data = {name: 'test'};
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<b>one</b>' +
+                '<i class="test">two</i>' +
+                '<em>three</em>' +
+                '</div>');
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: {},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(
             div.innerHTML,
             '<b>one</b><i class="test">two</i><em>three</em>'
@@ -356,22 +333,20 @@ suite('patch', function () {
 
     test('append sibling', function () {
         var div = makeElement(
-            '<b>one</b>'
+            '<div>' +
+                '<b>one</b>' +
+                '</div>'
         );
-        var tmpl = createTemplateNode('foo',
-                                      '<b>one</b>' +
-                                      '<i>two</i>');
-        var prev_data = {};
-        var next_data = {name: 'test'};
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<b>one</b>' +
+                '<i>two</i>' +
+                '</div>');
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: {},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(div.innerHTML, '<b>one</b><i>two</i>');
         assert.deepEqual(transform_log, [
             'insertElement',
@@ -381,22 +356,21 @@ suite('patch', function () {
 
     test('remove sibling from end', function () {
         var div = makeElement(
-            '<b>one</b>' +
-            '<i>two</i>' 
+            '<div>' +
+                '<b>one</b>' +
+                '<i>two</i>' +
+                '</div>'
         );
-        var tmpl = createTemplateNode('foo',
-                                      '<b>one</b>');
-        var prev_data = {};
-        var next_data = {name: 'test'};
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<b>one</b>' +
+                '</div>');
+        
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: {},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(div.innerHTML, '<b>one</b>');
         assert.deepEqual(transform_log, [
             'removeChild'
@@ -405,23 +379,21 @@ suite('patch', function () {
  
     test('replace node, keep sibling', function () {
         var div = makeElement(
-            '<b>one</b>' +
-            '<b>two</b>'
+            '<div>' +
+                '<b>one</b>' +
+                '<b>two</b>' +
+                '</div>'
         );
-        var tmpl = createTemplateNode('foo',
-                                      '<i>one</i>' +
-                                      '<b>two</b>');
-        var prev_data = {};
-        var next_data = {name: 'test'};
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<i>one</i>' +
+                '<b>two</b>' +
+                '</div>');
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: {},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(div.innerHTML, '<i>one</i><b>two</b>');
         assert.deepEqual(transform_log, [
             'insertElement',
@@ -433,23 +405,21 @@ suite('patch', function () {
 
     test('replace all siblings', function () {
         var div = makeElement(
-            '<b>one</b>' +
-            '<b>two</b>'
+            '<div>' +
+                '<b>one</b>' +
+                '<b>two</b>' +
+                '</div>'
         );
-        var tmpl = createTemplateNode('foo',
-                                      '<i>one</i>' +
-                                      '<i>two</i>');
-        var prev_data = {};
-        var next_data = {name: 'test'};
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<i>one</i>' +
+                '<i>two</i>' +
+                '</div>');
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: {},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(div.innerHTML, '<i>one</i><i>two</i>');
         assert.deepEqual(transform_log, [
             'insertElement',
@@ -463,24 +433,22 @@ suite('patch', function () {
 
     test('insert middle sibling', function () {
         var div = makeElement(
-            '<b>one</b>' +
-            '<em>three</em>'
+            '<div>' +
+                '<b>one</b>' +
+                '<em>three</em>' +
+                '</div>'
         );
-        var tmpl = createTemplateNode('foo',
-                           '<b>one</b>' +
-                           '<i>two</i>' +
-                           '<em>three</em>');
-        var prev_data = {};
-        var next_data = {};
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<b>one</b>' +
+                '<i>two</i>' +
+                '<em>three</em>' +
+                '</div>');
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: {},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(div.innerHTML, '<b>one</b><i>two</i><em>three</em>');
         assert.deepEqual(transform_log, [
             'insertElement',
@@ -496,38 +464,34 @@ suite('patch', function () {
               '<li>three</li>' +
             '</ul>'
         );
-        var tmpl = createTemplateNode('foo',
-                           '<ul>' +
-                             '<li data-each="item in items" data-key="{{item.id}}">' +
-                               '{{item.id}}' +
-                             '</li>' +
-                           '</ul>');
-        var prev_data = {items: []};
-        var next_data = {items: [
+        var templates = createTemplateNode(
+            '<ul data-template="foo">' +
+                '<li data-each="item in items" data-key="{{item.id}}">' +
+                '{{item.id}}' +
+                '</li>' +
+                '</ul>');
+        var data = {items: [
             {id: 'one'},
             {id: 'two'},
             {id: 'three'}
         ]};
         // first render sets up keymaps
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: data,
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         // second render using keys
-        prev_data = next_data;
-        next_data = {items: [
-            prev_data.items[1],
-            prev_data.items[2]
-        ]};
         transform_log = [];
-        tmpl.content.render(state, next_data, prev_data);
+        bound = templates['foo'].bind({
+            data: {items: [
+                data.items[1],
+                data.items[2]
+            ]},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(
-            div.innerHTML,
+            div.outerHTML,
             '<ul>' +
               '<li>two</li>' +
               '<li>three</li>' +
@@ -547,39 +511,35 @@ suite('patch', function () {
               '<li>three</li>' +
             '</ul>'
         );
-        var tmpl = createTemplateNode('foo',
-                           '<ul>' +
-                             '<li data-each="item in items" data-key="{{item.id}}">' +
-                               '{{item.id}}' +
-                             '</li>' +
-                           '</ul>');
-        var prev_data = {items: []};
-        var next_data = {items: [
+        var templates = createTemplateNode(
+            '<ul data-template="foo">' +
+                '<li data-each="item in items" data-key="{{item.id}}">' +
+                '{{item.id}}' +
+                '</li>' +
+                '</ul>');
+        var data = {items: [
             {id: 'one'},
             {id: 'two'},
             {id: 'three'}
         ]};
         // first render sets up keymaps
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: data,
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         // second render using keys
-        prev_data = next_data;
-        next_data = {items: [
-            prev_data.items[2],
-            prev_data.items[0],
-            prev_data.items[1]
-        ]};
         transform_log = [];
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: {items: [
+                data.items[2],
+                data.items[0],
+                data.items[1]
+            ]},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(
-            div.innerHTML,
+            div.outerHTML,
             '<ul>' +
               '<li>three</li>' +
               '<li>one</li>' +
@@ -602,40 +562,36 @@ suite('patch', function () {
               '<li>three</li>' +
             '</ul>'
         );
-        var tmpl = createTemplateNode('foo',
-                           '<ul>' +
-                             '<li data-each="item in items" data-key="{{item.id}}">' +
-                               '{{item.id}}' +
-                             '</li>' +
-                           '</ul>');
-        var prev_data = {items: []};
-        var next_data = {items: [
+        var templates = createTemplateNode(
+            '<ul data-template="foo">' +
+                '<li data-each="item in items" data-key="{{item.id}}">' +
+                '{{item.id}}' +
+                '</li>' +
+                '</ul>');
+        var data = {items: [
             {id: 'one'},
             {id: 'two'},
             {id: 'three'}
         ]};
         // first render sets up keymaps
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: data,
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         // second render using keys
-        prev_data = next_data;
-        next_data = {items: [
-            {id: 'zero'},
-            prev_data.items[0],
-            prev_data.items[1],
-            prev_data.items[2]
-        ]};
         transform_log = [];
-        tmpl.content.render(state, next_data, prev_data);
+        bound = templates['foo'].bind({
+            data: {items: [
+                {id: 'zero'},
+                data.items[0],
+                data.items[1],
+                data.items[2]
+            ]},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(
-            div.innerHTML,
+            div.outerHTML,
             '<ul>' +
               '<li>zero</li>' +
               '<li>one</li>' +
@@ -658,40 +614,36 @@ suite('patch', function () {
               '<li>three</li>' +
             '</ul>'
         );
-        var tmpl = createTemplateNode('foo',
-                           '<ul>' +
-                             '<li data-each="item in items" data-key="{{item.id}}">' +
-                               '{{item.id}}' +
-                             '</li>' +
-                           '</ul>');
-        var prev_data = {items: []};
-        var next_data = {items: [
+        var templates = createTemplateNode(
+            '<ul data-template="foo">' +
+                '<li data-each="item in items" data-key="{{item.id}}">' +
+                '{{item.id}}' +
+                '</li>' +
+                '</ul>');
+        var data = {items: [
             {id: 'one'},
             {id: 'two'},
             {id: 'three'}
         ]};
         // first render sets up keymaps
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: data,
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         // second render using keys
-        prev_data = next_data;
-        next_data = {items: [
-            prev_data.items[0],
-            prev_data.items[1],
-            prev_data.items[2],
-            {id: 'four'}
-        ]};
         transform_log = [];
-        tmpl.content.render(state, next_data, prev_data);
+        bound = templates['foo'].bind({
+            data: {items: [
+                data.items[0],
+                data.items[1],
+                data.items[2],
+                {id: 'four'}
+            ]},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(
-            div.innerHTML,
+            div.outerHTML,
             '<ul>' +
               '<li>one</li>' +
               '<li>two</li>' +
@@ -713,40 +665,36 @@ suite('patch', function () {
               '<li>three</li>' +
             '</ul>'
         );
-        var tmpl = createTemplateNode('foo',
-                           '<ul>' +
-                             '<li data-each="item in items" data-key="{{item.id}}">' +
-                               '{{item.id}}' +
-                             '</li>' +
-                           '</ul>');
-        var prev_data = {items: []};
-        var next_data = {items: [
+        var templates = createTemplateNode(
+            '<ul data-template="foo">' +
+                '<li data-each="item in items" data-key="{{item.id}}">' +
+                '{{item.id}}' +
+                '</li>' +
+                '</ul>');
+        var data = {items: [
             {id: 'one'},
             {id: 'two'},
             {id: 'three'}
         ]};
         // first render sets up keymaps
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var bound = templates['foo'].bind({
+            data: data,
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         // second render using keys
-        prev_data = next_data;
-        next_data = {items: [
-            prev_data.items[0],
-            prev_data.items[1],
-            {id: '2.5'},
-            prev_data.items[2]
-        ]};
         transform_log = [];
-        tmpl.content.render(state, next_data, prev_data);
+        bound = templates['foo'].bind({
+            data: {items: [
+                data.items[0],
+                data.items[1],
+                {id: '2.5'},
+                data.items[2]
+            ]},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(
-            div.innerHTML,
+            div.outerHTML,
             '<ul>' +
               '<li>one</li>' +
               '<li>two</li>' +
@@ -762,22 +710,19 @@ suite('patch', function () {
 
     test('escaped var', function () {
         var div = document.createElement('div');
-        var tmpl = createTemplateNode('foo',
-                                      '<span>Hello, {{name}}!</span>');
-        var prev_data = {};
-        var next_data = {name: 'world'};
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<span>Hello, {{name}}!</span>' +
+                '</div>');
+        var bound = templates['foo'].bind({
+            data: {name: 'world'},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(div.childNodes[0].innerHTML, 'Hello, world!');
-        prev_data = next_data;
-        next_data = {name: '<script>alert("bad stuff");</script>'};
-        tmpl.content.render(state, next_data, prev_data);
+        bound = templates['foo'].bind({
+            data: {name: '<script>alert("bad stuff");</script>'},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(
             div.childNodes[0].innerHTML,
             'Hello, &lt;script&gt;alert("bad stuff");&lt;/script&gt;!'
@@ -786,22 +731,19 @@ suite('patch', function () {
 
     test('escaped var with whitespace', function () {
         var div = document.createElement('div');
-        var tmpl = createTemplateNode('foo',
-                                      '<span>Hello, {{ name }}!</span>');
-        var prev_data = {};
-        var next_data = {name: 'world'};
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<span>Hello, {{ name }}!</span>' +
+                '</div>');
+        var bound = templates['foo'].bind({
+            data: {name: 'world'},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(div.childNodes[0].innerHTML, 'Hello, world!');
-        prev_data = next_data;
-        next_data = {name: '<script>alert("bad stuff");</script>'};
-        tmpl.content.render(state, next_data, prev_data);
+        bound = templates['foo'].bind({
+            data: {name: '<script>alert("bad stuff");</script>'},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(
             div.childNodes[0].innerHTML,
             'Hello, &lt;script&gt;alert("bad stuff");&lt;/script&gt;!'
@@ -810,18 +752,14 @@ suite('patch', function () {
 
     test('escaped attribute', function () {
         var div = document.createElement('div');
-        var tmpl = createTemplateNode('foo',
-                                      '<span class="{{type}}">foo</span>');
-        var prev_data = {};
-        var next_data = {type: 'test" onclick="throw new Error(\'fail\');'};
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'foo', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<span class="{{type}}">foo</span>' +
+                '</div>');
+        var bound = templates['foo'].bind({
+            data: {type: 'test" onclick="throw new Error(\'fail\');'},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.equal(
             div.childNodes[0].className,
             'test" onclick="throw new Error(\'fail\');'
@@ -915,52 +853,48 @@ suite('patch', function () {
 
     test('checked property using template conditional', function () {
         var div = document.createElement('div');
-        var tmpl = createTemplateNode('app',
-                           '<input data-if="complete" type="checkbox" checked />' +
-                           '<input data-unless="complete" type="checkbox" />');
-        var prev_data = {};
-        var next_data = {complete: false};
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'app', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<input data-if="complete" type="checkbox" checked />' +
+                '<input data-unless="complete" type="checkbox" />' +
+                '</div>');
+        var bound = templates['foo'].bind({
+            data: {complete: false},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.strictEqual(child(div, 0).checked, false, 'one');
-        prev_data = next_data;
-        next_data = {complete: true};
-        tmpl.content.render(state, next_data, prev_data);
+        bound = templates['foo'].bind({
+            data: {complete: true},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.strictEqual(child(div, 0).checked, true, 'two');
-        prev_data = next_data;
-        next_data = {complete: false};
-        tmpl.content.render(state, next_data, prev_data);
+        bound = templates['foo'].bind({
+            data: {complete: false},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.strictEqual(child(div, 0).checked, false, 'three');
     });
 
     test('value property', function () {
         var div = document.createElement('div');
-        var tmpl = createTemplateNode('app',
-                                      '<input type="text" value="{{message}}" />');
-        var prev_data = {};
-        var next_data = {message: ''};
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'app', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<input type="text" value="{{message}}" />' +
+                '</div>');
+        var bound = templates['foo'].bind({
+            data: {message: ''},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.strictEqual(child(div, 0).value, "");
-        prev_data = next_data;
-        next_data = {message: 'testing'};
-        tmpl.content.render(state, next_data, prev_data);
+        bound = templates['foo'].bind({
+            data: {message: 'testing'},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.strictEqual(child(div, 0).value, "testing");
-        prev_data = next_data;
-        next_data = {message: 'asdf'};
-        tmpl.content.render(state, next_data, prev_data);
+        bound = templates['foo'].bind({
+            data: {message: 'asdf'},
+            patcher: new patch.Patcher(div, test_transforms)
+        });
         assert.strictEqual(child(div, 0).value, "asdf");
     });
 
@@ -993,28 +927,25 @@ suite('patch', function () {
     //     document.body.removeChild(div);
     // });
 
-    test("don't remove attributes on container", function () {
-        var div = document.createElement('div');
-        div.setAttribute('id', 'testing');
-        var calls = [];
-        div.addEventListener('click', function () {
-            calls.push('click');
-        });
-        var tmpl = createTemplateNode('app', '<b>test</b>');
-        var prev_data = {};
-        var next_data = {};
-        var patcher = new patch.Patcher(div, test_transforms);
-        var bound = new Magery.BoundTemplate(div, 'app', next_data, {});
-        var state = {
-            patcher: patcher,
-            bound_template: bound,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
-        assert.strictEqual(div.getAttribute('id'), 'testing', 'id not removed');
-        click(div);
-        assert.deepEqual(calls, ['click'], 'event handler not removed');
-    });
+    // test("don't remove attributes on container", function () {
+    //     var div = document.createElement('div');
+    //     div.setAttribute('id', 'testing');
+    //     var calls = [];
+    //     div.addEventListener('click', function () {
+    //         calls.push('click');
+    //     });
+    //     var templates = createTemplateNode(
+    //         '<div data-template="foo">' +
+    //             '<b>test</b>' +
+    //             '</div>');
+    //     var bound = templates['foo'].bind({
+    //         data: {},
+    //         patcher: new patch.Patcher(div, test_transforms)
+    //     });
+    //     assert.strictEqual(div.getAttribute('id'), 'testing', 'id not removed');
+    //     click(div);
+    //     assert.deepEqual(calls, ['click'], 'event handler not removed');
+    // });
 
     // test("don't destroy external changes inside #skip tags", function () {
     //     var div = document.createElement('div');

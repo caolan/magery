@@ -71,18 +71,22 @@ function deleteUnvisitedEvents(transforms, node) {
 };
 
 
-function Patcher(node, custom_transforms) {
-    this.container = node;
-    this.parent = null;
-    this.current = null;
+function Patcher(root, custom_transforms) {
     this.transforms = custom_transforms || transforms;
+    this.root = root;
+    this.reset();
 };
 
 exports.Patcher = Patcher;
 
-Patcher.prototype.start = function () {
-    this.stepInto(this.container);
+Patcher.prototype.reset = function () {
+    this.parent = this.root.parentNode;
+    this.current = this.root;
 };
+
+// Patcher.prototype.start = function () {
+//     // this.stepInto(this.container);
+// };
 
 Patcher.prototype.stepInto = function (node) {
     node.visited_attributes = new Set();
@@ -289,7 +293,7 @@ Patcher.prototype.skip = function (tag, key) {
     this.current = node.nextSibling;
 };
 
-Patcher.prototype.end = function (data) {
-    deleteChildren(this.transforms, this.parent, this.current);
-    this.parent = null;
-};
+// Patcher.prototype.end = function (data) {
+//     // deleteChildren(this.transforms, this.parent, this.current);
+//     // this.parent = null;
+// };

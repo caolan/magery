@@ -1,22 +1,24 @@
 var html = require('./html');
 var utils = require('./utils');
+var active_paths = require('./active_paths');
+var Template = require('./template');
 
 
 function run_all(xs) {
     var funs = xs.filter(function (x) { return x; });
     var length = funs.length;
-    return function (state, next_data, prev_data, inner) {
+    return function (bound, next_data, prev_data, inner) {
         var index = -1;
         while (++index < length) {
-            funs[index](state, next_data, prev_data, inner);
+            funs[index](bound, next_data, prev_data, inner);
         }
     };
 }
 
-function flushText(state) {
-    if (state.text_buffer) {
-        state.patcher.text(state.text_buffer);
-        state.text_buffer = '';
+function flushText(bound) {
+    if (bound.text_buffer) {
+        bound.patcher.text(bound.text_buffer);
+        bound.text_buffer = '';
     }
 }
 
@@ -56,13 +58,13 @@ function compileExpandVars(str, boolean) {
 function compileText(node) {
     var txt = node.textContent;
     var expand = compileExpandVars(txt);
-    return function (state, next_data, prev_data, inner) {
-        state.text_buffer += expand(next_data);
+    return function (bound, next_data, prev_data, inner) {
+        bound.text_buffer += expand(next_data);
     };
 }
 
-function compileElement(node) {
-    var children = exports.compileChildren(node);
+function compileElement(templates, node) {
+    var children = compileChildren(templates, node);
     var expand_key = null;
     if (node.dataset.key) {
         expand_key = compileExpandVars(node.dataset.key);
@@ -75,7 +77,8 @@ function compileElement(node) {
         if (name == 'data-each' ||
             name == 'data-if' ||
             name == 'data-unless' ||
-            name == 'data-key') {
+            name == 'data-key' ||
+            name == 'data-template') {
             continue;
         }
         var event = name.match(/^on(.*)/, event);
@@ -90,36 +93,45 @@ function compileElement(node) {
             );
         }
     }
-    var render = function (state, next_data, prev_data, inner) {
+    var render = function (bound, next_data, prev_data, inner) {
         var key = expand_key ? expand_key(next_data) : null;
-        flushText(state);
-        state.patcher.enterTag(node.tagName, key);
+        flushText(bound);
+        bound.patcher.enterTag(node.tagName, key);
         for (var attr_name in attrs) {
             var value = attrs[attr_name](next_data);
             if (value || !(html.attributes[attr_name] & html.BOOLEAN_ATTRIBUTE)) {
-                state.patcher.attribute(attr_name, value);
+                bound.patcher.attribute(attr_name, value);
             }
         }
         for (var event_name in events) {
-            state.patcher.eventListener(
+            bound.patcher.eventListener(
                 event_name,
                 events[event_name],
                 next_data,
-                state.bound_template
+                bound
             );
         }
-        children(state, next_data, prev_data, inner);
-        flushText(state);
-        state.patcher.exitTag();
+        children(bound, next_data, prev_data, inner);
+        flushText(bound);
+        bound.patcher.exitTag();
     };
-    if (node.dataset.unless) {
-        render = compileUnless(node, render);
+    if (node.dataset.template) {
+        var template_name = node.dataset.template;
+        if (templates[template_name]) {
+            throw new Error("Template '" + template_name + "' already exists");
+        }
+        templates[template_name] = new Template(render);
     }
-    if (node.dataset.if) {
-        render = compileIf(node, render);
-    }
-    if (node.dataset.each) {
-        render = compileEach(node, render);
+    else {
+        if (node.dataset.unless) {
+            render = compileUnless(node, render);
+        }
+        if (node.dataset.if) {
+            render = compileIf(node, render);
+        }
+        if (node.dataset.each) {
+            render = compileEach(node, render);
+        }
     }
     return render;
 }
@@ -133,18 +145,18 @@ function isTruthy(x) {
 
 function compileUnless(node, render) {
     var path = utils.propertyPath(node.dataset.unless);
-    return function (state, next_data, prev_data, inner) {
+    return function (bound, next_data, prev_data, inner) {
         if (!isTruthy(utils.lookup(next_data, path))) {
-            render(state, next_data, prev_data, inner);
+            render(bound, next_data, prev_data, inner);
         }
     };
 }
 
 function compileIf(node, render) {
     var path = utils.propertyPath(node.dataset.if);
-    return function (state, next_data, prev_data, inner) {
+    return function (bound, next_data, prev_data, inner) {
         if (isTruthy(utils.lookup(next_data, path))) {
-            render(state, next_data, prev_data, inner);
+            render(bound, next_data, prev_data, inner);
         }
     };
 }
@@ -153,7 +165,7 @@ function compileEach(node, render) {
     var parts = node.dataset.each.split(' in ');
     var name = parts[0];
     var path = utils.propertyPath(parts[1]);
-    return function (state, next_data, prev_data, inner) {
+    return function (bound, next_data, prev_data, inner) {
         var next_arr = utils.lookup(next_data, path);
         var prev_arr = utils.lookup(prev_data, path);
         var length = next_arr.length;
@@ -163,21 +175,21 @@ function compileEach(node, render) {
             var prev_data2 = Object.assign({}, prev_data);
             next_data2[name] = next_arr[index];
             prev_data2[name] = prev_arr && prev_arr[index];
-            render(state, next_data2, prev_data2, inner);
+            render(bound, next_data2, prev_data2, inner);
         }
     };
 }
 
-function compileTemplateCall(node) {
+function compileTemplateCall(templates, node) {
     var attr = node.getAttribute('template');
     if (!attr) {
         throw new Error("<template-call> tags must include a 'template' attribute");
     }
     var template_id_pattern = compileExpandVars(attr);
-    var children = exports.compileChildren(node);
-    return function (state, next_data, prev_data, inner) {
+    var children = compileChildren(templates, node);
+    return function (bound, next_data, prev_data, inner) {
         var template_id = template_id_pattern(next_data);
-        var template = document.getElementById(template_id);
+        var template = templates[template_id];
         if (!template) {
             throw new Error("Template not found: '" + template_id + "'");
         }
@@ -192,13 +204,13 @@ function compileTemplateCall(node) {
             }
         }
         var self = this;
-        template.content.render_children(state, next_data2, prev_data2, function () {
-            children(state, next_data, prev_data, inner);
+        template.render(bound, next_data2, prev_data2, function () {
+            children(bound, next_data, prev_data, inner);
         });
     };
 }
 
-function compileNode(node) {
+function compileNode(templates, node) {
     if (utils.isTextNode(node)) {
         return compileText(node);
     }
@@ -206,10 +218,10 @@ function compileNode(node) {
         var name = utils.templateTagName(node);
         if (name) {
             if (name == 'call') {
-                return compileTemplateCall(node);
+                return compileTemplateCall(templates, node);
             }
             else if (name == 'children') {
-                return function (state, next_data, prev_data, inner) {
+                return function (bound, next_data, prev_data, inner) {
                     inner && inner();
                 };
             }
@@ -217,20 +229,29 @@ function compileNode(node) {
                 'Unkonwn template tag: <template-' + name + '>'
             );
         }
-        return compileElement(node);
+        return compileElement(templates, node);
     }
     return null;
 }
 
-exports.compileChildren = function (parent) {
-    return run_all(utils.mapNodes(parent.childNodes, compileNode));
+function compileChildren(templates, parent) {
+    return run_all(
+        utils.mapNodes(
+            parent.childNodes,
+            compileNode.bind(null, templates)
+        )
+    );
 }
 
-exports.wrapTemplate = function (children) {
-    return function (state, next_data, prev_data, inner) {
-        state.patcher.start();
-        children(state, next_data, prev_data, inner);
-        flushText(state);
-        state.patcher.end();
-    };
+module.exports = function (node, templates) {
+    templates = templates || {};
+    if (typeof node === 'string') {
+        node = document.getElementById(node);
+    }
+    if (node.tagName === 'TEMPLATE' && node.content) {
+        node = node.content;
+    }
+    active_paths.markPaths(node);
+    utils.eachNode(node.childNodes, compileNode.bind(null, templates));
+    return templates;
 };

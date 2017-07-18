@@ -45,15 +45,14 @@ var active_paths =
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(7);
+	module.exports = __webpack_require__(5);
 
 
 /***/ }),
 /* 1 */,
 /* 2 */,
 /* 3 */,
-/* 4 */,
-/* 5 */
+/* 4 */
 /***/ (function(module, exports) {
 
 	var ELEMENT_NODE = 1;
@@ -121,11 +120,10 @@ var active_paths =
 
 
 /***/ }),
-/* 6 */,
-/* 7 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var utils = __webpack_require__(5);
+	var utils = __webpack_require__(4);
 
 	exports.markPath = function (obj, props) {
 	    switch (props.length) {
@@ -327,10 +325,13 @@ var active_paths =
 	    return false;
 	}
 
-	exports.markTemplatePaths = function (tmpl) {
-	    var paths = initNode(tmpl);
-	    tmpl.static = (paths && Object.keys(paths).length === 0);
-	    tmpl.active_paths = paths;
+	exports.markPaths = function (container) {
+	    utils.eachNode(container.childNodes, function (child) {
+	        child.active_paths = initNode(child);
+	        child.static = (
+	            child.active_paths && (Object.keys(child.active_paths).length === 0)
+	        );
+	    });
 	};
 
 

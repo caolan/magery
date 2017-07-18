@@ -41,17 +41,33 @@ var transforms =
 /******/ 	return __webpack_require__(0);
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */
+/******/ ({
+
+/***/ 0:
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(3);
+	module.exports = __webpack_require__(9);
 
 
 /***/ }),
-/* 1 */,
-/* 2 */,
-/* 3 */
+
+/***/ 3:
+/***/ (function(module, exports) {
+
+	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
+	var USE_PROPERTY = exports.USE_PROPERTY = 2;
+
+	exports.attributes = {
+	    'checked': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'value': USE_PROPERTY
+	};
+
+
+
+/***/ }),
+
+/***/ 9:
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -60,7 +76,7 @@ var transforms =
 	 * monitor mutations during testing.
 	 */
 
-	var html = __webpack_require__(4);
+	var html = __webpack_require__(3);
 
 
 	exports.insertTextNode = function (parent, before, str) {
@@ -122,20 +138,6 @@ var transforms =
 	};
 
 
-/***/ }),
-/* 4 */
-/***/ (function(module, exports) {
-
-	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
-	var USE_PROPERTY = exports.USE_PROPERTY = 2;
-
-	exports.attributes = {
-	    'checked': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'value': USE_PROPERTY
-	};
-
-
-
 /***/ })
-/******/ ]);
+
+/******/ });

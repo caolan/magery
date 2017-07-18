@@ -45,12 +45,99 @@ var patch =
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(2);
+	module.exports = __webpack_require__(8);
 
 
 /***/ }),
 /* 1 */,
-/* 2 */
+/* 2 */,
+/* 3 */
+/***/ (function(module, exports) {
+
+	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
+	var USE_PROPERTY = exports.USE_PROPERTY = 2;
+
+	exports.attributes = {
+	    'checked': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'value': USE_PROPERTY
+	};
+
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports) {
+
+	var ELEMENT_NODE = 1;
+	var TEXT_NODE = 3;
+	var DOCUMENT_FRAGMENT = 11;
+
+	exports.isDocumentFragment = function (node) {
+	    return node.nodeType === DOCUMENT_FRAGMENT;
+	};
+
+	exports.isElementNode = function (node) {
+	    return node.nodeType === ELEMENT_NODE;
+	};
+
+	exports.isTextNode = function (node) {
+	    return node.nodeType === TEXT_NODE;
+	};
+
+	exports.eachNode = function (nodelist, f) {
+	    var i = 0;
+	    var node = nodelist[0];
+	    while (node) {
+	        var tmp = node;
+	        // need to call nextSibling before f() because f()
+	        // might remove the node from the DOM
+	        node = node.nextSibling;
+	        f(tmp, i++, nodelist);
+	    }
+	};
+
+	exports.mapNodes = function (nodelist, f) {
+	    var results = [];
+	    exports.eachNode(nodelist, function (node, i) {
+	        results[i] = f(node, i, nodelist);
+	    });
+	    return results;
+	};
+
+	exports.trim = function (str) {
+	    return str.replace(/^\s+|\s+$/g, '');
+	};
+
+	exports.propertyPath = function (str) {
+	    return str.split('.').filter(function (x) {
+	        return x;
+	    });
+	};
+
+	// finds property path array (e.g. ['foo', 'bar']) in data object
+	exports.lookup = function (data, props) {
+	    var value = data;
+	    for(var i = 0, len = props.length; i < len; i++) {
+	        if (value === undefined || value === null) {
+	            return '';
+	        }
+	        value = value[props[i]];
+	    }
+	    return (value === undefined || value === null) ? '' : value;
+	};
+
+	exports.templateTagName = function (node) {
+	    var m = /^TEMPLATE-([^\s/>]+)/.exec(node.tagName);
+	    return m && m[1].toLowerCase();
+	};
+
+
+/***/ }),
+/* 5 */,
+/* 6 */,
+/* 7 */,
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -60,9 +147,9 @@ var patch =
 	 * DOM, performing DOM mutation only through transform calls.
 	 */
 
-	var transforms = __webpack_require__(3);
-	var utils = __webpack_require__(5);
-	var Set = __webpack_require__(6);
+	var transforms = __webpack_require__(9);
+	var utils = __webpack_require__(4);
+	var Set = __webpack_require__(10);
 
 	var ELEMENT_NODE = 1;
 	var TEXT_NODE = 3;
@@ -126,18 +213,22 @@ var patch =
 	};
 
 
-	function Patcher(node, custom_transforms) {
-	    this.container = node;
-	    this.parent = null;
-	    this.current = null;
+	function Patcher(root, custom_transforms) {
 	    this.transforms = custom_transforms || transforms;
+	    this.root = root;
+	    this.reset();
 	};
 
 	exports.Patcher = Patcher;
 
-	Patcher.prototype.start = function () {
-	    this.stepInto(this.container);
+	Patcher.prototype.reset = function () {
+	    this.parent = this.root.parentNode;
+	    this.current = this.root;
 	};
+
+	// Patcher.prototype.start = function () {
+	//     // this.stepInto(this.container);
+	// };
 
 	Patcher.prototype.stepInto = function (node) {
 	    node.visited_attributes = new Set();
@@ -344,14 +435,14 @@ var patch =
 	    this.current = node.nextSibling;
 	};
 
-	Patcher.prototype.end = function (data) {
-	    deleteChildren(this.transforms, this.parent, this.current);
-	    this.parent = null;
-	};
+	// Patcher.prototype.end = function (data) {
+	//     // deleteChildren(this.transforms, this.parent, this.current);
+	//     // this.parent = null;
+	// };
 
 
 /***/ }),
-/* 3 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -360,7 +451,7 @@ var patch =
 	 * monitor mutations during testing.
 	 */
 
-	var html = __webpack_require__(4);
+	var html = __webpack_require__(3);
 
 
 	exports.insertTextNode = function (parent, before, str) {
@@ -423,90 +514,7 @@ var patch =
 
 
 /***/ }),
-/* 4 */
-/***/ (function(module, exports) {
-
-	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
-	var USE_PROPERTY = exports.USE_PROPERTY = 2;
-
-	exports.attributes = {
-	    'checked': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'value': USE_PROPERTY
-	};
-
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports) {
-
-	var ELEMENT_NODE = 1;
-	var TEXT_NODE = 3;
-	var DOCUMENT_FRAGMENT = 11;
-
-	exports.isDocumentFragment = function (node) {
-	    return node.nodeType === DOCUMENT_FRAGMENT;
-	};
-
-	exports.isElementNode = function (node) {
-	    return node.nodeType === ELEMENT_NODE;
-	};
-
-	exports.isTextNode = function (node) {
-	    return node.nodeType === TEXT_NODE;
-	};
-
-	exports.eachNode = function (nodelist, f) {
-	    var i = 0;
-	    var node = nodelist[0];
-	    while (node) {
-	        var tmp = node;
-	        // need to call nextSibling before f() because f()
-	        // might remove the node from the DOM
-	        node = node.nextSibling;
-	        f(tmp, i++, nodelist);
-	    }
-	};
-
-	exports.mapNodes = function (nodelist, f) {
-	    var results = [];
-	    exports.eachNode(nodelist, function (node, i) {
-	        results[i] = f(node, i, nodelist);
-	    });
-	    return results;
-	};
-
-	exports.trim = function (str) {
-	    return str.replace(/^\s+|\s+$/g, '');
-	};
-
-	exports.propertyPath = function (str) {
-	    return str.split('.').filter(function (x) {
-	        return x;
-	    });
-	};
-
-	// finds property path array (e.g. ['foo', 'bar']) in data object
-	exports.lookup = function (data, props) {
-	    var value = data;
-	    for(var i = 0, len = props.length; i < len; i++) {
-	        if (value === undefined || value === null) {
-	            return '';
-	        }
-	        value = value[props[i]];
-	    }
-	    return (value === undefined || value === null) ? '' : value;
-	};
-
-	exports.templateTagName = function (node) {
-	    var m = /^TEMPLATE-([^\s/>]+)/.exec(node.tagName);
-	    return m && m[1].toLowerCase();
-	};
-
-
-/***/ }),
-/* 6 */
+/* 10 */
 /***/ (function(module, exports) {
 
 	function Set() {

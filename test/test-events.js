@@ -2,16 +2,15 @@ suite('events', function () {
 
     var assert = chai.assert;
 
-    function createTemplateNode(id, src) {
-        var el = document.getElementById(id);
+    function createTemplateNode(src) {
+        var el = document.getElementById('test-templates');
         if (!el) {
             el = document.createElement('template');
             document.body.appendChild(el);
-            el.id = id;
+            el.id = 'test-templates';
         }
         el.innerHTML = src;
-        Magery.initTemplates();
-        return el;
+        return Magery.compileTemplates(el);
     }
 
     function child(node /*...*/) {
@@ -44,14 +43,20 @@ suite('events', function () {
 
     test('click event to dispatch', function (done) {
         var container = document.createElement('div');
-        createTemplateNode('main',
-                           '<button onclick="clicked(event)">click me</button>');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<button onclick="clicked(event)">click me</button>' +
+                '</div>');
         var data = {};
-        Magery.bind(container, 'main', data, {
-            clicked: function (event) {
-                assert.equal(event.target, child(container, 0));
-                assert.deepEqual(this.data, data);
-                done();
+        templates['main'].bind({
+            element: container,
+            data: data,
+            handlers: {
+                clicked: function (event) {
+                    assert.equal(event.target, child(container, 0));
+                    assert.deepEqual(this.data, data);
+                    done();
+                }
             }
         });
         click(child(container, 0));
@@ -59,13 +64,19 @@ suite('events', function () {
 
     test('click event with context data', function (done) {
         var container = document.createElement('div');
-        createTemplateNode('main',
-                           '<button onclick="clicked(user)">click me</button>');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<button onclick="clicked(user)">click me</button>' +
+                '</div>');
         var data = {user: {name: 'test'}};
-        Magery.bind(container, 'main', data, {
-            clicked: function (user) {
-                assert.deepEqual(user, {name: 'test'});
-                done();
+        templates['main'].bind({
+            element: container,
+            data: data,
+            handlers: {
+                clicked: function (user) {
+                    assert.deepEqual(user, {name: 'test'});
+                    done();
+                }
             }
         });
         click(child(container, 0));
@@ -73,14 +84,20 @@ suite('events', function () {
     
     test('click event with event and context data', function (done) {
         var container = document.createElement('div');
-        createTemplateNode('main',
-                           '<button onclick="clicked(event, user)">click me</button>');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<button onclick="clicked(event, user)">click me</button>' +
+                '</div>');
         var data = {user: {name: 'test'}};
-        Magery.bind(container, 'main', data, {
-            clicked: function (event, user) {
-                assert.equal(event.target, child(container, 0));
-                assert.deepEqual(user, {name: 'test'});
-                done();
+        templates['main'].bind({
+            element: container,
+            data: data,
+            handlers: {
+                clicked: function (event, user) {
+                    assert.equal(event.target, child(container, 0));
+                    assert.deepEqual(user, {name: 'test'});
+                    done();
+                }
             }
         });
         click(child(container, 0));
@@ -104,13 +121,19 @@ suite('events', function () {
 
     test('page is updated after event handler returns', function (done) {
         var container = document.createElement('div');
-        createTemplateNode('main',
-                           '<div id="counter">{{app.counter}}</div>' +
-                           '<button onclick="increment(app)">add one</button>');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<div id="counter">{{app.counter}}</div>' +
+                '<button onclick="increment(app)">add one</button>' +
+                '</div>');
         var data = {app: {counter: 0}};
-        Magery.bind(container, 'main', data, {
-            increment: function (app) {
-                app.counter++;
+        templates['main'].bind({
+            element: container,
+            data: data,
+            handlers: {
+                increment: function (app) {
+                    app.counter++;
+                }
             }
         });
         assert.equal(child(container, 0).textContent, '0');
@@ -123,13 +146,19 @@ suite('events', function () {
     
     test('reference named item in loop', function () {
         var container = document.createElement('div');
-        createTemplateNode('main',
-                           '<button data-each="item in items" onclick="test(item)">test</button>');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<button data-each="item in items" onclick="test(item)">test</button>' +
+                '</div>');
         var data = {items: [{name: 'one'}, {name: 'two'}, {name: 'three'}]};
         var calls = [];
-        Magery.bind(container, 'main', data, {
-            test: function (item) {
-                calls.push(item.name);
+        templates['main'].bind({
+            element: container,
+            data: data,
+            handlers: {
+                test: function (item) {
+                    calls.push(item.name);
+                }
             }
         });
         click(child(container, 0));
@@ -140,13 +169,19 @@ suite('events', function () {
 
     test('oninput for managed text input does not interfere with resetInput', function () {
         var container = document.createElement('div');
-        createTemplateNode('main',
-                           '<input type="text" value="{{user.id}}" data-managed="true" oninput="updateID(user, event)">');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<input type="text" value="{{user.id}}" data-managed="true" oninput="updateID(user, event)">' +
+                '</div>');
         var data = {user: {id: '123'}};
         var calls = [];
-        Magery.bind(container, 'main', data, {
-            updateID: function (user, event) {
-                user.id = event.target.value.replace(/[^0-9]/g, '');
+        templates['main'].bind({
+            element: container,
+            data: data,
+            handlers: {
+                updateID: function (user, event) {
+                    user.id = event.target.value.replace(/[^0-9]/g, '');
+                }
             }
         });
         input(child(container, 0), '123abc4');
@@ -161,12 +196,18 @@ suite('events', function () {
 
     test('render html tags back into managed input', function () {
         var container = document.createElement('div');
-        createTemplateNode('main',
-                           '<input type="text" value="{{user.name}}" data-managed="true" oninput="updateID(user, event)">');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<input type="text" value="{{user.name}}" data-managed="true" oninput="updateID(user, event)">' +
+                '</div>');
         var data = {user: {name: 'test'}};
-        Magery.bind(container, 'main', data, {
-            updateID: function (user, event) {
-                user.name = event.target.value;
+        templates['main'].bind({
+            element: container,
+            data: data,
+            handlers: {
+                updateID: function (user, event) {
+                    user.name = event.target.value;
+                }
             }
         });
         assert.equal(child(container, 0).value, 'test');
@@ -176,16 +217,22 @@ suite('events', function () {
 
     test('trigger() should not run update() if an update is already queued', function () {
         var container = document.createElement('div');
-        createTemplateNode('main',
-                           '<input type="text" value="{{input}}" data-managed="true">' +
-                           '<button onclick="clearBtn()">clear</button>');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<input type="text" value="{{input}}" data-managed="true">' +
+                '<button onclick="clearBtn()">clear</button>' +
+                '</div>');
         var data = {input: 'test'};
-        var bound = Magery.bind(container, 'main', data, {
-            clearBtn: function (event) {
-                this.trigger('clearInput');
-            },
-            clearInput: function () {
-                this.data.input = '';
+        var bound = templates['main'].bind({
+            element: container,
+            data: data,
+            handlers: {
+                clearBtn: function (event) {
+                    this.trigger('clearInput');
+                },
+                clearInput: function () {
+                    this.data.input = '';
+                }
             }
         });
         var calls = 0;
@@ -200,9 +247,16 @@ suite('events', function () {
 
     test('text input value reset to match template data on input', function () {
         var container = document.createElement('div');
-        createTemplateNode('main', '<input data-managed="true" type="text" value="{{name}}">');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<input data-managed="true" type="text" value="{{name}}">' +
+                '</div>');
         var data = {name: 'testing'};
-        Magery.bind(container, 'main', data, {});
+        templates['main'].bind({
+            element: container,
+            data: data,
+            handlers: {}
+        });
         var input = child(container, 0);
         input.value = 'foo';
         assert.equal(input.value, 'foo');
@@ -215,11 +269,18 @@ suite('events', function () {
 
     test('update input value via dispatch + patch', function () {
         var container = document.createElement('div');
-        createTemplateNode('main', '<input data-managed="true" type="text" value="{{name}}" oninput="updateInput()">');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<input data-managed="true" type="text" value="{{name}}" oninput="updateInput()">' +
+                '</div>');
         var data = {name: 'testing'};
-        Magery.bind(container, 'main', data, {
-            updateInput: function () {
-                this.data.name = 'bar';
+        templates['main'].bind({
+            element: container,
+            data: data,
+            handlers: {
+                updateInput: function () {
+                    this.data.name = 'bar';
+                }
             }
         });
         var input = child(container, 0);
@@ -268,11 +329,17 @@ suite('events', function () {
 
     test('reset checkbox to match template data', function (done) {
         var container = document.createElement('div');
-        createTemplateNode('main',
-                           '<input data-managed="true" data-if="checked" type="checkbox" checked>' +
-                           '<input data-managed="true" data-unless="checked" type="checkbox">');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<input data-managed="true" data-if="checked" type="checkbox" checked>' +
+                '<input data-managed="true" data-unless="checked" type="checkbox">' +
+                '</div>');
         var data = {checked: true};
-        Magery.bind(container, 'main', data, {});
+        templates['main'].bind({
+            element: container,
+            data: data,
+            handlers: {}
+        });
         var input = child(container, 0);
         document.body.appendChild(container);
         assert.ok(input.checked);
@@ -286,13 +353,19 @@ suite('events', function () {
 
     test('update checkbox via dispatch', function (done) {
         var container = document.createElement('div');
-        createTemplateNode('main',
-                           '<input data-if="checked" type="checkbox" onclick="toggle()" checked>' +
-                           '<input data-unless="checked" type="checkbox" onclick="toggle()">');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<input data-if="checked" type="checkbox" onclick="toggle()" checked>' +
+                '<input data-unless="checked" type="checkbox" onclick="toggle()">' +
+                '</div>');
         var data = {checked: true};
-        Magery.bind(container, 'main', data, {
-            toggle: function () {
-                this.data.checked = !this.data.checked;
+        templates['main'].bind({
+            element: container,
+            data: data,
+            handlers: {
+                toggle: function () {
+                    this.data.checked = !this.data.checked;
+                }
             }
         });
         var input = child(container, 0);
@@ -312,11 +385,13 @@ suite('events', function () {
     
     test('reset radio to match template data', function (done) {
         var container = document.createElement('div');
-        createTemplateNode('main',
-                           '<div data-each="option in options">' +
-                           '<input data-if="option.checked" data-managed="true" type="radio" name="example" value="{{option.value}}" checked>' +
-                           '<input data-unless="option.checked" data-managed="true" type="radio" name="example" value="{{option.value}}">' +
-                           '</div>');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<div data-each="option in options">' +
+                '<input data-if="option.checked" data-managed="true" type="radio" name="example" value="{{option.value}}" checked>' +
+                '<input data-unless="option.checked" data-managed="true" type="radio" name="example" value="{{option.value}}">' +
+                '</div>' +
+                '</div>');
         var data = {
             options: [
                 {value: 'one', checked: false},
@@ -324,7 +399,11 @@ suite('events', function () {
                 {value: 'three', checked: false}
             ]
         };
-        Magery.bind(container, 'main', data, {});
+        templates['main'].bind({
+            element: container,
+            data: data,
+            handlers: {}
+        });
         var radioOne = child(container, 0, 0);
         var radioTwo = child(container, 1, 0);
         var radioThree = child(container, 2, 0);
@@ -344,11 +423,13 @@ suite('events', function () {
 
     test('update radio via event handler', function (done) {
         var container = document.createElement('div');
-        createTemplateNode('main',
-                           '<div data-each="option in options">' +
-                           '<input data-if="option.checked" data-managed="true" type="radio" onclick="pick(option.value)" name="example" value="{{option.value}}" checked>' +
-                           '<input data-unless="option.checked" data-managed="true" type="radio" onclick="pick(option.value)" name="example" value="{{option.value}}">' +
-                           '</div>');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<div data-each="option in options">' +
+                '<input data-if="option.checked" data-managed="true" type="radio" onclick="pick(option.value)" name="example" value="{{option.value}}" checked>' +
+                '<input data-unless="option.checked" data-managed="true" type="radio" onclick="pick(option.value)" name="example" value="{{option.value}}">' +
+                '</div>' +
+                '</div>');
         var data = {
             options: [
                 {value: 'one', checked: false},
@@ -356,11 +437,15 @@ suite('events', function () {
                 {value: 'three', checked: false}
             ]
         };
-        Magery.bind(container, 'main', data, {
-            pick: function (value) {
-                this.data.options.forEach(function (option) {
-                    option.checked = (option.value === value);
-                });
+        templates['main'].bind({
+            element: container,
+            data: data,
+            handlers: {
+                pick: function (value) {
+                    this.data.options.forEach(function (option) {
+                        option.checked = (option.value === value);
+                    });
+                }
             }
         });
         var radioOne = child(container, 0, 0);
@@ -388,12 +473,14 @@ suite('events', function () {
 
     test('reset select to match template data', function (done) {
         var container = document.createElement('div');
-        createTemplateNode('main',
-                           '<select>' +
-                             '<option data-each="option in options" value="{{option.value}}" selected="{{option.selected}}">' +
-                               '{{option.label}}' +
-                             '</option>' +
-                           '</select>');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<select>' +
+                '<option data-each="option in options" value="{{option.value}}" selected="{{option.selected}}">' +
+                '{{option.label}}' +
+                '</option>' +
+                '</select>' +
+                '</div>');
         var data = {
             options: [
                 {value: 1, label: 'one', selected: false},
@@ -401,19 +488,16 @@ suite('events', function () {
                 {value: 3, label: 'three', selected: false}
             ]
         };
-        Magery.bind(container, 'main', data, {});
+        templates['main'].bind({
+            element: container,
+            data: data,
+            handlers: {}
+        });
         var select = child(container, 0);
         var optionOne = child(select, 0);
         var optionTwo = child(select, 1);
         var optionThree = child(select, 2);
         document.body.appendChild(container);
-        console.log(document.getElementById('main').content);
-        console.log(document.getElementById('main').content.childNodes[0].innerHTML);
-        console.log(container);
-        console.log(select);
-        console.log(optionOne);
-        console.log(optionTwo);
-        console.log(optionThree);
         assert.ok(!optionOne.selected, 'option one (pre)');
         assert.ok(optionTwo.selected, 'option two (pre)');
         assert.ok(!optionThree.selected, 'option three (pre)');

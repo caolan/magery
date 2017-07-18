@@ -1,13 +1,12 @@
-function createTemplateNode(id, src) {
-    var el = document.getElementById(id);
+function createTemplateNode(src) {
+    var el = document.getElementById('test-templates');
     if (!el) {
         el = document.createElement('template');
         document.body.appendChild(el);
-        el.id = id;
+        el.id = 'test-templates';
     }
     el.innerHTML = src;
-    Magery.initTemplates();
-    return el;
+    return Magery.compileTemplates(el);
 }
 
 function random (max) {
@@ -42,9 +41,8 @@ benchsuite('Add 100 elements to a list, one at a time (no keys)', function () {
     bench({
         name: 'Magery',
         setup: function () {
-            createTemplateNode(
-                'app',
-                '<ul>' +
+            this.templates = createTemplateNode(
+                '<ul data-template="app">' +
                     '<li data-each="item in items">' +
                     '{{item.name}}' +
                     '</li>' +
@@ -52,11 +50,13 @@ benchsuite('Add 100 elements to a list, one at a time (no keys)', function () {
             );
         },
         fn: function () {
-            var container = document.createElement('div');
-            var data = {items: []};
-            var app = Magery.bind(container, 'app', data, {});
+            var app = this.templates['app'].bind({
+                element: document.createElement('ul'),
+                data: {items: []},
+                handlers: {}
+            });
             for (var i = 0; i < 100; i++) {
-                app.context.items.push({name: 'item' + i});
+                app.data.items.push({name: 'item' + i});
                 app.update();
             }
         }
@@ -89,20 +89,22 @@ benchsuite('Add 100 elements to a list, one at a time (keys)', function () {
     bench({
         name: 'Magery',
         setup: function () {
-            createTemplateNode('app',
-                               '<ul>' +
-                               '<li data-each="item in items" data-key="{{item.id}}">' +
-                               '{{item.name}}' +
-                               '</li>' +
-                               '</ul>'
-                              );
+            this.templates = createTemplateNode(
+                '<ul data-template="app">' +
+                    '<li data-each="item in items" data-key="{{item.id}}">' +
+                    '{{item.name}}' +
+                    '</li>' +
+                    '</ul>'
+            );
         },
         fn: function () {
-            var container = document.createElement('div');
-            var data = {items: []};
-            var app = Magery.bind(container, 'app', data, {});
+            var app = this.templates['app'].bind({
+                element: document.createElement('ul'),
+                data: {items: []},
+                handlers: {}
+            });
             for (var i = 0; i < 100; i++) {
-                app.context.items.push({id: i, name: 'item' + i});
+                app.data.items.push({id: i, name: 'item' + i});
                 app.update();
             }
         }
@@ -139,24 +141,27 @@ benchsuite('Randomly remove elements from 100 length list, one at a time (no key
     bench({
         name: 'Magery',
         setup: function () {
-            createTemplateNode('app',
-                               '<ul>' +
-                               '<li data-each="item in items">' +
-                               '{{item.name}}' +
-                               '</li>' +
-                               '</ul>'
-                              );
+            this.templates = createTemplateNode(
+                '<ul data-template="app">' +
+                    '<li data-each="item in items">' +
+                    '{{item.name}}' +
+                    '</li>' +
+                    '</ul>'
+            );
             this.items = [];
             for (var i = 0; i < 100; i++) {
                 this.items.push({name: 'item' + i});
             }
         },
         fn: function () {
-            var container = document.createElement('div');
             var data = {items: this.items.slice()};
-            var app = Magery.bind(container, 'app', data, {});
+            var app = this.templates['app'].bind({
+                element: document.createElement('ul'),
+                data: data,
+                handlers: {}
+            });
             for (var i = 0; i < 100; i++) {
-                app.context.items.splice(random(app.context.items.length - 1), 1);
+                app.data.items.splice(random(app.data.items.length - 1), 1);
                 app.update();
             }
         }
@@ -193,8 +198,8 @@ benchsuite('Randomly remove elements from 100 length list, one at a time (keys)'
     bench({
         name: 'Magery',
         setup: function () {
-            createTemplateNode('app',
-                               '<ul>' +
+            this.templates = createTemplateNode(
+                               '<ul data-template="app">' +
                                '<li data-each="item in items" data-key="{{item.id}}">' +
                                '{{item.name}}' +
                                '</li>' +
@@ -206,11 +211,14 @@ benchsuite('Randomly remove elements from 100 length list, one at a time (keys)'
             }
         },
         fn: function () {
-            var container = document.createElement('div');
             var data = {items: this.items.slice()};
-            var app = Magery.bind(container, 'app', data, {});
+            var app = this.templates['app'].bind({
+                element: document.createElement('ul'),
+                data: data,
+                handlers: {}
+            });
             for (var i = 0; i < 100; i++) {
-                app.context.items.splice(random(app.context.items.length - 1), 1);
+                app.data.items.splice(random(app.data.items.length - 1), 1);
                 app.update();
             }
         }
@@ -254,23 +262,25 @@ benchsuite('Add 100 more complex elements to a list, one at a time', function ()
     bench({
         name: 'Magery',
         setup: function () {
-            createTemplateNode('app',
-                               '<div id="container">' +
-                               '<ul>' +
-                               '<li data-each="item in items" data-key="{{item.id}}">' +
-                               '<span data-if="item.published">Published</span>' +
-                               '<strong>{{item.name}}</strong>' +
-                               '</li>' +
-                               '</ul>' +
-                               '</div>'
-                              );
+            this.templates = createTemplateNode(
+                '<div id="container" data-template="app">' +
+                    '<ul>' +
+                    '<li data-each="item in items" data-key="{{item.id}}">' +
+                    '<span data-if="item.published">Published</span>' +
+                    '<strong>{{item.name}}</strong>' +
+                    '</li>' +
+                    '</ul>' +
+                    '</div>'
+            );
         },
         fn: function () {
-            var container = document.createElement('div');
-            var data = {items: []};
-            var app = Magery.bind(container, 'app', data, {});
+            var app = this.templates['app'].bind({
+                element: document.createElement('div'),
+                data: {items: []},
+                handlers: {}
+            });
             for (var i = 0; i < 100; i++) {
-                app.context.items.push({id: i, name: 'item' + i});
+                app.data.items.push({id: i, name: 'item' + i});
                 app.update();
             }
         }
@@ -318,20 +328,21 @@ benchsuite('Live update a managed text box', function () {
     bench({
         name: 'Magery',
         setup: function () {
-            createTemplateNode(
-                'app',
-                '<input type="text" value="{{name}}" data-managed="true" oninput="updateInput(event)" />'
+            this.templates = createTemplateNode(
+                '<input data-template="app" type="text" value="{{name}}" data-managed="true" oninput="updateInput(event)" />'
             );
         },
         fn: function () {
-            var container = document.createElement('div');
-            var data = {name: ''};
-            var app = Magery.bind(container, 'app', data, {
-                updateInput: function (ev) {
-                    this.context.name = ev.target.value;
+            var el = document.createElement('input');
+            var app = this.templates['app'].bind({
+                element: el,
+                data: {name: ''},
+                handlers: {
+                    updateInput: function (ev) {
+                        this.data.name = ev.target.value;
+                    }
                 }
             });
-            var el = container.querySelector('input');
             for (var i = 0; i < 100; i++) {
                 var str = test_string.substring(0, i + 1);
                 el.value = str;

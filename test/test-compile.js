@@ -4,8 +4,8 @@ suite('compile', function () {
 
     function test_patcher(calls) {
         return {
-            start: function () {
-                calls.push(['start']);
+            reset: function () {
+                // calls.push(['reset']);
             },
             enterTag: function (tag, key) {
                 calls.push(['enterTag', tag, key]);
@@ -21,34 +21,29 @@ suite('compile', function () {
             },
             skip: function (tag, key) {
                 calls.push(['skip', tag, key]);
-            },
-            end: function () {
-                calls.push(['end']);
             }
         };
     }
 
-    function patch(tmpl, next_data, prev_data) {
+    function patch(templates, name, next_data, prev_data) {
         var calls = [];
-        var state = {
+        var bound = new Magery.BoundTemplate(templates[name], {
             patcher: test_patcher(calls),
-            bound_template: null,
-            text_buffer: ''
-        };
-        tmpl.content.render(state, next_data, prev_data);
+            data: next_data
+        });
+        bound.update();
         return calls;
     }
 
-    function createTemplateNode(id, src) {
-        var el = document.getElementById(id);
+    function createTemplateNode(src) {
+        var el = document.getElementById('test-templates');
         if (!el) {
             el = document.createElement('template');
             document.body.appendChild(el);
-            el.id = id;
+            el.id = 'test-templates';
         }
         el.innerHTML = src;
-        Magery.initTemplates();
-        return el;
+        return Magery.compileTemplates(el);
     }
 
     // test('updateActiveData', function () {
@@ -97,14 +92,17 @@ suite('compile', function () {
     // });
 
     test('flat children', function () {
-        var tmpl = createTemplateNode('foo',
-                                      '<i>foo</i>' +
-                                      '<b>bar</b>' +
-                                      '<em>baz</em>');
+        var templates = createTemplateNode(
+            '<div data-template="app">' +
+                '<i>foo</i>' +
+                '<b>bar</b>' +
+                '<em>baz</em>' +
+                '</div>'
+        );
         var prev_data = {};
         var next_data = {};
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'app', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'I', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'foo']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
@@ -114,21 +112,23 @@ suite('compile', function () {
         assert.deepEqual(patcher_calls[7], ['enterTag', 'EM', null]);
         assert.deepEqual(patcher_calls[8], ['text', 'baz']);
         assert.deepEqual(patcher_calls[9], ['exitTag']);
-        assert.deepEqual(patcher_calls[10], ['end']);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
         assert.equal(patcher_calls.length, 11);
     });
 
     test('nested children', function () {
-        var tmpl = createTemplateNode('foo',
-                                      '<i>foo</i>\n' +
-                                      '<p>\n' +
-                                      '  <b>bar</b>\n' +
-                                      '  <em>baz</em>\n' +
-                                      '</p>\n');
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<i>foo</i>\n' +
+                '<p>\n' +
+                '  <b>bar</b>\n' +
+                '  <em>baz</em>\n' +
+                '</p>\n' +
+                '</div>');
         var prev_data = {};
         var next_data = {};
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'I', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'foo']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
@@ -145,102 +145,100 @@ suite('compile', function () {
         assert.deepEqual(patcher_calls[14], ['text', '\n']);
         assert.deepEqual(patcher_calls[15], ['exitTag']);
         assert.deepEqual(patcher_calls[16], ['text', '\n']);
-        assert.deepEqual(patcher_calls[17], ['end']);
+        assert.deepEqual(patcher_calls[17], ['exitTag']);
         assert.equal(patcher_calls.length, 18);
     });
 
     test('variable substitution - text', function () {
-        var tmpl = createTemplateNode('foo', '<i>Hello, {{name}}!</i>');
+        var templates = createTemplateNode('<i data-template="foo">Hello, {{name}}!</i>');
         var prev_data = {};
         var next_data = {name: 'world'};
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
-        assert.deepEqual(patcher_calls[1], ['enterTag', 'I', null]);
-        assert.deepEqual(patcher_calls[2], ['text', 'Hello, world!']);
-        assert.deepEqual(patcher_calls[3], ['exitTag']);
-        assert.deepEqual(patcher_calls[4], ['end']);
-        assert.equal(patcher_calls.length, 5);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'I', null]);
+        assert.deepEqual(patcher_calls[1], ['text', 'Hello, world!']);
+        assert.deepEqual(patcher_calls[2], ['exitTag']);
+        assert.equal(patcher_calls.length, 3);
     });
 
     test('variable substitution - array', function () {
-        var tmpl = createTemplateNode('foo', '{{names}}');
+        var templates = createTemplateNode('<div data-template="foo">{{names}}</div>');
         var prev_data = {};
         var next_data = {names: ['foo', 'bar', 'baz']};
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['text', 'foo,bar,baz']);
-        assert.deepEqual(patcher_calls[2], ['end']);
+        assert.deepEqual(patcher_calls[2], ['exitTag']);
         assert.equal(patcher_calls.length, 3);
     });
 
     test('variable substitution - undefined', function () {
-        var tmpl = createTemplateNode('foo', 'Hello, {{name}}');
+        var templates = createTemplateNode('<div data-template="foo">Hello, {{name}}</div>');
         var prev_data = {};
         var next_data = {};
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['text', 'Hello, ']);
-        assert.deepEqual(patcher_calls[2], ['end']);
+        assert.deepEqual(patcher_calls[2], ['exitTag']);
         assert.equal(patcher_calls.length, 3);
     });
 
     test('variable substitution - null', function () {
-        var tmpl = createTemplateNode('foo', 'Hello, {{name}}');
+        var templates = createTemplateNode('<div data-template="foo">Hello, {{name}}</div>');
         var prev_data = {};
         var next_data = {name: null};
         var changes = true;
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['text', 'Hello, ']);
-        assert.deepEqual(patcher_calls[2], ['end']);
+        assert.deepEqual(patcher_calls[2], ['exitTag']);
         assert.equal(patcher_calls.length, 3);
     });
 
     test('variable substitution - true', function () {
-        var tmpl = createTemplateNode('foo', 'Hello, {{name}}');
+        var templates = createTemplateNode('<div data-template="foo">Hello, {{name}}</div>');
         var prev_data = {};
         var next_data = {name: true};
         var changes = true;
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['text', 'Hello, true']);
-        assert.deepEqual(patcher_calls[2], ['end']);
+        assert.deepEqual(patcher_calls[2], ['exitTag']);
         assert.equal(patcher_calls.length, 3);
     });
 
     test('variable substitution - false', function () {
-        var tmpl = createTemplateNode('foo', 'Hello, {{name}}');
+        var templates = createTemplateNode('<div data-template="foo">Hello, {{name}}</div>');
         var prev_data = {};
         var next_data = {name: false};
         var changes = true;
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['text', 'Hello, false']);
-        assert.deepEqual(patcher_calls[2], ['end']);
+        assert.deepEqual(patcher_calls[2], ['exitTag']);
         assert.equal(patcher_calls.length, 3);
     });
 
     test('variable substitution - object', function () {
-        var tmpl = createTemplateNode('foo', 'Hello, {{name}}');
+        var templates = createTemplateNode('<div data-template="foo">Hello, {{name}}</div>');
         var prev_data = {};
         var next_data = {name: {first: 'a', last: 'b'}};
         var changes = true;
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['text', 'Hello, [object Object]']);
-        assert.deepEqual(patcher_calls[2], ['end']);
+        assert.deepEqual(patcher_calls[2], ['exitTag']);
         assert.equal(patcher_calls.length, 3);
     });
 
     test('variable substitution - length property', function () {
-        var tmpl = createTemplateNode('foo', 'Total: {{ items.length }}');
+        var templates = createTemplateNode('<div data-template="foo">Total: {{ items.length }}</div>');
         var prev_data = {};
         var next_data = {items: ['a', 'b', 'c']};
         var changes = true;
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['text', 'Total: 3']);
-        assert.deepEqual(patcher_calls[2], ['end']);
+        assert.deepEqual(patcher_calls[2], ['exitTag']);
         assert.equal(patcher_calls.length, 3);
     });
 
@@ -336,14 +334,16 @@ suite('compile', function () {
     // });
 
     test('data-each', function () {
-        var tmpl = createTemplateNode('foo',
-                                      '<h1>title</h1>' +
-                                      '<section data-each="item in items">item</section>');
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<h1>title</h1>' +
+                '<section data-each="item in items">item</section>' +
+                '</div>'
+        );
         var prev_data = {};
         var next_data = {items: [{name: 'one'}, {name: 'two'}, {name: 'three'}]};
-        var changes = true;
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
@@ -356,7 +356,7 @@ suite('compile', function () {
         assert.deepEqual(patcher_calls[10], ['enterTag', 'SECTION', null]);
         assert.deepEqual(patcher_calls[11], ['text', 'item']);
         assert.deepEqual(patcher_calls[12], ['exitTag']);
-        assert.deepEqual(patcher_calls[13], ['end']);
+        assert.deepEqual(patcher_calls[13], ['exitTag']);
         assert.equal(patcher_calls.length, 14);
     });
 
@@ -404,18 +404,19 @@ suite('compile', function () {
     // });
 
     test('data-each introduces new context variable', function () {
-        var tmpl = createTemplateNode('foo',
-                                      '<h1>title</h1>' +
-                                      '<ul>' +
-                                      '<li data-each="item in items">' +
-                                      '{{item.name}}' +
-                                      '</li>' +
-                                      '</ul>');
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<h1>title</h1>' +
+                '<ul>' +
+                '<li data-each="item in items">' +
+                '{{item.name}}' +
+                '</li>' +
+                '</ul>' +
+                '</div>');
         var prev_data = {};
         var next_data = {items: [{name: 'one'}, {name: 'two'}, {name: 'three'}]};
-        var changes = true;
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
@@ -430,22 +431,23 @@ suite('compile', function () {
         assert.deepEqual(patcher_calls[12], ['text', 'three']);
         assert.deepEqual(patcher_calls[13], ['exitTag']);
         assert.deepEqual(patcher_calls[14], ['exitTag']);
-        assert.deepEqual(patcher_calls[15], ['end']);
+        assert.deepEqual(patcher_calls[15], ['exitTag']);
         assert.equal(patcher_calls.length, 16);
     });
 
     test('data-each with data-key', function () {
-        var tmpl = createTemplateNode('foo',
-                                      '<h1>title</h1>' +
-                                      '<section data-each="item in items" data-key="{{item.name}}">' +
-                                      'item' +
-                                      '</section>' +
-                                      '<p>footer</p>');
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<h1>title</h1>' +
+                '<section data-each="item in items" data-key="{{item.name}}">' +
+                'item' +
+                '</section>' +
+                '<p>footer</p>' +
+                '</div>');
         var prev_data = {};
         var next_data = {items: [{name: 'one'}, {name: 'two'}, {name: 'three'}]};
-        var changes = true;
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
@@ -461,7 +463,7 @@ suite('compile', function () {
         assert.deepEqual(patcher_calls[13], ['enterTag', 'P', null]);
         assert.deepEqual(patcher_calls[14], ['text', 'footer']);
         assert.deepEqual(patcher_calls[15], ['exitTag']);
-        assert.deepEqual(patcher_calls[16], ['end']);
+        assert.deepEqual(patcher_calls[16], ['exitTag']);
         assert.equal(patcher_calls.length, 17);
     });
 
@@ -546,153 +548,158 @@ suite('compile', function () {
     // });
 
     test('data-if', function () {
-        var tmpl = createTemplateNode('foo',
-                                      '<h1>title</h1>' +
-                                      '<b data-if="published">published</b>');
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<h1>title</h1>' +
+                '<b data-if="published">published</b>' +
+                '</div>');
         var next_data = {published: true};
         var prev_data = {};
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
         assert.deepEqual(patcher_calls[4], ['enterTag', 'B', null]);
         assert.deepEqual(patcher_calls[5], ['text', 'published']);
         assert.deepEqual(patcher_calls[6], ['exitTag']);
-        assert.deepEqual(patcher_calls[7], ['end']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
         assert.equal(patcher_calls.length, 8);
         prev_data = next_data;
         next_data = {published: false};
-        patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
-        assert.deepEqual(patcher_calls[4], ['end']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
         assert.equal(patcher_calls.length, 5);
         // empty array is falsy
         next_data = {published: []};
-        patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
-        assert.deepEqual(patcher_calls[4], ['end']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
         assert.equal(patcher_calls.length, 5);
         // empty string is falsy
         next_data = {published: ''};
-        patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
-        assert.deepEqual(patcher_calls[4], ['end']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
         assert.equal(patcher_calls.length, 5);
         // zero is falsy
         next_data = {published: 0};
-        patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
-        assert.deepEqual(patcher_calls[4], ['end']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
         assert.equal(patcher_calls.length, 5);
         // undefined is falsy
         next_data = {};
-        patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
-        assert.deepEqual(patcher_calls[4], ['end']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
         assert.equal(patcher_calls.length, 5);
     });
 
     test('data-unless', function () {
-        var tmpl = createTemplateNode('foo',
-                                      '<h1>title</h1>' +
-                                      '<b data-unless="published">published</b>');
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<h1>title</h1>' +
+                '<b data-unless="published">published</b>' +
+                '</div>');
         var next_data = {published: true};
         var prev_data = {};
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
-        assert.deepEqual(patcher_calls[4], ['end']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
         assert.equal(patcher_calls.length, 5);
         prev_data = next_data;
         next_data = {published: false};
-        patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
         assert.deepEqual(patcher_calls[4], ['enterTag', 'B', null]);
         assert.deepEqual(patcher_calls[5], ['text', 'published']);
         assert.deepEqual(patcher_calls[6], ['exitTag']);
-        assert.deepEqual(patcher_calls[7], ['end']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
         assert.equal(patcher_calls.length, 8);
         // empty array is falsy
         prev_data = next_data;
         next_data = {published: []};
-        patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
         assert.deepEqual(patcher_calls[4], ['enterTag', 'B', null]);
         assert.deepEqual(patcher_calls[5], ['text', 'published']);
         assert.deepEqual(patcher_calls[6], ['exitTag']);
-        assert.deepEqual(patcher_calls[7], ['end']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
         assert.equal(patcher_calls.length, 8);
         // empty string is falsy
         prev_data = next_data;
         next_data = {published: ''};
-        patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
         assert.deepEqual(patcher_calls[4], ['enterTag', 'B', null]);
         assert.deepEqual(patcher_calls[5], ['text', 'published']);
         assert.deepEqual(patcher_calls[6], ['exitTag']);
-        assert.deepEqual(patcher_calls[7], ['end']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
         assert.equal(patcher_calls.length, 8);
         // zero is falsy
         prev_data = next_data;
         next_data = {published: 0};
-        patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
         assert.deepEqual(patcher_calls[4], ['enterTag', 'B', null]);
         assert.deepEqual(patcher_calls[5], ['text', 'published']);
         assert.deepEqual(patcher_calls[6], ['exitTag']);
-        assert.deepEqual(patcher_calls[7], ['end']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
         assert.equal(patcher_calls.length, 8);
         // undefined is falsy
         prev_data = next_data;
         next_data = {};
-        patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
         assert.deepEqual(patcher_calls[4], ['enterTag', 'B', null]);
         assert.deepEqual(patcher_calls[5], ['text', 'published']);
         assert.deepEqual(patcher_calls[6], ['exitTag']);
-        assert.deepEqual(patcher_calls[7], ['end']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
         assert.equal(patcher_calls.length, 8);
     });
 
     test('call another template block statically', function () {
-        createTemplateNode('bar',
-                           '<b>{{meta.year}}</b>');
-        var tmpl = createTemplateNode('foo',
-                                      '<h1>title</h1>' +
-                                      '<template-call template="bar" meta="article.meta" />');
+        var templates = createTemplateNode(
+            '<b data-template="bar">{{meta.year}}</b>' +
+                '<div data-template="foo">' +
+                '<h1>title</h1>' +
+                '<template-call template="bar" meta="article.meta"></template-call>' +
+                '</div>');
         var prev_data = {};
         var next_data = {
             article: {
@@ -701,24 +708,25 @@ suite('compile', function () {
                 }
             }
         };
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
         assert.deepEqual(patcher_calls[4], ['enterTag', 'B', null]);
         assert.deepEqual(patcher_calls[5], ['text', '2015']);
         assert.deepEqual(patcher_calls[6], ['exitTag']);
-        assert.deepEqual(patcher_calls[7], ['end']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
         assert.equal(patcher_calls.length, 8);
     });
 
     test('call another template block dynamically', function () {
-        var tmpl = createTemplateNode('foo',
-                                      '<h1>title</h1>' +
-                                      '<template-call template="{{article.mytemplate}}" meta="article.meta" />');
-        createTemplateNode('bar',
-                           '<b>{{meta.year}}</b>');
+        var templates = createTemplateNode(
+            '<b data-template="bar">{{meta.year}}</b>' +
+                '<div data-template="foo">' +
+                '<h1>title</h1>' +
+                '<template-call template="{{article.mytemplate}}" meta="article.meta"></template-call>' +
+                '</div>');
         var prev_data = {};
         var next_data = {
             article: {
@@ -728,29 +736,30 @@ suite('compile', function () {
                 }
             }
         };
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
         assert.deepEqual(patcher_calls[4], ['enterTag', 'B', null]);
         assert.deepEqual(patcher_calls[5], ['text', '2015']);
         assert.deepEqual(patcher_calls[6], ['exitTag']);
-        assert.deepEqual(patcher_calls[7], ['end']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
         assert.equal(patcher_calls.length, 8);
     });
 
     test('call another template block with child expansion', function () {
-        var tmpl = createTemplateNode('foo',
-                                      '<h1>title</h1>' +
-                                      '<template-call template="bar" article="article">' +
-                                      '<i>inner</i>' +
-                                      '</template-call>');
-        createTemplateNode('bar',
-                           '<div>' +
-                             '<b>{{article.title}}</b>' +
-                             '<template-children />' +
-                           '</div>');
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<h1>title</h1>' +
+                '<template-call template="bar" article="article">' +
+                '<i>inner</i>' +
+                '</template-call>' +
+                '</div>' +
+                '<div data-template="bar">' +
+                '<b>{{article.title}}</b>' +
+                '<template-children />' +
+                '</div>');
         var prev_data = {};
         var next_data = {
             article: {
@@ -760,8 +769,8 @@ suite('compile', function () {
                 }
             }
         };
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
@@ -773,20 +782,23 @@ suite('compile', function () {
         assert.deepEqual(patcher_calls[9], ['text', 'inner']);
         assert.deepEqual(patcher_calls[10], ['exitTag']);
         assert.deepEqual(patcher_calls[11], ['exitTag']);
-        assert.deepEqual(patcher_calls[12], ['end']);
+        assert.deepEqual(patcher_calls[12], ['exitTag']);
         assert.equal(patcher_calls.length, 13);
     });
 
     test('call another template block dynamically with child expansion', function () {
-        var tmpl = createTemplateNode('foo',
-                                      '<h1>title</h1>' +
-                                      '<template-call template="{{mytemplate}}" article="article">' +
-                                      '<i>inner</i>' +
-                                      '</template-call>');
-        createTemplateNode('bar',
-                           '<div>' +
-                           '<b>{{article.title}}</b>' +
-                           '<template-children />');
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<h1>title</h1>' +
+                '<template-call template="{{mytemplate}}" article="article">' +
+                '<i>inner</i>' +
+                '</template-call>' +
+                '</div>' +
+                '<div data-template="bar">' +
+                '<b>{{article.title}}</b>' +
+                '<template-children></template-children>' +
+                '</div>'
+        );
         var prev_data = {};
         var next_data = {
             mytemplate: 'bar',
@@ -797,8 +809,8 @@ suite('compile', function () {
                 }
             }
         };
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'title']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
@@ -810,30 +822,38 @@ suite('compile', function () {
         assert.deepEqual(patcher_calls[9], ['text', 'inner']);
         assert.deepEqual(patcher_calls[10], ['exitTag']);
         assert.deepEqual(patcher_calls[11], ['exitTag']);
-        assert.deepEqual(patcher_calls[12], ['end']);
+        assert.deepEqual(patcher_calls[12], ['exitTag']);
         assert.equal(patcher_calls.length, 13);
     });
 
     test('nested expansions', function () {
-        var tmpl = createTemplateNode('root',
-                                      '<template-call template="one" article="article">' +
-                                      '<i>root</i>' +
-                                      '</template-call>');
-        createTemplateNode('one',
-                           '<h1>title</h1>' +
-                           '<template-call template="two" meta="article.meta">' +
-                             '<i>one.1</i>' +
-                             '<template-call template="{{article.meta.tmpl}}">' +
-                               '<i>one.2</i>' +
-                               '<template-children />' +
-                             '</template-call>' +
-                           '</template-call>');
-        createTemplateNode('two',
-                           '<b>{{meta.year}}</b>' +
-                           '<template-children />');
-        createTemplateNode('three',
-                           '<b>three</b>' +
-                           '<template-children />');
+        var templates = createTemplateNode(
+            '<div data-template="root">' +
+                '<template-call template="one" article="article">' +
+                '<i>root</i>' +
+                '</template-call>' +
+                '</div>' +
+                
+                '<div data-template="one">' +
+                '<h1>title</h1>' +
+                '<template-call template="two" meta="article.meta">' +
+                '<i>one.1</i>' +
+                '<template-call template="{{article.meta.tmpl}}">' +
+                '<i>one.2</i>' +
+                '<template-children></template-children>' +
+                '</template-call>' +
+                '</template-call>' +
+                '</div>' +
+
+                '<div data-template="two">' +
+                '<b>{{meta.year}}</b>' +
+                '<template-children></template-children>' +
+                '</div>' +
+                
+                '<div data-template="three">' +
+                '<b>three</b>' +
+                '<template-children></template-children>' +
+                '</div>');
         var prev_data = {};
         var next_data = {
             article: {
@@ -843,40 +863,48 @@ suite('compile', function () {
                 }
             }
         };
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
-        assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
-        assert.deepEqual(patcher_calls[2], ['text', 'title']);
-        assert.deepEqual(patcher_calls[3], ['exitTag']);
-        assert.deepEqual(patcher_calls[4], ['enterTag', 'B', null]);
-        assert.deepEqual(patcher_calls[5], ['text', '2015']);
-        assert.deepEqual(patcher_calls[6], ['exitTag']);
-        assert.deepEqual(patcher_calls[7], ['enterTag', 'I', null]);
-        assert.deepEqual(patcher_calls[8], ['text', 'one.1']);
-        assert.deepEqual(patcher_calls[9], ['exitTag']);
-        assert.deepEqual(patcher_calls[10], ['enterTag', 'B', null]);
-        assert.deepEqual(patcher_calls[11], ['text', 'three']);
-        assert.deepEqual(patcher_calls[12], ['exitTag']);
-        assert.deepEqual(patcher_calls[13], ['enterTag', 'I', null]);
-        assert.deepEqual(patcher_calls[14], ['text', 'one.2']);
+        var patcher_calls = patch(templates, 'root', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[2], ['enterTag', 'H1', null]);
+        assert.deepEqual(patcher_calls[3], ['text', 'title']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[6], ['enterTag', 'B', null]);
+        assert.deepEqual(patcher_calls[7], ['text', '2015']);
+        assert.deepEqual(patcher_calls[8], ['exitTag']);
+        assert.deepEqual(patcher_calls[9], ['enterTag', 'I', null]);
+        assert.deepEqual(patcher_calls[10], ['text', 'one.1']);
+        assert.deepEqual(patcher_calls[11], ['exitTag']);
+        assert.deepEqual(patcher_calls[12], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[13], ['enterTag', 'B', null]);
+        assert.deepEqual(patcher_calls[14], ['text', 'three']);
         assert.deepEqual(patcher_calls[15], ['exitTag']);
         assert.deepEqual(patcher_calls[16], ['enterTag', 'I', null]);
-        assert.deepEqual(patcher_calls[17], ['text', 'root']);
+        assert.deepEqual(patcher_calls[17], ['text', 'one.2']);
         assert.deepEqual(patcher_calls[18], ['exitTag']);
-        assert.deepEqual(patcher_calls[19], ['end']);
-        assert.equal(patcher_calls.length, 20);
+        assert.deepEqual(patcher_calls[19], ['enterTag', 'I', null]);
+        assert.deepEqual(patcher_calls[20], ['text', 'root']);
+        assert.deepEqual(patcher_calls[21], ['exitTag']);
+        assert.deepEqual(patcher_calls[22], ['exitTag']);
+        assert.deepEqual(patcher_calls[23], ['exitTag']);
+        assert.deepEqual(patcher_calls[24], ['exitTag']);
+        assert.deepEqual(patcher_calls[25], ['exitTag']);
+        assert.equal(patcher_calls.length, 26);
     });
 
     test('skip comment nodes in template', function () {
-        var tmpl = createTemplateNode('foo',
-                                      '<i>foo</i>' +
-                                      '<!-- this is a comment -->' +
-                                      '<b>bar</b>' +
-                                      '<em>baz</em>');
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<i>foo</i>' +
+                '<!-- this is a comment -->' +
+                '<b>bar</b>' +
+                '<em>baz</em>' +
+                '</div>');
         var prev_data = {};
         var next_data = {};
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['enterTag', 'I', null]);
         assert.deepEqual(patcher_calls[2], ['text', 'foo']);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
@@ -886,90 +914,102 @@ suite('compile', function () {
         assert.deepEqual(patcher_calls[7], ['enterTag', 'EM', null]);
         assert.deepEqual(patcher_calls[8], ['text', 'baz']);
         assert.deepEqual(patcher_calls[9], ['exitTag']);
-        assert.deepEqual(patcher_calls[10], ['end']);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
         assert.equal(patcher_calls.length, 11);
     });
 
     test('node attributes', function () {
-        var tmpl = createTemplateNode('foo',
-                                      '<a href="#" class="btn">foo</a>');
+        var templates = createTemplateNode(
+            '<a data-template="foo" href="#" class="btn">foo</a>'
+        );
         var prev_data = {};
         var next_data = {};
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
-        assert.deepEqual(patcher_calls[1], ['enterTag', 'A', null]);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'A', null]);
         // order of these events is browser dependant
-        assert.deepEqual(patcher_calls.slice(2, 4).sort(), [
+        assert.deepEqual(patcher_calls.slice(1, 3).sort(), [
             ['attribute', 'class', 'btn'],
             ['attribute', 'href', '#']
         ]);
-        assert.deepEqual(patcher_calls[4], ['text', 'foo']);
-        assert.deepEqual(patcher_calls[5], ['exitTag']);
-        assert.deepEqual(patcher_calls[6], ['end']);
-        assert.equal(patcher_calls.length, 7);
-    });
-
-    test('boolean attributes - checked', function () {
-        var tmpl = createTemplateNode('foo',
-                                      '<input type="checkbox" checked="{{fs}}"></input>');
-        var prev_data = {};
-        var next_data = {fs: true};
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
-        assert.deepEqual(patcher_calls[1], ['enterTag', 'INPUT', null]);
-        assert.deepEqual(patcher_calls.slice(2, 4).sort(), [
-            ['attribute', 'checked', true],
-            ['attribute', 'type', 'checkbox']
-        ]);
+        assert.deepEqual(patcher_calls[3], ['text', 'foo']);
         assert.deepEqual(patcher_calls[4], ['exitTag']);
-        assert.deepEqual(patcher_calls[5], ['end']);
-        assert.equal(patcher_calls.length, 6);
-        next_data = {fs: false};
-        patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
-        assert.deepEqual(patcher_calls[1], ['enterTag', 'INPUT', null]);
-        assert.deepEqual(patcher_calls[2], ['attribute', 'type', 'checkbox']);
-        assert.deepEqual(patcher_calls[3], ['exitTag']);
-        assert.deepEqual(patcher_calls[4], ['end']);
         assert.equal(patcher_calls.length, 5);
     });
 
+    test('boolean attributes - checked', function () {
+        var templates = createTemplateNode(
+            '<input data-template="foo" type="checkbox" checked="{{fs}}"></input>'
+        );
+        var prev_data = {};
+        var next_data = {fs: true};
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls.slice(1, 3).sort(), [
+            ['attribute', 'checked', true],
+            ['attribute', 'type', 'checkbox']
+        ]);
+        assert.deepEqual(patcher_calls[3], ['exitTag']);
+        assert.equal(patcher_calls.length, 4);
+        next_data = {fs: false};
+        patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls[1], ['attribute', 'type', 'checkbox']);
+        assert.deepEqual(patcher_calls[2], ['exitTag']);
+        assert.equal(patcher_calls.length, 3);
+    });
+
     test('expand variables in node attributes', function () {
-        var tmpl = createTemplateNode('foo',
-                                      '<a href="{{url}}" class="btn">foo</a>');
+        var templates = createTemplateNode(
+            '<a data-template="foo" href="{{url}}" class="btn">foo</a>'
+        );
         var prev_data = {};
         var next_data = {url: 'http://example.com'};
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
-        assert.deepEqual(patcher_calls[1], ['enterTag', 'A', null]);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'A', null]);
         // order of these events is browser dependant
-        assert.deepEqual(patcher_calls.slice(2, 4).sort(), [
+        assert.deepEqual(patcher_calls.slice(1, 3).sort(), [
             ['attribute', 'class', 'btn'],
             ['attribute', 'href', 'http://example.com']
         ]);
-        assert.deepEqual(patcher_calls[4], ['text', 'foo']);
-        assert.deepEqual(patcher_calls[5], ['exitTag']);
-        assert.deepEqual(patcher_calls[6], ['end']);
-        assert.equal(patcher_calls.length, 7);
+        assert.deepEqual(patcher_calls[3], ['text', 'foo']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.equal(patcher_calls.length, 5);
     });
 
-    test('collapse adjacent text nodes', function () {
+    // test('collapse adjacent text nodes', function () {
+    //     createTemplateNode('foo', 'Hello, <b>world</b>!');
+    //     var tmpl = createTemplateNode('bar',
+    //                                   'MESSAGE ' +
+    //                                   '<template-call template="foo"></template-call>\n' +
+    //                                   'END');
+    //     var prev_data = {};
+    //     var next_data = {};
+    //     var patcher_calls = patch(tmpl, next_data, prev_data);
+    //     assert.deepEqual(patcher_calls[0], ['start']);
+    //     assert.deepEqual(patcher_calls[1], ['text', 'MESSAGE Hello, ']);
+    //     assert.deepEqual(patcher_calls[2], ['enterTag', 'B', null]);
+    //     assert.deepEqual(patcher_calls[3], ['text', 'world']);
+    //     assert.deepEqual(patcher_calls[4], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[5], ['text', '!\nEND']);
+    //     assert.deepEqual(patcher_calls[6], ['end']);
+    //     assert.equal(patcher_calls.length, 7);
+    // });
+    
+    test('collapse text nodes around conditional', function () {
         createTemplateNode('foo', 'Hello, <b>world</b>!');
-        var tmpl = createTemplateNode('bar',
-                                      'MESSAGE ' +
-                                      '<template-call template="foo"></template-call>\n' +
-                                      'END');
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                'MESSAGE ' +
+                '<span data-if="{{nope}}"></span>\n' +
+                'END' +
+                '</div>');
         var prev_data = {};
         var next_data = {};
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
-        assert.deepEqual(patcher_calls[1], ['text', 'MESSAGE Hello, ']);
-        assert.deepEqual(patcher_calls[2], ['enterTag', 'B', null]);
-        assert.deepEqual(patcher_calls[3], ['text', 'world']);
-        assert.deepEqual(patcher_calls[4], ['exitTag']);
-        assert.deepEqual(patcher_calls[5], ['text', '!\nEND']);
-        assert.deepEqual(patcher_calls[6], ['end']);
-        assert.equal(patcher_calls.length, 7);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['text', 'MESSAGE \nEND']);
+        assert.deepEqual(patcher_calls[2], ['exitTag']);
+        assert.equal(patcher_calls.length, 3);
     });
 
     // test('if block with {{else}}', function () {
@@ -1544,39 +1584,37 @@ suite('compile', function () {
     // });
 
     test('render missing variables in text block', function () {
-        var tmpl = createTemplateNode('foo',
-                                      '<h1>Hello, {{user.name}}!</h1>');
+        var templates = createTemplateNode(
+            '<h1 data-template="foo">Hello, {{user.name}}!</h1>'
+        );
         var prev_data = {};
         var next_data = {};
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
-        assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
-        assert.deepEqual(patcher_calls[2], ['text', 'Hello, !']);
-        assert.deepEqual(patcher_calls[3], ['exitTag']);
-        assert.deepEqual(patcher_calls[4], ['end']);
-        assert.equal(patcher_calls.length, 5);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'H1', null]);
+        assert.deepEqual(patcher_calls[1], ['text', 'Hello, !']);
+        assert.deepEqual(patcher_calls[2], ['exitTag']);
+        assert.equal(patcher_calls.length, 3);
     });
 
     test('render missing variables in text attributes', function () {
-        var tmpl = createTemplateNode('foo',
-                                      '<a href="{{url}}">link</a>');
+        var templates = createTemplateNode(
+            '<a data-template="foo" href="{{url}}">link</a>'
+        );
         var prev_data = {};
         var next_data = {};
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
-        assert.deepEqual(patcher_calls[1], ['enterTag', 'A', null]);
-        assert.deepEqual(patcher_calls[2], ['attribute', 'href', '']);
-        assert.deepEqual(patcher_calls[3], ['text', 'link']);
-        assert.deepEqual(patcher_calls[4], ['exitTag']);
-        assert.deepEqual(patcher_calls[5], ['end']);
-        assert.equal(patcher_calls.length, 6);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'A', null]);
+        assert.deepEqual(patcher_calls[1], ['attribute', 'href', '']);
+        assert.deepEqual(patcher_calls[2], ['text', 'link']);
+        assert.deepEqual(patcher_calls[3], ['exitTag']);
+        assert.equal(patcher_calls.length, 4);
     });
 
     test('template tags inside select element', function () {
-        var tmpl = createTemplateNode('foo',
-                                      '<select>' +
-                                      '<option data-each="opt in options" value="{{opt.value}}">{{opt.label}}</option>' +
-                                      '</select>');
+        var templates = createTemplateNode(
+            '<select data-template="foo">' +
+                '<option data-each="opt in options" value="{{opt.value}}">{{opt.label}}</option>' +
+                '</select>');
         var prev_data = {};
         var next_data = {
             options: [
@@ -1585,24 +1623,22 @@ suite('compile', function () {
                 {value: 3, label: 'three'},
             ]
         };
-        var patcher_calls = patch(tmpl, next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['start']);
-        assert.deepEqual(patcher_calls[1], ['enterTag', 'SELECT', null]);
-        assert.deepEqual(patcher_calls[2], ['enterTag', 'OPTION', null]);
-        assert.deepEqual(patcher_calls[3], ['attribute', 'value', 1]);
-        assert.deepEqual(patcher_calls[4], ['text', 'one']);
-        assert.deepEqual(patcher_calls[5], ['exitTag']);
-        assert.deepEqual(patcher_calls[6], ['enterTag', 'OPTION', null]);
-        assert.deepEqual(patcher_calls[7], ['attribute', 'value', 2]);
-        assert.deepEqual(patcher_calls[8], ['text', 'two']);
-        assert.deepEqual(patcher_calls[9], ['exitTag']);
-        assert.deepEqual(patcher_calls[10], ['enterTag', 'OPTION', null]);
-        assert.deepEqual(patcher_calls[11], ['attribute', 'value', 3]);
-        assert.deepEqual(patcher_calls[12], ['text', 'three']);
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'SELECT', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'OPTION', null]);
+        assert.deepEqual(patcher_calls[2], ['attribute', 'value', 1]);
+        assert.deepEqual(patcher_calls[3], ['text', 'one']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'OPTION', null]);
+        assert.deepEqual(patcher_calls[6], ['attribute', 'value', 2]);
+        assert.deepEqual(patcher_calls[7], ['text', 'two']);
+        assert.deepEqual(patcher_calls[8], ['exitTag']);
+        assert.deepEqual(patcher_calls[9], ['enterTag', 'OPTION', null]);
+        assert.deepEqual(patcher_calls[10], ['attribute', 'value', 3]);
+        assert.deepEqual(patcher_calls[11], ['text', 'three']);
+        assert.deepEqual(patcher_calls[12], ['exitTag']);
         assert.deepEqual(patcher_calls[13], ['exitTag']);
-        assert.deepEqual(patcher_calls[14], ['exitTag']);
-        assert.deepEqual(patcher_calls[15], ['end']);
-        assert.equal(patcher_calls.length, 16);
+        assert.equal(patcher_calls.length, 14);
     });
 
 });

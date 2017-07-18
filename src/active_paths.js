@@ -200,8 +200,11 @@ function initNode(node) {
     return false;
 }
 
-exports.markTemplatePaths = function (tmpl) {
-    var paths = initNode(tmpl);
-    tmpl.static = (paths && Object.keys(paths).length === 0);
-    tmpl.active_paths = paths;
+exports.markPaths = function (container) {
+    utils.eachNode(container.childNodes, function (child) {
+        child.active_paths = initNode(child);
+        child.static = (
+            child.active_paths && (Object.keys(child.active_paths).length === 0)
+        );
+    });
 };
