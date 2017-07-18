@@ -41,19 +41,11 @@ function eachNode(nodelist, f) {
     }
 };
 
-function copyTemplatesToPage() {
+var templates = {};
+function loadTemplates() {
     var active = document.getElementById('active-templates');
-    var el = document.createElement('div');
-    el.innerHTML = templates_editor.getValue();
-    eachNode(el.getElementsByTagName('template'), function (node) {
-        var existing = document.getElementById(node.id);
-        if (existing) {
-            existing.innerHTML = node.innerHTML;
-        }
-        else {
-            active.appendChild(node);
-        }
-    });
+    active.innerHTML = templates_editor.getValue();
+    Object.assign(templates, Magery.compileTemplates(active));
 }
 
 var data;
@@ -65,16 +57,13 @@ catch (e) {
     json_editor.setValue('{}');
 }
 
-copyTemplatesToPage();
-// check if query params failed to provide a 'main' template
-if (!document.getElementById('main')) {
-    var tmpl = document.createElement('template');
-    tmpl.id = 'main';
-    document.getElementById('active-templates').appendChild(tmpl);
-}
+loadTemplates();
 
-Magery.initTemplates();
-var app = Magery.bind('result', 'main', data, {});
+var app = templates['main'].bind({
+    element: document.getElementById('result'),
+    data: data,
+    handlers: {}
+});
     
 function patch() {
     try {
@@ -88,8 +77,8 @@ function patch() {
 
 function updateTemplates() {
     try {
-        copyTemplatesToPage();
-        Magery.initTemplates();
+        loadTemplates();
+        app.template = templates['main'];
         return true;
     }
     catch (e) {
@@ -100,7 +89,7 @@ function updateTemplates() {
 
 function updateJSON() {
     try {
-        app.context = JSON.parse(json_editor.getValue());
+        app.data = JSON.parse(json_editor.getValue());
         return true;
     }
     catch (e) {
