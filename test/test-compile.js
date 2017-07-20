@@ -698,7 +698,7 @@ suite('compile', function () {
             '<b data-template="bar">{{meta.year}}</b>' +
                 '<div data-template="foo">' +
                 '<h1>title</h1>' +
-                '<template-call template="bar" meta="article.meta"></template-call>' +
+                '<bar meta="article.meta"></bar>' +
                 '</div>');
         var prev_data = {};
         var next_data = {
@@ -720,41 +720,41 @@ suite('compile', function () {
         assert.equal(patcher_calls.length, 8);
     });
 
-    test('call another template block dynamically', function () {
-        var templates = createTemplateNode(
-            '<b data-template="bar">{{meta.year}}</b>' +
-                '<div data-template="foo">' +
-                '<h1>title</h1>' +
-                '<template-call template="{{article.mytemplate}}" meta="article.meta"></template-call>' +
-                '</div>');
-        var prev_data = {};
-        var next_data = {
-            article: {
-                mytemplate: 'bar',
-                meta: {
-                    year: 2015
-                }
-            }
-        };
-        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
-        assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
-        assert.deepEqual(patcher_calls[2], ['text', 'title']);
-        assert.deepEqual(patcher_calls[3], ['exitTag']);
-        assert.deepEqual(patcher_calls[4], ['enterTag', 'B', null]);
-        assert.deepEqual(patcher_calls[5], ['text', '2015']);
-        assert.deepEqual(patcher_calls[6], ['exitTag']);
-        assert.deepEqual(patcher_calls[7], ['exitTag']);
-        assert.equal(patcher_calls.length, 8);
-    });
+    // test('call another template block dynamically', function () {
+    //     var templates = createTemplateNode(
+    //         '<b data-template="bar">{{meta.year}}</b>' +
+    //             '<div data-template="foo">' +
+    //             '<h1>title</h1>' +
+    //             '<template-call template="{{article.mytemplate}}" meta="article.meta"></template-call>' +
+    //             '</div>');
+    //     var prev_data = {};
+    //     var next_data = {
+    //         article: {
+    //             mytemplate: 'bar',
+    //             meta: {
+    //                 year: 2015
+    //             }
+    //         }
+    //     };
+    //     var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+    //     assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+    //     assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
+    //     assert.deepEqual(patcher_calls[2], ['text', 'title']);
+    //     assert.deepEqual(patcher_calls[3], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[4], ['enterTag', 'B', null]);
+    //     assert.deepEqual(patcher_calls[5], ['text', '2015']);
+    //     assert.deepEqual(patcher_calls[6], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[7], ['exitTag']);
+    //     assert.equal(patcher_calls.length, 8);
+    // });
 
     test('call another template block with child expansion', function () {
         var templates = createTemplateNode(
             '<div data-template="foo">' +
                 '<h1>title</h1>' +
-                '<template-call template="bar" article="article">' +
+                '<bar article="article">' +
                 '<i>inner</i>' +
-                '</template-call>' +
+                '</bar>' +
                 '</div>' +
                 '<div data-template="bar">' +
                 '<b>{{article.title}}</b>' +
@@ -786,63 +786,63 @@ suite('compile', function () {
         assert.equal(patcher_calls.length, 13);
     });
 
-    test('call another template block dynamically with child expansion', function () {
-        var templates = createTemplateNode(
-            '<div data-template="foo">' +
-                '<h1>title</h1>' +
-                '<template-call template="{{mytemplate}}" article="article">' +
-                '<i>inner</i>' +
-                '</template-call>' +
-                '</div>' +
-                '<div data-template="bar">' +
-                '<b>{{article.title}}</b>' +
-                '<template-children></template-children>' +
-                '</div>'
-        );
-        var prev_data = {};
-        var next_data = {
-            mytemplate: 'bar',
-            article: {
-                title: 'test',
-                meta: {
-                    year: 2015
-                }
-            }
-        };
-        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
-        assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
-        assert.deepEqual(patcher_calls[2], ['text', 'title']);
-        assert.deepEqual(patcher_calls[3], ['exitTag']);
-        assert.deepEqual(patcher_calls[4], ['enterTag', 'DIV', null]);
-        assert.deepEqual(patcher_calls[5], ['enterTag', 'B', null]);
-        assert.deepEqual(patcher_calls[6], ['text', 'test']);
-        assert.deepEqual(patcher_calls[7], ['exitTag']);
-        assert.deepEqual(patcher_calls[8], ['enterTag', 'I', null]);
-        assert.deepEqual(patcher_calls[9], ['text', 'inner']);
-        assert.deepEqual(patcher_calls[10], ['exitTag']);
-        assert.deepEqual(patcher_calls[11], ['exitTag']);
-        assert.deepEqual(patcher_calls[12], ['exitTag']);
-        assert.equal(patcher_calls.length, 13);
-    });
+    // test('call another template block dynamically with child expansion', function () {
+    //     var templates = createTemplateNode(
+    //         '<div data-template="foo">' +
+    //             '<h1>title</h1>' +
+    //             '<template-call template="{{mytemplate}}" article="article">' +
+    //             '<i>inner</i>' +
+    //             '</template-call>' +
+    //             '</div>' +
+    //             '<div data-template="bar">' +
+    //             '<b>{{article.title}}</b>' +
+    //             '<template-children></template-children>' +
+    //             '</div>'
+    //     );
+    //     var prev_data = {};
+    //     var next_data = {
+    //         mytemplate: 'bar',
+    //         article: {
+    //             title: 'test',
+    //             meta: {
+    //                 year: 2015
+    //             }
+    //         }
+    //     };
+    //     var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+    //     assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+    //     assert.deepEqual(patcher_calls[1], ['enterTag', 'H1', null]);
+    //     assert.deepEqual(patcher_calls[2], ['text', 'title']);
+    //     assert.deepEqual(patcher_calls[3], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[4], ['enterTag', 'DIV', null]);
+    //     assert.deepEqual(patcher_calls[5], ['enterTag', 'B', null]);
+    //     assert.deepEqual(patcher_calls[6], ['text', 'test']);
+    //     assert.deepEqual(patcher_calls[7], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[8], ['enterTag', 'I', null]);
+    //     assert.deepEqual(patcher_calls[9], ['text', 'inner']);
+    //     assert.deepEqual(patcher_calls[10], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[11], ['exitTag']);
+    //     assert.deepEqual(patcher_calls[12], ['exitTag']);
+    //     assert.equal(patcher_calls.length, 13);
+    // });
 
     test('nested expansions', function () {
         var templates = createTemplateNode(
             '<div data-template="root">' +
-                '<template-call template="one" article="article">' +
+                '<one article="article">' +
                 '<i>root</i>' +
-                '</template-call>' +
+                '</one>' +
                 '</div>' +
                 
                 '<div data-template="one">' +
                 '<h1>title</h1>' +
-                '<template-call template="two" meta="article.meta">' +
+                '<two meta="article.meta">' +
                 '<i>one.1</i>' +
-                '<template-call template="{{article.meta.tmpl}}">' +
+                '<three>' +
                 '<i>one.2</i>' +
                 '<template-children></template-children>' +
-                '</template-call>' +
-                '</template-call>' +
+                '</three>' +
+                '</two>' +
                 '</div>' +
 
                 '<div data-template="two">' +
@@ -858,8 +858,7 @@ suite('compile', function () {
         var next_data = {
             article: {
                 meta: {
-                    year: 2015,
-                    tmpl: 'three'
+                    year: 2015
                 }
             }
         };

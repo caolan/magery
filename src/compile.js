@@ -93,7 +93,22 @@ function compileElement(templates, node) {
             );
         }
     }
+    var tag = node.tagName.toLowerCase();
     var render = function (bound, next_data, prev_data, inner) {
+        if (templates[tag]) {
+            var next_data2 = {};
+            var prev_data2 = {};
+            for (var attr_name in attrs) {
+                var value = attrs[attr_name](next_data);
+                var path = utils.propertyPath(value);
+                next_data2[attr_name] = utils.lookup(next_data, path);
+                prev_data2[attr_name] = utils.lookup(prev_data, path);
+            }
+            templates[tag].render(bound, next_data2, prev_data2, function () {
+                children(bound, next_data, prev_data, inner);
+            });
+            return;
+        }
         var key = expand_key ? expand_key(next_data) : null;
         flushText(bound);
         bound.patcher.enterTag(node.tagName, key);
@@ -180,54 +195,15 @@ function compileEach(node, render) {
     };
 }
 
-function compileTemplateCall(templates, node) {
-    var attr = node.getAttribute('template');
-    if (!attr) {
-        throw new Error("<template-call> tags must include a 'template' attribute");
-    }
-    var template_id_pattern = compileExpandVars(attr);
-    var children = compileChildren(templates, node);
-    return function (bound, next_data, prev_data, inner) {
-        var template_id = template_id_pattern(next_data);
-        var template = templates[template_id];
-        if (!template) {
-            throw new Error("Template not found: '" + template_id + "'");
-        }
-        var next_data2 = {};
-        var prev_data2 = {};
-        for (var i = 0, len = node.attributes.length; i < len; i++) {
-            var name = node.attributes[i].name;
-            if (name !== 'template') {
-                var path = utils.propertyPath(node.attributes[i].value);
-                next_data2[name] = utils.lookup(next_data, path);
-                prev_data2[name] = utils.lookup(prev_data, path);
-            }
-        }
-        var self = this;
-        template.render(bound, next_data2, prev_data2, function () {
-            children(bound, next_data, prev_data, inner);
-        });
-    };
-}
-
 function compileNode(templates, node) {
     if (utils.isTextNode(node)) {
         return compileText(node);
     }
     else if (utils.isElementNode(node)) {
-        var name = utils.templateTagName(node);
-        if (name) {
-            if (name == 'call') {
-                return compileTemplateCall(templates, node);
-            }
-            else if (name == 'children') {
-                return function (bound, next_data, prev_data, inner) {
-                    inner && inner();
-                };
-            }
-            throw new Error(
-                'Unkonwn template tag: <template-' + name + '>'
-            );
+        if (node.tagName === 'TEMPLATE-CHILDREN') {
+            return function (bound, next_data, prev_data, inner) {
+                inner && inner();
+            };
         }
         return compileElement(templates, node);
     }
