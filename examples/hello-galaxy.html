@@ -5,7 +5,7 @@
     <body>
         <div id="container"></div>
 
-        <template id="myApp">
+        <template data-template="myapp">
             <h1>Hello, {{name}}!</h1>
         </template>
 
@@ -13,8 +13,8 @@
         <script>
          var data = {name: "galaxy"};
 
-         Magery.initTemplates();
-         Magery.bind('container', 'myApp', data, {});
+         var templates = Magery.compileTemplates();
+         templates['myApp'].bind('container', data, {});
         </script>
     </body>
 </html>

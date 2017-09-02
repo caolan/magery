@@ -1,28 +1,30 @@
 var BoundTemplate = require('./bound_template');
 var patch = require('./patch');
+var utils = require('./utils');
 
 
-function Template(render) {
+function Template(name, render) {
     this.render = render;
-    // this.templates = templates;
+    this.name = name;
 }
 
-// Template.prototype.render = function (bound, next_data, prev_data, inner) {
-//     bound.patcher.start();
-//     this.expand(bound, next_data, prev_data, inner);
-//     // if (bound.text_buffer) {
-//     //     bound.patcher.text(bound.text_buffer);
-//     //     bound.text_buffer = '';
-//     // }
-//     bound.patcher.end();
-// };
-
-
 Template.prototype.bind = function (options) {
+    console.log(['bind', this.name, options.element]);
     options.patcher = options.patcher || new patch.Patcher(options.element);
     var bound = new BoundTemplate(this, options);
     bound.update();
     return bound;
+};
+
+Template.prototype.bindAll = function (options) {
+    var self = this;
+    var nodes = document.querySelectorAll('[data-bind="' + this.name + '"]');
+    return Array.prototype.map.call(nodes, function (node) {
+        var opt = utils.shallowClone(options);
+        opt.data = opt.data || JSON.parse(node.getAttribute('data-context'));
+        opt.element = node;
+        return self.bind(opt);
+    });
 };
 
 module.exports = Template;

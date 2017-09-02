@@ -77,8 +77,11 @@ function compileElement(templates, node) {
         if (name == 'data-each' ||
             name == 'data-if' ||
             name == 'data-unless' ||
-            name == 'data-key' ||
-            name == 'data-template') {
+            name == 'data-key') {
+            continue;
+        }
+        if (name == 'data-template') {
+            attrs['data-bind'] = compileExpandVars(attr.value, false);
             continue;
         }
         var event = name.match(/^on(.*)/, event);
@@ -135,7 +138,7 @@ function compileElement(templates, node) {
         if (templates[template_name]) {
             throw new Error("Template '" + template_name + "' already exists");
         }
-        templates[template_name] = new Template(render);
+        templates[template_name] = new Template(template_name, render);
     }
     else {
         if (node.dataset.unless) {
@@ -186,8 +189,8 @@ function compileEach(node, render) {
         var length = next_arr.length;
         var index = -1;
         while (++index < length) {
-            var next_data2 = Object.assign({}, next_data);
-            var prev_data2 = Object.assign({}, prev_data);
+            var next_data2 = utils.shallowClone(next_data);
+            var prev_data2 = utils.shallowClone(prev_data);
             next_data2[name] = next_arr[index];
             prev_data2[name] = prev_arr && prev_arr[index];
             render(bound, next_data2, prev_data2, inner);
@@ -221,13 +224,21 @@ function compileChildren(templates, parent) {
 
 module.exports = function (node, templates) {
     templates = templates || {};
+    node = node || '.magery-templates';
     if (typeof node === 'string') {
-        node = document.getElementById(node);
+        node = document.querySelectorAll(node);
     }
-    if (node.tagName === 'TEMPLATE' && node.content) {
-        node = node.content;
+    if (node instanceof NodeList) {
+        for (var i = 0, len = node.length; i < len; i++) {
+            module.exports(node[i], templates);
+        }
     }
-    active_paths.markPaths(node);
-    utils.eachNode(node.childNodes, compileNode.bind(null, templates));
+    else {
+        if (node.tagName === 'TEMPLATE' && node.content) {
+            node = node.content;
+        }
+        active_paths.markPaths(node);
+        utils.eachNode(node.childNodes, compileNode.bind(null, templates));
+    }
     return templates;
 };

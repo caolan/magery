@@ -60,6 +60,7 @@ var transforms =
 	exports.attributes = {
 	    'checked': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
 	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'disabled': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
 	    'value': USE_PROPERTY
 	};
 

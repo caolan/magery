@@ -118,6 +118,10 @@ var utils =
 	    return m && m[1].toLowerCase();
 	};
 
+	exports.shallowClone = function (obj) {
+	    return Object.assign({}, obj);
+	};
+
 
 /***/ })
 /******/ ]);

@@ -11,6 +11,7 @@
             </ul>
             <button onclick="addItem(app)">add item</button>
         </template>
+        
         <div id="container"></div>
         <script src="../build/magery.js"></script>
         <script>
@@ -20,7 +21,9 @@
              }
          };
          
-         Magery.initTemplates();
+         var templates = Magery.compileTemplates();
+
+         Magery.compileTemplates('new-templaes', templates);
          
          window.app = Magery.bind('container', 'main', data, {
              addItem: function (app) {

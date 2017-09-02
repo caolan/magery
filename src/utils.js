@@ -60,3 +60,7 @@ exports.templateTagName = function (node) {
     var m = /^TEMPLATE-([^\s/>]+)/.exec(node.tagName);
     return m && m[1].toLowerCase();
 };
+
+exports.shallowClone = function (obj) {
+    return Object.assign({}, obj);
+};

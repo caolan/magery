@@ -118,6 +118,10 @@ var active_paths =
 	    return m && m[1].toLowerCase();
 	};
 
+	exports.shallowClone = function (obj) {
+	    return Object.assign({}, obj);
+	};
+
 
 /***/ }),
 /* 5 */

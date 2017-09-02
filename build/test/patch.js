@@ -60,6 +60,7 @@ var patch =
 	exports.attributes = {
 	    'checked': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
 	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'disabled': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
 	    'value': USE_PROPERTY
 	};
 
@@ -130,6 +131,10 @@ var patch =
 	exports.templateTagName = function (node) {
 	    var m = /^TEMPLATE-([^\s/>]+)/.exec(node.tagName);
 	    return m && m[1].toLowerCase();
+	};
+
+	exports.shallowClone = function (obj) {
+	    return Object.assign({}, obj);
 	};
 
 

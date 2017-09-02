@@ -142,8 +142,11 @@ var Magery =
 	        if (name == 'data-each' ||
 	            name == 'data-if' ||
 	            name == 'data-unless' ||
-	            name == 'data-key' ||
-	            name == 'data-template') {
+	            name == 'data-key') {
+	            continue;
+	        }
+	        if (name == 'data-template') {
+	            attrs['data-bind'] = compileExpandVars(attr.value, false);
 	            continue;
 	        }
 	        var event = name.match(/^on(.*)/, event);
@@ -200,7 +203,7 @@ var Magery =
 	        if (templates[template_name]) {
 	            throw new Error("Template '" + template_name + "' already exists");
 	        }
-	        templates[template_name] = new Template(render);
+	        templates[template_name] = new Template(template_name, render);
 	    }
 	    else {
 	        if (node.dataset.unless) {
@@ -251,8 +254,8 @@ var Magery =
 	        var length = next_arr.length;
 	        var index = -1;
 	        while (++index < length) {
-	            var next_data2 = Object.assign({}, next_data);
-	            var prev_data2 = Object.assign({}, prev_data);
+	            var next_data2 = utils.shallowClone(next_data);
+	            var prev_data2 = utils.shallowClone(prev_data);
 	            next_data2[name] = next_arr[index];
 	            prev_data2[name] = prev_arr && prev_arr[index];
 	            render(bound, next_data2, prev_data2, inner);
@@ -286,14 +289,22 @@ var Magery =
 
 	module.exports = function (node, templates) {
 	    templates = templates || {};
+	    node = node || '.magery-templates';
 	    if (typeof node === 'string') {
-	        node = document.getElementById(node);
+	        node = document.querySelectorAll(node);
 	    }
-	    if (node.tagName === 'TEMPLATE' && node.content) {
-	        node = node.content;
+	    if (node instanceof NodeList) {
+	        for (var i = 0, len = node.length; i < len; i++) {
+	            module.exports(node[i], templates);
+	        }
 	    }
-	    active_paths.markPaths(node);
-	    utils.eachNode(node.childNodes, compileNode.bind(null, templates));
+	    else {
+	        if (node.tagName === 'TEMPLATE' && node.content) {
+	            node = node.content;
+	        }
+	        active_paths.markPaths(node);
+	        utils.eachNode(node.childNodes, compileNode.bind(null, templates));
+	    }
 	    return templates;
 	};
 
@@ -308,6 +319,7 @@ var Magery =
 	exports.attributes = {
 	    'checked': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
 	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'disabled': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
 	    'value': USE_PROPERTY
 	};
 
@@ -378,6 +390,10 @@ var Magery =
 	exports.templateTagName = function (node) {
 	    var m = /^TEMPLATE-([^\s/>]+)/.exec(node.tagName);
 	    return m && m[1].toLowerCase();
+	};
+
+	exports.shallowClone = function (obj) {
+	    return Object.assign({}, obj);
 	};
 
 
@@ -603,29 +619,31 @@ var Magery =
 
 	var BoundTemplate = __webpack_require__(7);
 	var patch = __webpack_require__(8);
+	var utils = __webpack_require__(4);
 
 
-	function Template(render) {
+	function Template(name, render) {
 	    this.render = render;
-	    // this.templates = templates;
+	    this.name = name;
 	}
 
-	// Template.prototype.render = function (bound, next_data, prev_data, inner) {
-	//     bound.patcher.start();
-	//     this.expand(bound, next_data, prev_data, inner);
-	//     // if (bound.text_buffer) {
-	//     //     bound.patcher.text(bound.text_buffer);
-	//     //     bound.text_buffer = '';
-	//     // }
-	//     bound.patcher.end();
-	// };
-
-
 	Template.prototype.bind = function (options) {
+	    console.log(['bind', this.name, options.element]);
 	    options.patcher = options.patcher || new patch.Patcher(options.element);
 	    var bound = new BoundTemplate(this, options);
 	    bound.update();
 	    return bound;
+	};
+
+	Template.prototype.bindAll = function (options) {
+	    var self = this;
+	    var nodes = document.querySelectorAll('[data-bind="' + this.name + '"]');
+	    return Array.prototype.map.call(nodes, function (node) {
+	        var opt = utils.shallowClone(options);
+	        opt.data = opt.data || JSON.parse(node.getAttribute('data-context'));
+	        opt.element = node;
+	        return self.bind(opt);
+	    });
 	};
 
 	module.exports = Template;
