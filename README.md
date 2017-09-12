@@ -452,7 +452,7 @@ Result:
 </div>
 ```
 
-## Sever-side rendering
+## Server-side rendering
 
 Magery has been designed to work with server-side rendering in any
 language. If you'd like to create a new server-side library then you
