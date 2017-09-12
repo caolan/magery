@@ -345,72 +345,28 @@ The attributes will be processed in the following order:
 ## Tags
 
 * [template](#template)
-* [template-call](#template-call)
 * [template-children](#template-children)
-* template-embed
+* [custom tags](#custom-tags)
 
 ### `<template>`
 
-This defines a new template. Each template **must** have an `id`
-attribute to uniquely identify it. All other template tags can only be
-used inside a `<template>` tag.
-
-#### Attributes
-
-* __id__ - uniquely identifies the template (required)
+This is just a standard HTML5 `<template>` element, but you may
+encounter it while Magery. When embedding templates, Magery will
+include the definitions inside `<template class="magery-templates">`
+tags so they can be easily found by `magery.compileTemplates()` later.
 
 #### Example use
 
 ```html
-<h1 data-template="greeting">Hello, world!</h1>
-```
-
-### `<template-call>`
-
-Renders another named template in this position. Can also be used to
-dynamically render a template based on context data (see 'dynamic'
-example).
-
-#### Attributes
-
-* __template__ - the ID of the template to expand (required)
-* ___(any other argument)___ - used to set context data for the new template
-
-#### Example use
-
-##### Static example
-
-Template:
-```html
-<li data-template="score">{{ user.name }} - {{ user.score }}</li>
-
-<ol data-template="highscores">
-  <score data-each="user in users" user="user" />
-</ol>
-```
-
-Data:
-```javascript
-{
-  users: [
-    {name: 'fuzzable', score: 100},
-    {name: 'popchop', score: 99}
-  ]
-}
-```
-
-Result:
-```html
-<ol>
-  <li>fuzzable - 100</li>
-  <li>popchop - 100</li>
-</ol>
+<template class="magery-templates">
+  <h1 data-template="greeting">Hello, world!</h1>
+</template>
 ```
 
 ### `<template-children>`
 
-Expands child nodes from the calling `<template-call>` tag, if any.
-Note: any child nodes of this tag will be ignored.
+Expands child nodes from the calling template, if any. Note: any child
+nodes of this tag will be ignored.
 
 #### Attributes
 
@@ -420,17 +376,21 @@ No attributes.
 
 Template:
 ```html
-<template id="article">
-  <h1>{{ title }}</h1>
-  <div class="main-content">
-    <template-children />
-  </div>
-</template>
+<template class="magery-templates">
 
-<template id="page">
-  <template-call template="article" title="article.title">
-    <p>{{ article.text }}</p>
-  </template-call>
+  <div data-template="article">
+    <h1>{{ title }}</h1>
+    <div class="main-content">
+      <template-children />
+    </div>
+  </div>
+
+  <div data-template="page">
+    <article title="article.title">
+      <p>{{ article.text }}</p>
+    </article>
+  </div>
+  
 </template>
 ```
 
@@ -446,11 +406,37 @@ Data:
 
 Result:
 ```html
-<h1>Guinea Pig Names</h1>
-<div class="main-content">
-  <p>Popchop, Fuzzable, Deathmop</p>
+<div data-bind="page">
+  <div data-bind="article">
+    <h1>Guinea Pig Names</h1>
+    <div class="main-content">
+      <p>Popchop, Fuzzable, Deathmop</p>
+    </div>
+  </div>
 </div>
 ```
+
+### Custom tags
+
+Templates can be rendered by other templates, using the template name
+as a custom tag. For example, the following template:
+
+``` html
+<h1 data-template="hello">
+  Hello, {{name}}!
+</h1>
+```
+
+Could be rendered in another template by using the tag `<hello>`:
+
+``` html
+<hello name="user.name"></hello>
+```
+
+By adding attributes to your custom tag, you can include data from the
+current context in the rendering context of the sub-template. In the
+above example the data property `user.name` is set to `name` inside
+the `hello` template.
 
 ## Server-side rendering
 
