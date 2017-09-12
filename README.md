@@ -462,7 +462,7 @@ include your library here.
 
 ### Languages
 
-- Python - [magery-python](https://github.com/caolan/magery-python)
+- Python - [python-magery](https://github.com/caolan/python-magery)
 
 ### Working with server-rendered components
 
