@@ -1,28 +1,35 @@
+<!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
         <title>My App</title>
     </head>
     <body>
         <div id="container"></div>
 
-        <template id="myApp">
-            <h1>Hello, {{name}}!</h1>
-            
-            <input type="text"
-                   value="{{name}}"
-                   oninput="updateName(event)" />
-        </template>
+        <template class="magery-templates">
+            <div data-template="app">
+                <h1>Hello, {{name}}!</h1>
 
+                <input type="text"
+                       value="{{name}}"
+                       oninput="updateName(event)" />
+            </div>
+        </template>
 
         <script src="../build/magery.js"></script>
         <script>
-         var data = {name: 'galaxy'};
+         var templates = Magery.compileTemplates();
 
-         Magery.initTemplates();
-         
-         Magery.bind('container', 'myApp', data, {
-             updateName: function (event) {
-                 this.context.name = event.target.value;
+         templates['app'].bind({
+             element: document.getElementById('container'),
+             data: {
+                 name: 'galaxy'
+             },
+             handlers: {
+                 updateName: function (event) {
+                     this.data.name = event.target.value;
+                 }
              }
          });
         </script>

@@ -9,7 +9,6 @@ function Template(name, render) {
 }
 
 Template.prototype.bind = function (options) {
-    console.log(['bind', this.name, options.element]);
     options.patcher = options.patcher || new patch.Patcher(options.element);
     var bound = new BoundTemplate(this, options);
     bound.update();

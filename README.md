@@ -14,6 +14,7 @@ update the page simply by changing the JSON data.
   - [Getting started](#getting-started)
   - [Attributes](#attributes)
   - [Tags](#tags)
+  - [Server-side rendering](#server-side-rendering)
 * [Examples](https://github.com/caolan/magery/tree/master/examples)
 * [Test suite](https://caolan.github.io/magery/test/)
 * [Benchmarks](https://caolan.github.io/magery/bench/)
@@ -62,10 +63,10 @@ Magery (2017-08-28):         ###                                        12 kb
 
 ## Getting started
 
-Magery uses `<template>` tags containing HTML to update the page:
+Magery uses HTML templates to update the page:
 
 ```html
-<template>
+<template class="magery-templates">
   <h1 data-template="app">Hello, world!</h1>
 </template>
 ```
@@ -85,23 +86,28 @@ To display the "app" template we need a HTML page:
   <body>
     <div id="container"></div>
 
-    <template>
+    <template class="magery-templates">
       <h1 data-template="app">Hello, world!</h1>
     </template>
 
     <script src="magery.min.js"></script>
     <script>
       var templates = Magery.compileTemplates();
-      templates['app'].bind('container', {}, {});
+      
+      templates['app'].bind({
+        element: document.getElementById('container')
+      });
     </script>
   </body>
 </html>
 ```
 
-This page includes the template "app", a `<div>` container element
-to render the template into, and a script block which binds the
-"app" template to the container. Open [this page][hello-world] in
-the browser and you should see "Hello, world!".
+This page includes a container element to render the template into,
+the "app" template itself, and a script block which binds the "app"
+template to the container element. 
+
+Open [this page][hello-world] in the browser and you should see
+"Hello, world!".
 
 ### Provide data
 
@@ -110,29 +116,35 @@ displayed. Properties of the data object can then be rendered using
 `{{` curly braces `}}`:
 
 ```html
-<template>
+<template class="magery-templates">
   <h1 data-template="app">Hello, {{name}}!</h1>
 </template>
 ```
 
-Your initial data is the third parameter of `bind()`:
+Your initial data can be provided as an option to `bind()`:
 
 ```javascript
-var data = {name: "galaxy"};
-
-templates['app'].bind('container', data, {});
+templates['app'].bind({
+  element: document.getElementById('container'),
+  data: {
+    name: "galaxy"
+  }
+);
 ```
 
 This will display "Hello, galaxy!". [View page][hello-galaxy].
 
 ### Attach event handlers
 
-Once bound using `bind()`, a template's data can be changed on the fly
-by listening for events. Let's make our greeting message universal by
-using a textbox to change the name:
+After binding a template using `bind()`, the elements on the page can
+be modified by listening for events and updating the data property on
+the fly.
+
+Let's make our greeting page universal by using a textbox to set the
+correct name:
 
 ```html
-<template>
+<template class="magery-templates">
   <div data-template="app">
     <h1>Hello, {{name}}!</h1>
   
@@ -143,28 +155,35 @@ using a textbox to change the name:
 </template>
 ```
 
-The value of the textbox is set to the current `name`, and when an
-`input` event occurs, we're going to call the `updateName()` function.
-The 'updateName()' function goes in the final parameter to `bind()`:
+The value of the textbox is set to the current `name` (from the `data`
+object), and when an `input` event occurs, we're going to call the
+`updateName()` function with the event.
+
+The `updateName()` function is provided to `bind()` using the
+`handlers` option:
 
 ```javascript
-var data = {name: 'galaxy'};
-
-templates['app'].bind('container', data, {
-  updateName: function (event) {
-    this.context.name = event.target.value;
+templates['app'].bind({
+  element: document.getElementById('container'),
+  data: {
+    name: 'galaxy'
+  },
+  handlers: {
+    updateName: function (event) {
+      this.data.name = event.target.value;
+    }
   }
 });
 ```
 
-By modifying `this.context`, the `updateName()` function will cause
-the page to update and display the new template data. You can now type
-"universe" into the textbox and see the message update to "Hello,
-universe!" as you type. [View page][hello-universe].
+By modifying `this.data`, the `updateName()` function causes the page
+to dynamically update to match the new template data. You can now type
+"universe" into the textbox and see the welcome message update to
+"Hello, universe!" as you type. [View page][hello-universe].
 
-__You now know all the arguments to `bind()`__. Once you've had a look
-at the available template [attributes](#attributes) and [tags](#tags),
-you should be ready to get started.
+You now know how to use `bind()`. Once you've had a look at the
+available template [attributes](#attributes) and [tags](#tags), you
+should be ready to get started with [server-side rendering](#server-side-rendering).
 
 ## Attributes
 
@@ -433,6 +452,84 @@ Result:
 </div>
 ```
 
+## Sever-side rendering
+
+Magery has been designed to work with server-side rendering in any
+language. If you'd like to create a new server-side library then you
+can use the cross-platform [Magery test suite][testsuite] to get you
+started. If it passes the tests, you can send a pull request to
+include your library here.
+
+### Languages
+
+- Python - [magery-python](https://github.com/caolan/magery-python)
+
+### Working with server-rendered components
+
+#### Embedding templates
+
+A template can be embedded in the page by adding `data-embed="true"`
+to a template element's attributes. The server-side library will then
+include the template definition itself in the rendered page, and add a
+`data-context` attribute containing the current JSON context data.
+
+#### Binding to embedded templates
+
+When a template is rendered on the page the template name is included
+in the `data-bind` attribute of the element. This means, that instead
+of calling `bind()` on each individual component, you can bind to all
+components of a given type using `bindAll()`.
+
+Here's an example of a server-rendered page (with comments added):
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Server-rendered page</title>
+  </head>
+  <body>
+    <!-- the output itself -->
+    <div data-bind="greeting" data-context='{"name":"world"}'>
+      <h1>Hello, world!</h1>
+      <input value="world">
+    </div>
+
+    <!-- the embedded template -->
+    <template class="magery-templates">
+      <div data-template="greeting" data-embed="true">
+        <h1>Hello, {{name}}!</h1>
+        <input value="{{name}}" oninput="updateName(event)">
+      </div>
+    </template>
+
+    <!-- our javascript -->
+    <script src="magery.min.js"></script>
+    <script>
+    
+      // load templates from all .magery-templates elements on page
+      var templates = Magery.compileTemplates();
+
+      // bind template to all elements with data-bind='greeting' attribute
+      templates['greeting'].bindAll({
+        handlers: {
+          updateName: function (event) {
+            this.data.name = event.target.value;
+          }
+        }
+      });
+      
+    </script>
+  </body>
+</html>
+```
+
+When using `bindAll()` you do not need to provide `data` or `element`
+options. The elements are found by their `data-bind` attributes, and
+the data for each element is loaded from it's `data-context`
+attribute.
+
 
 [magery-js]: https://raw.githubusercontent.com/caolan/magery/master/build/magery.js
 [magery-min-js]: https://raw.githubusercontent.com/caolan/magery/master/build/magery.min.js
@@ -440,4 +537,5 @@ Result:
 [hello-galaxy]: https://caolan.github.io/magery/examples/hello-galaxy.html
 [hello-universe]: https://caolan.github.io/magery/examples/hello-universe.html
 [blog-post]: https://caolan.org/posts/progressive_enhancement_and_modern_javascript.html
+[testsuite]: https://github.com/caolan/magery-tests
 [ci]: https://travis-ci.org/caolan/magery

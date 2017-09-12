@@ -1,38 +1,41 @@
+<!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
         <title>Example: simple list</title>
     </head>
     <body>
-        <template id="main">
-            <ul>
-                <li data-each="item in app.items">
-                    {{item.name}} <button onclick="removeItem(app, item)">X</button>
-                </li>
-            </ul>
-            <button onclick="addItem(app)">add item</button>
+        <template class="magery-templates">
+            <div data-template="main">
+                <ul>
+                    <li data-each="item in app.items">
+                        {{item.name}} <button onclick="removeItem(app, item)">X</button>
+                    </li>
+                </ul>
+                <button onclick="addItem(app)">add item</button>
+            </div>
         </template>
         
         <div id="container"></div>
+        
         <script src="../build/magery.js"></script>
         <script>
-         var data = {
-             app: {
-                 items: []
-             }
-         };
-         
          var templates = Magery.compileTemplates();
 
-         Magery.compileTemplates('new-templaes', templates);
-         
-         window.app = Magery.bind('container', 'main', data, {
-             addItem: function (app) {
-                 app.items.push({name: '' + Math.random()});
+         window.app = templates['main'].bind({
+             element: document.getElementById('container'),
+             data: {
+                 app: {items: []}
              },
-             removeItem: function (app, item) {
-                 app.items = app.items.filter(function (x) {
-                     return x !== item;
-                 });
+             handlers: {
+                 addItem: function (app) {
+                     app.items.push({name: '' + Math.random()});
+                 },
+                 removeItem: function (app, item) {
+                     app.items = app.items.filter(function (x) {
+                         return x !== item;
+                     });
+                 }
              }
          });
         </script>

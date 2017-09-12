@@ -1,18 +1,23 @@
+<!DOCTYPE html>
 <html>
-  <head>
-    <title>My App</title>
-  </head>
-  <body>
-    <div id="container"></div>
-
-    <template id="myApp">
-      <h1>Hello, world!</h1>
-    </template>
-
-    <script src="../build/magery.min.js"></script>
-    <script>
-     Magery.initTemplates();
-     Magery.bind('container', 'myApp', {}, {});
-    </script>
-  </body>
+    <head>
+        <meta charset="UTF-8">
+        <title>My App</title>
+    </head>
+    <body>
+        <div id="container"></div>
+        
+        <template class="magery-templates">
+            <h1 data-template="app">Hello, world!</h1>
+        </template>
+        
+        <script src="../build/magery.min.js"></script>
+        <script>
+         var templates = Magery.compileTemplates();
+         
+         templates['app'].bind({
+             element: document.getElementById('container')
+         });
+        </script>
+    </body>
 </html>

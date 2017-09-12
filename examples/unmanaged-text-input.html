@@ -1,59 +1,67 @@
+<!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
         <title>Example: unmanaged text input</title>
     </head>
     <body>
-        <template id="main">
-            <h1>User</h1>
-            <table>
-                <tr>
-                    <th>ID</th>
-                    <td>{{user.id}}</td>
-                </tr>
-                <tr>
-                    <th>Name</th>
-                    <td>{{user.name}}</td>
-                </tr>
-            </table>
-            <h2>Edit</h2>
-            <form onsubmit="saveUser(event)">
-                <div class="field">
-                    <label for="user_id">ID:</label>
-                    <input type="text"
-                           id="user_id"
-                           name="user_id"
-                           value="{{user.id}}">
-                </div>
-                <div class="field">
-                    <label for="user_name">Name:</label>
-                    <input type="text"
-                           id="user_name"
-                           name="user_name"
-                           value="{{user.name}}">
-                </div>
-                <button>Save</button>
-            </form>
+        <template class="magery-templates">
+            <div data-template="main">
+                <h1>User</h1>
+                <table>
+                    <tr>
+                        <th>ID</th>
+                        <td>{{user.id}}</td>
+                    </tr>
+                    <tr>
+                        <th>Name</th>
+                        <td>{{user.name}}</td>
+                    </tr>
+                </table>
+                <h2>Edit</h2>
+                <form onsubmit="saveUser(event)">
+                    <div class="field">
+                        <label for="user_id">ID:</label>
+                        <input type="text"
+                               id="user_id"
+                               name="user_id"
+                               value="{{user.id}}">
+                    </div>
+                    <div class="field">
+                        <label for="user_name">Name:</label>
+                        <input type="text"
+                               id="user_name"
+                               name="user_name"
+                               value="{{user.name}}">
+                    </div>
+                    <button>Save</button>
+                </form>
+            </div>
         </template>
+        
         <div id="container"></div>
+        
         <script src="../build/magery.js"></script>
         <script>
-         var data = {
-             user: {
-                 id: 123,
-                 name: 'Example'
-             }
-         };
-         
-         Magery.initTemplates();
-         
-         window.app = Magery.bind('container', 'main', data, {
-             saveUser: function (event) {
-                 event.preventDefault();
-                 var form = event.target;
-                 this.context.user = {
-                     id: form.user_id.value,
-                     name: form.user_name.value
-                 };
+         var templates = Magery.compileTemplates();
+
+         templates['main'].bind({
+             element: document.getElementById('container'),
+             data: {
+                 user: {
+                     id: 123,
+                     name: 'Example'
+                 }
+             },
+             handlers: {
+                 saveUser: function (event) {
+                     event.preventDefault();
+                     var form = event.target;
+                     this.data.user = {
+                         id: form.user_id.value,
+                         name: form.user_name.value
+                     };
+                 }
              }
          });
         </script>

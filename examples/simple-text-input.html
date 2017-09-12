@@ -1,29 +1,37 @@
+<!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
         <title>Example: simple text input</title>
     </head>
     <body>
-        <template id="main">
-            <h1>Hello, {{name}}!</h1>
-            <form onsubmit="updateName(event)">
-                <input type="text" name="name" />
-                <button>Update name</button>
-            </form>
+        <template class="magery-templates">
+            <div data-template="main">
+                <h1>Hello, {{name}}!</h1>
+                <form onsubmit="updateName(event)">
+                    <input type="text" name="name" />
+                    <button>Update name</button>
+                </form>
+            </div>
         </template>
+        
         <div id="container"></div>
+        
         <script src="../build/magery.js"></script>
         <script>
-         var data = {
-             name: 'world'
-         };
-         
-         Magery.initTemplates();
-         
-         window.app = Magery.bind('container', 'main', data, {
-             updateName: function (event) {
-                 var form = event.target;
-                 this.context.name = form.name.value;
-                 event.preventDefault();
+         var templates = Magery.compileTemplates();
+
+         window.app = templates['main'].bind({
+             element: document.getElementById('container'),
+             data: {
+                 name: 'world'
+             },
+             handlers: {
+                 updateName: function (event) {
+                     var form = event.target;
+                     this.data.name = form.name.value;
+                     event.preventDefault();
+                 }
              }
          });
         </script>

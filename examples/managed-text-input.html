@@ -1,33 +1,42 @@
+<!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
         <title>Example: managed text input</title>
     </head>
     <body>
-        <template id="main">
-            <p>
-                The input below should only allow you to enter digits
-                (0-9), not letters etc.
-            </p>
-            <label for="id_number">Enter a number:</label>
-            <input type="text"
-                   id="id_number"
-                   name="number"
-                   value="{{number_str}}"
-                   data-managed="true"
-                   oninput="addDigit(event)" />
+        <template class="magery-templates">
+            <div data-template="main">
+                <h1>Number: {{number_str}}</h1>
+                <p>
+                    The input below should only allow you to enter digits
+                    (0-9), not letters etc.
+                </p>
+                <label for="id_number">Enter a number:</label>
+                <input type="text"
+                       id="id_number"
+                       name="number"
+                       value="{{number_str}}"
+                       data-managed="true"
+                       oninput="updateNumber(event)" />
+            </div>
         </template>
+        
         <div id="container"></div>
+        
         <script src="../build/magery.js"></script>
         <script>
-         var data = {
-             number_str: ''
-         };
-         
-         Magery.initTemplates();
-         
-         window.app = Magery.bind('container', 'main', data, {
-             addDigit: function (event) {
-                 this.context.number_str = event.target.value.replace(/[^0-9]/g, '');
+         var templates = Magery.compileTemplates();
+
+         templates['main'].bind({
+             element: document.getElementById('container'),
+             data: {number_str: ''},
+             handlers: {
+                 updateNumber: function (event) {
+                     if (/^[0-9]*$/.test(event.target.value)) {
+                         this.data.number_str = event.target.value;
+                     }
+                 }
              }
          });
         </script>
