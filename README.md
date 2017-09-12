@@ -49,7 +49,7 @@ Include one of the above in your HTML:
 
 While there are smaller frameworks out there, Magery aims to sit on
 the more lightweight end of the file size range. This is to encourage
-it's use for relatively small improvements to server-generated pages.
+its use for relatively small improvements to server-generated pages.
 
 A comparison of some minified production builds:
 
@@ -187,10 +187,44 @@ should be ready to get started with [server-side rendering](#server-side-renderi
 
 ## Attributes
 
+* [data-template](#data-template)
 * [data-each](#data-each)
 * [data-key](#data-key)
 * [data-if](#data-if)
 * [data-unless](#data-unless)
+* [data-managed](#data-managed)
+* [data-embed](#data-embed)
+
+### `data-template`
+
+This is how you define a template. A template name must consist only
+of the lower-case letters `a-z` and `-`, so they can be used
+as [component tags](#component-tags).
+
+Once rendered, the name provided in the `data-template` attribute will
+be added to the rendered element's `data-bind` attribute (for use
+with [bindAll()](#binding-to-embedded-templates)).
+
+#### Example use
+
+Template:
+``` html
+<h1 data-template="hello">
+  Hello, {{name}}!
+</h1>
+```
+
+Data:
+``` javascript
+{name: "world"}
+```
+
+Result:
+``` html
+<h1 data-bind="hello">
+  Hello, world!
+</h1>
+```
 
 ### `data-each`
 
@@ -267,7 +301,7 @@ Result:
 
 Helps Magery match up tags between page updates for improved
 preformance. The value can use the normal property `{{` expansion `}}`
-syntax and __must__ be unique within it's parent element.
+syntax and __must__ be unique within its parent element.
 
 This attribute is particularly useful when combined with the
 `data-each` attribute but it can be used elsewhere too. See the
@@ -332,6 +366,60 @@ Result:
 <span>Draft</span>
 ```
 
+### `data-managed`
+
+This attribute is for use with HTML form elements, and will force the
+state of the element to match the template data.
+
+By default, the value of text inputs, checkboxes, and other form
+elements can be modified and cached by the browser (and so may not
+match the rendered `value` attribute on the HTML element). By setting
+`data-managed="true"` you can ensure the state of the form element
+always matches your template data.
+
+This is particularly useful for 'live' validation of inputs, or
+clearing text boxes by setting the value attribute to empty.
+
+__NOTE:__ If you use `data-managed` you *must* update the associated
+data property for an input using the `oninput` event handler if you
+want the user's input to be displayed.
+
+#### Example
+
+This input will only allow the user to enter digits (0-9).
+
+Template:
+```html
+<form data-template="number-form">
+  <input type="text" value="{{number}}" oninput="updateNumber(event)">
+</form>
+```
+
+JavaScript:
+``` javascript
+templates['number-form'].bindAll({
+  handlers: {
+    updateNumber: function (event) {
+      if (/^[0-9]*$/.test(event.target.value) {
+        this.data.number = event.target.value;
+      }
+    }
+  }
+});
+```
+
+For a complete example,
+see [examples/managed-text-input.html][managed-text-input].
+
+### `data-embed`
+
+This is only used for server-side rendering. Adding
+`data-embed="true"` to an element will include the current context
+data and template definition in the final output. A `data-context`
+attribute will be added to the rendered element to contain the current
+JSON context data. For more information see
+the [server-side rendering](#server-side-rendering) section.
+
 ### Attribute processing order
 
 It's possible to add multiple template attributes to a single element.
@@ -340,13 +428,14 @@ The attributes will be processed in the following order:
 - `data-each`
 - `data-if`
 - `data-unless`
+- `data-template`
 - `data-key`
 
 ## Tags
 
 * [template](#template)
 * [template-children](#template-children)
-* [custom tags](#custom-tags)
+* [component tags](#component-tags)
 
 ### `<template>`
 
@@ -416,7 +505,7 @@ Result:
 </div>
 ```
 
-### Custom tags
+### Component tags
 
 Templates can be rendered by other templates, using the template name
 as a custom tag. For example, the following template:
@@ -513,7 +602,7 @@ Here's an example of a server-rendered page (with comments added):
 
 When using `bindAll()` you do not need to provide `data` or `element`
 options. The elements are found by their `data-bind` attributes, and
-the data for each element is loaded from it's `data-context`
+the data for each element is loaded from its `data-context`
 attribute.
 
 ### Server and client example
@@ -528,6 +617,7 @@ the [python-magery example directory][python-example].
 [hello-world]: https://caolan.github.io/magery/examples/hello-world.html
 [hello-galaxy]: https://caolan.github.io/magery/examples/hello-galaxy.html
 [hello-universe]: https://caolan.github.io/magery/examples/hello-universe.html
+[managed-text-input]: https://caolan.github.io/magery/examples/managed-text-input.html
 [blog-post]: https://caolan.org/posts/progressive_enhancement_and_modern_javascript.html
 [python-example]: https://github.com/caolan/python-magery/tree/master/example
 [testsuite]: https://github.com/caolan/magery-tests
