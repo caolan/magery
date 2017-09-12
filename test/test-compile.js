@@ -935,26 +935,738 @@ suite('compile', function () {
         assert.equal(patcher_calls.length, 5);
     });
 
-    test('boolean attributes - checked', function () {
+    test('boolean attributes - allowfullscreen', function () {
         var templates = createTemplateNode(
-            '<input data-template="foo" type="checkbox" checked="{{fs}}"></input>'
+            '<div data-template="foo">' +
+                '<iframe allowfullscreen="{{a}}"></iframe>' +
+                '<iframe allowfullscreen="{{b}}"></iframe>' +
+                '<iframe allowfullscreen="{{c}}"></iframe>' +
+                '<iframe allowfullscreen></iframe>' +
+            '</div>'
         );
         var prev_data = {};
-        var next_data = {fs: true};
+        var next_data = {
+            a: true,
+            b: false
+        };
         var patcher_calls = patch(templates, 'foo', next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['enterTag', 'INPUT', null]);
-        assert.deepEqual(patcher_calls.slice(1, 3).sort(), [
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'IFRAME', null]);
+        assert.deepEqual(patcher_calls[2], ['attribute', 'allowfullscreen', true]);
+        assert.deepEqual(patcher_calls[3], ['exitTag']);
+        assert.deepEqual(patcher_calls[4], ['enterTag', 'IFRAME', null]);
+        assert.deepEqual(patcher_calls[5], ['exitTag']);
+        assert.deepEqual(patcher_calls[6], ['enterTag', 'IFRAME', null]);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'IFRAME', null]);
+        assert.deepEqual(patcher_calls[9], ['attribute', 'allowfullscreen', true]);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['exitTag']);
+        assert.equal(patcher_calls.length, 12);
+    });
+
+    test('boolean attributes - async', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<script src="blank.js" async="{{a}}"></script>' +
+                '<script src="blank.js" async="{{b}}"></script>' +
+                '<script src="blank.js" async="{{c}}"></script>' +
+                '<script src="blank.js" async></script>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'SCRIPT', null]);
+        assert.deepEqual(patcher_calls.slice(2, 4).sort(), [
+            ['attribute', 'async', true],
+            ['attribute', 'src', 'blank.js']
+        ]);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'SCRIPT', null]);
+        assert.deepEqual(patcher_calls[6], ['attribute', 'src', 'blank.js']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'SCRIPT', null]);
+        assert.deepEqual(patcher_calls[9], ['attribute', 'src', 'blank.js']);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['enterTag', 'SCRIPT', null]);
+        assert.deepEqual(patcher_calls.slice(12, 14).sort(), [
+            ['attribute', 'async', true],
+            ['attribute', 'src', 'blank.js']
+        ]);
+        assert.deepEqual(patcher_calls[14], ['exitTag']);
+        assert.deepEqual(patcher_calls[15], ['exitTag']);
+        assert.equal(patcher_calls.length, 16);
+    });
+
+    test('boolean attributes - autofocus', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<input type="text" autofocus="{{a}}">' +
+                '<input type="text" autofocus="{{b}}">' +
+                '<input type="text" autofocus="{{c}}">' +
+                '<input type="text" autofocus>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls.slice(2, 4).sort(), [
+            ['attribute', 'autofocus', true],
+            ['attribute', 'type', 'text']
+        ]);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls[6], ['attribute', 'type', 'text']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls[9], ['attribute', 'type', 'text']);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls.slice(12, 14).sort(), [
+            ['attribute', 'autofocus', true],
+            ['attribute', 'type', 'text']
+        ]);
+        assert.deepEqual(patcher_calls[14], ['exitTag']);
+        assert.deepEqual(patcher_calls[15], ['exitTag']);
+        assert.equal(patcher_calls.length, 16);
+    });
+
+    test('boolean attributes - autoplay', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<video autoplay="{{a}}"></video>' +
+                '<video autoplay="{{b}}"></video>' +
+                '<video autoplay="{{c}}"></video>' +
+                '<video autoplay></video>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'VIDEO', null]);
+        assert.deepEqual(patcher_calls[2], ['attribute', 'autoplay', true]);
+        assert.deepEqual(patcher_calls[3], ['exitTag']);
+        assert.deepEqual(patcher_calls[4], ['enterTag', 'VIDEO', null]);
+        assert.deepEqual(patcher_calls[5], ['exitTag']);
+        assert.deepEqual(patcher_calls[6], ['enterTag', 'VIDEO', null]);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'VIDEO', null]);
+        assert.deepEqual(patcher_calls[9], ['attribute', 'autoplay', true]);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['exitTag']);
+        assert.equal(patcher_calls.length, 12);
+    });
+
+    test('boolean attributes - capture', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<input type="file" capture="{{a}}">' +
+                '<input type="file" capture="{{b}}">' +
+                '<input type="file" capture="{{c}}">' +
+                '<input type="file" capture>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls.slice(2, 4).sort(), [
+            ['attribute', 'capture', true],
+            ['attribute', 'type', 'file']
+        ]);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls[6], ['attribute', 'type', 'file']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls[9], ['attribute', 'type', 'file']);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls.slice(12, 14).sort(), [
+            ['attribute', 'capture', true],
+            ['attribute', 'type', 'file']
+        ]);
+        assert.deepEqual(patcher_calls[14], ['exitTag']);
+        assert.deepEqual(patcher_calls[15], ['exitTag']);
+        assert.equal(patcher_calls.length, 16);
+    });
+    
+    test('boolean attributes - checked', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<input type="checkbox" checked="{{a}}">' +
+                '<input type="checkbox" checked="{{b}}">' +
+                '<input type="checkbox" checked="{{c}}">' +
+                '<input type="checkbox" checked>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls.slice(2, 4).sort(), [
             ['attribute', 'checked', true],
             ['attribute', 'type', 'checkbox']
         ]);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls[6], ['attribute', 'type', 'checkbox']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls[9], ['attribute', 'type', 'checkbox']);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls.slice(12, 14).sort(), [
+            ['attribute', 'checked', true],
+            ['attribute', 'type', 'checkbox']
+        ]);
+        assert.deepEqual(patcher_calls[14], ['exitTag']);
+        assert.deepEqual(patcher_calls[15], ['exitTag']);
+        assert.equal(patcher_calls.length, 16);
+    });
+
+    test('boolean attributes - controls', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<video controls="{{a}}"></video>' +
+                '<video controls="{{b}}"></video>' +
+                '<video controls="{{c}}"></video>' +
+                '<video controls></video>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'VIDEO', null]);
+        assert.deepEqual(patcher_calls[2], ['attribute', 'controls', true]);
         assert.deepEqual(patcher_calls[3], ['exitTag']);
-        assert.equal(patcher_calls.length, 4);
-        next_data = {fs: false};
-        patcher_calls = patch(templates, 'foo', next_data, prev_data);
-        assert.deepEqual(patcher_calls[0], ['enterTag', 'INPUT', null]);
-        assert.deepEqual(patcher_calls[1], ['attribute', 'type', 'checkbox']);
-        assert.deepEqual(patcher_calls[2], ['exitTag']);
-        assert.equal(patcher_calls.length, 3);
+        assert.deepEqual(patcher_calls[4], ['enterTag', 'VIDEO', null]);
+        assert.deepEqual(patcher_calls[5], ['exitTag']);
+        assert.deepEqual(patcher_calls[6], ['enterTag', 'VIDEO', null]);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'VIDEO', null]);
+        assert.deepEqual(patcher_calls[9], ['attribute', 'controls', true]);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['exitTag']);
+        assert.equal(patcher_calls.length, 12);
+    });
+    
+    test('boolean attributes - default', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<audio><track src="test.vtt" default="{{a}}"></audio>' +
+                '<audio><track src="test.vtt" default="{{b}}"></audio>' +
+                '<audio><track src="test.vtt" default="{{c}}"></audio>' +
+                '<audio><track src="test.vtt" default></audio>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'AUDIO', null]);
+        assert.deepEqual(patcher_calls[2], ['enterTag', 'TRACK', null]);
+        assert.deepEqual(patcher_calls.slice(3, 5).sort(), [
+            ['attribute', 'default', true],
+            ['attribute', 'src', 'test.vtt']
+        ]);
+        assert.deepEqual(patcher_calls[5], ['exitTag']);
+        assert.deepEqual(patcher_calls[6], ['exitTag']);
+        assert.deepEqual(patcher_calls[7], ['enterTag', 'AUDIO', null]);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'TRACK', null]);
+        assert.deepEqual(patcher_calls[9], ['attribute', 'src', 'test.vtt']);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['exitTag']);
+        assert.deepEqual(patcher_calls[12], ['enterTag', 'AUDIO', null]);
+        assert.deepEqual(patcher_calls[13], ['enterTag', 'TRACK', null]);
+        assert.deepEqual(patcher_calls[14], ['attribute', 'src', 'test.vtt']);
+        assert.deepEqual(patcher_calls[15], ['exitTag']);
+        assert.deepEqual(patcher_calls[16], ['exitTag']);
+        assert.deepEqual(patcher_calls[17], ['enterTag', 'AUDIO', null]);
+        assert.deepEqual(patcher_calls[18], ['enterTag', 'TRACK', null]);
+        assert.deepEqual(patcher_calls.slice(19, 21).sort(), [
+            ['attribute', 'default', true],
+            ['attribute', 'src', 'test.vtt']
+        ]);
+        assert.deepEqual(patcher_calls[21], ['exitTag']);
+        assert.deepEqual(patcher_calls[22], ['exitTag']);
+        assert.deepEqual(patcher_calls[23], ['exitTag']);
+        assert.equal(patcher_calls.length, 24);
+    });
+
+    test('boolean attributes - defer', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<script src="blank.js" defer="{{a}}"></script>' +
+                '<script src="blank.js" defer="{{b}}"></script>' +
+                '<script src="blank.js" defer="{{c}}"></script>' +
+                '<script src="blank.js" defer></script>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'SCRIPT', null]);
+        assert.deepEqual(patcher_calls.slice(2, 4).sort(), [
+            ['attribute', 'defer', true],
+            ['attribute', 'src', 'blank.js']
+        ]);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'SCRIPT', null]);
+        assert.deepEqual(patcher_calls[6], ['attribute', 'src', 'blank.js']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'SCRIPT', null]);
+        assert.deepEqual(patcher_calls[9], ['attribute', 'src', 'blank.js']);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['enterTag', 'SCRIPT', null]);
+        assert.deepEqual(patcher_calls.slice(12, 14).sort(), [
+            ['attribute', 'defer', true],
+            ['attribute', 'src', 'blank.js']
+        ]);
+        assert.deepEqual(patcher_calls[14], ['exitTag']);
+        assert.deepEqual(patcher_calls[15], ['exitTag']);
+        assert.equal(patcher_calls.length, 16);
+    });
+
+    test('boolean attributes - disabled', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<input type="text" disabled="{{a}}">' +
+                '<input type="text" disabled="{{b}}">' +
+                '<input type="text" disabled="{{c}}">' +
+                '<input type="text" disabled>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls.slice(2, 4).sort(), [
+            ['attribute', 'disabled', true],
+            ['attribute', 'type', 'text']
+        ]);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls[6], ['attribute', 'type', 'text']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls[9], ['attribute', 'type', 'text']);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls.slice(12, 14).sort(), [
+            ['attribute', 'disabled', true],
+            ['attribute', 'type', 'text']
+        ]);
+        assert.deepEqual(patcher_calls[14], ['exitTag']);
+        assert.deepEqual(patcher_calls[15], ['exitTag']);
+        assert.equal(patcher_calls.length, 16);
+    });
+
+    test('boolean attributes - formvalidate', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<button formnovalidate="{{a}}">Test</button>' +
+                '<button formnovalidate="{{b}}">Test</button>' +
+                '<button formnovalidate="{{c}}">Test</button>' +
+                '<button formnovalidate>Test</button>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'BUTTON', null]);
+        assert.deepEqual(patcher_calls[2], ['attribute', 'formnovalidate', true]);
+        assert.deepEqual(patcher_calls[3], ['text', 'Test']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'BUTTON', null]);
+        assert.deepEqual(patcher_calls[6], ['text', 'Test']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'BUTTON', null]);
+        assert.deepEqual(patcher_calls[9], ['text', 'Test']);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['enterTag', 'BUTTON', null]);
+        assert.deepEqual(patcher_calls[12], ['attribute', 'formnovalidate', true]);
+        assert.deepEqual(patcher_calls[13], ['text', 'Test']);
+        assert.deepEqual(patcher_calls[14], ['exitTag']);
+        assert.deepEqual(patcher_calls[15], ['exitTag']);
+        assert.equal(patcher_calls.length, 16);
+    });
+
+    test('boolean attributes - hidden', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<p hidden="{{a}}">Test</p>' +
+                '<p hidden="{{b}}">Test</p>' +
+                '<p hidden="{{c}}">Test</p>' +
+                '<p hidden>Test</p>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'P', null]);
+        assert.deepEqual(patcher_calls[2], ['attribute', 'hidden', true]);
+        assert.deepEqual(patcher_calls[3], ['text', 'Test']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'P', null]);
+        assert.deepEqual(patcher_calls[6], ['text', 'Test']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'P', null]);
+        assert.deepEqual(patcher_calls[9], ['text', 'Test']);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['enterTag', 'P', null]);
+        assert.deepEqual(patcher_calls[12], ['attribute', 'hidden', true]);
+        assert.deepEqual(patcher_calls[13], ['text', 'Test']);
+        assert.deepEqual(patcher_calls[14], ['exitTag']);
+        assert.deepEqual(patcher_calls[15], ['exitTag']);
+        assert.equal(patcher_calls.length, 16);
+    });
+
+    test('boolean attributes - itemscope', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<div itemscope="{{a}}">Test</div>' +
+                '<div itemscope="{{b}}">Test</div>' +
+                '<div itemscope="{{c}}">Test</div>' +
+                '<div itemscope>Test</div>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[2], ['attribute', 'itemscope', true]);
+        assert.deepEqual(patcher_calls[3], ['text', 'Test']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[6], ['text', 'Test']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[9], ['text', 'Test']);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[12], ['attribute', 'itemscope', true]);
+        assert.deepEqual(patcher_calls[13], ['text', 'Test']);
+        assert.deepEqual(patcher_calls[14], ['exitTag']);
+        assert.deepEqual(patcher_calls[15], ['exitTag']);
+        assert.equal(patcher_calls.length, 16);
+    });
+
+    test('boolean attributes - loop', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<audio loop="{{a}}"></audio>' +
+                '<audio loop="{{b}}"></audio>' +
+                '<audio loop="{{c}}"></audio>' +
+                '<audio loop></audio>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'AUDIO', null]);
+        assert.deepEqual(patcher_calls[2], ['attribute', 'loop', true]);
+        assert.deepEqual(patcher_calls[3], ['exitTag']);
+        assert.deepEqual(patcher_calls[4], ['enterTag', 'AUDIO', null]);
+        assert.deepEqual(patcher_calls[5], ['exitTag']);
+        assert.deepEqual(patcher_calls[6], ['enterTag', 'AUDIO', null]);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'AUDIO', null]);
+        assert.deepEqual(patcher_calls[9], ['attribute', 'loop', true]);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['exitTag']);
+        assert.equal(patcher_calls.length, 12);
+    });
+
+    test('boolean attributes - multiple', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<select multiple="{{a}}"></select>' +
+                '<select multiple="{{b}}"></select>' +
+                '<select multiple="{{c}}"></select>' +
+                '<select multiple></select>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'SELECT', null]);
+        assert.deepEqual(patcher_calls[2], ['attribute', 'multiple', true]);
+        assert.deepEqual(patcher_calls[3], ['exitTag']);
+        assert.deepEqual(patcher_calls[4], ['enterTag', 'SELECT', null]);
+        assert.deepEqual(patcher_calls[5], ['exitTag']);
+        assert.deepEqual(patcher_calls[6], ['enterTag', 'SELECT', null]);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'SELECT', null]);
+        assert.deepEqual(patcher_calls[9], ['attribute', 'multiple', true]);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['exitTag']);
+        assert.equal(patcher_calls.length, 12);
+    });
+
+    test('boolean attributes - muted', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<video muted="{{a}}"></video>' +
+                '<video muted="{{b}}"></video>' +
+                '<video muted="{{c}}"></video>' +
+                '<video muted></video>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'VIDEO', null]);
+        assert.deepEqual(patcher_calls[2], ['attribute', 'muted', true]);
+        assert.deepEqual(patcher_calls[3], ['exitTag']);
+        assert.deepEqual(patcher_calls[4], ['enterTag', 'VIDEO', null]);
+        assert.deepEqual(patcher_calls[5], ['exitTag']);
+        assert.deepEqual(patcher_calls[6], ['enterTag', 'VIDEO', null]);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'VIDEO', null]);
+        assert.deepEqual(patcher_calls[9], ['attribute', 'muted', true]);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['exitTag']);
+        assert.equal(patcher_calls.length, 12);
+    });
+
+    test('boolean attributes - novalidate', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<form novalidate="{{a}}"></form>' +
+                '<form novalidate="{{b}}"></form>' +
+                '<form novalidate="{{c}}"></form>' +
+                '<form novalidate></form>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'FORM', null]);
+        assert.deepEqual(patcher_calls[2], ['attribute', 'novalidate', true]);
+        assert.deepEqual(patcher_calls[3], ['exitTag']);
+        assert.deepEqual(patcher_calls[4], ['enterTag', 'FORM', null]);
+        assert.deepEqual(patcher_calls[5], ['exitTag']);
+        assert.deepEqual(patcher_calls[6], ['enterTag', 'FORM', null]);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'FORM', null]);
+        assert.deepEqual(patcher_calls[9], ['attribute', 'novalidate', true]);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['exitTag']);
+        assert.equal(patcher_calls.length, 12);
+    });
+
+    test('boolean attributes - open', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<details open="{{a}}"><summary>Test</summary></details>' +
+                '<details open="{{b}}"><summary>Test</summary></details>' +
+                '<details open="{{c}}"><summary>Test</summary></details>' +
+                '<details open><summary>Test</summary></details>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'DETAILS', null]);
+        assert.deepEqual(patcher_calls[2], ['attribute', 'open', true]);
+        assert.deepEqual(patcher_calls[3], ['enterTag', 'SUMMARY', null]);
+        assert.deepEqual(patcher_calls[4], ['text', 'Test']);
+        assert.deepEqual(patcher_calls[5], ['exitTag']);
+        assert.deepEqual(patcher_calls[6], ['exitTag']);
+        assert.deepEqual(patcher_calls[7], ['enterTag', 'DETAILS', null]);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'SUMMARY', null]);
+        assert.deepEqual(patcher_calls[9], ['text', 'Test']);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['exitTag']);
+        assert.deepEqual(patcher_calls[12], ['enterTag', 'DETAILS', null]);
+        assert.deepEqual(patcher_calls[13], ['enterTag', 'SUMMARY', null]);
+        assert.deepEqual(patcher_calls[14], ['text', 'Test']);
+        assert.deepEqual(patcher_calls[15], ['exitTag']);
+        assert.deepEqual(patcher_calls[16], ['exitTag']);
+        assert.deepEqual(patcher_calls[17], ['enterTag', 'DETAILS', null]);
+        assert.deepEqual(patcher_calls[18], ['attribute', 'open', true]);
+        assert.deepEqual(patcher_calls[19], ['enterTag', 'SUMMARY', null]);
+        assert.deepEqual(patcher_calls[20], ['text', 'Test']);
+        assert.deepEqual(patcher_calls[21], ['exitTag']);
+        assert.deepEqual(patcher_calls[22], ['exitTag']);
+        assert.deepEqual(patcher_calls[23], ['exitTag']);
+        assert.equal(patcher_calls.length, 24);
+    });
+
+    test('boolean attributes - readonly', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<input type="text" readonly="{{a}}">' +
+                '<input type="text" readonly="{{b}}">' +
+                '<input type="text" readonly="{{c}}">' +
+                '<input type="text" readonly>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls.slice(2, 4).sort(), [
+            ['attribute', 'readonly', true],
+            ['attribute', 'type', 'text']
+        ]);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls[6], ['attribute', 'type', 'text']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls[9], ['attribute', 'type', 'text']);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls.slice(12, 14).sort(), [
+            ['attribute', 'readonly', true],
+            ['attribute', 'type', 'text']
+        ]);
+        assert.deepEqual(patcher_calls[14], ['exitTag']);
+        assert.deepEqual(patcher_calls[15], ['exitTag']);
+        assert.equal(patcher_calls.length, 16);
+    });
+
+    test('boolean attributes - required', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<input type="text" required="{{a}}">' +
+                '<input type="text" required="{{b}}">' +
+                '<input type="text" required="{{c}}">' +
+                '<input type="text" required>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls.slice(2, 4).sort(), [
+            ['attribute', 'required', true],
+            ['attribute', 'type', 'text']
+        ]);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls[6], ['attribute', 'type', 'text']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls[9], ['attribute', 'type', 'text']);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['enterTag', 'INPUT', null]);
+        assert.deepEqual(patcher_calls.slice(12, 14).sort(), [
+            ['attribute', 'required', true],
+            ['attribute', 'type', 'text']
+        ]);
+        assert.deepEqual(patcher_calls[14], ['exitTag']);
+        assert.deepEqual(patcher_calls[15], ['exitTag']);
+        assert.equal(patcher_calls.length, 16);
+    });
+
+    test('boolean attributes - reversed', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<ol reversed="{{a}}"></ol>' +
+                '<ol reversed="{{b}}"></ol>' +
+                '<ol reversed="{{c}}"></ol>' +
+                '<ol reversed></ol>' +
+            '</div>'
+        );
+        var prev_data = {};
+        var next_data = {
+            a: true,
+            b: false
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['enterTag', 'OL', null]);
+        assert.deepEqual(patcher_calls[2], ['attribute', 'reversed', true]);
+        assert.deepEqual(patcher_calls[3], ['exitTag']);
+        assert.deepEqual(patcher_calls[4], ['enterTag', 'OL', null]);
+        assert.deepEqual(patcher_calls[5], ['exitTag']);
+        assert.deepEqual(patcher_calls[6], ['enterTag', 'OL', null]);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['enterTag', 'OL', null]);
+        assert.deepEqual(patcher_calls[9], ['attribute', 'reversed', true]);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.deepEqual(patcher_calls[11], ['exitTag']);
+        assert.equal(patcher_calls.length, 12);
     });
 
     test('expand variables in node attributes', function () {

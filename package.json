@@ -2,12 +2,9 @@
   "name": "magery",
   "version": "0.0.4",
   "description": "Templates for progressive enhancement",
-  "dependencies": {
-    "parsimmon": "^0.7.0"
-  },
   "devDependencies": {
     "mocha-phantomjs": "^4.1.0",
-    "uglify-js": "^3.0.23",
+    "uglify-js": "^3.1.0",
     "webpack": "^1.15.0"
   },
   "repository": {
