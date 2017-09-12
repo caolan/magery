@@ -27,15 +27,12 @@
         <script src="../build/magery.js"></script>
         <script>
          var templates = Magery.compileTemplates();
+         var data = {number_str: ''};
 
-         templates['main'].bind({
-             element: document.getElementById('container'),
-             data: {number_str: ''},
-             handlers: {
-                 updateNumber: function (event) {
-                     if (/^[0-9]*$/.test(event.target.value)) {
-                         this.data.number_str = event.target.value;
-                     }
+         templates['main'].bind('container', data, {
+             updateNumber: function (event) {
+                 if (/^[0-9]*$/.test(event.target.value)) {
+                     this.data.number_str = event.target.value;
                  }
              }
          });

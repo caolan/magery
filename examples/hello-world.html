@@ -8,16 +8,13 @@
         <div id="container"></div>
         
         <template class="magery-templates">
-            <h1 data-template="app">Hello, world!</h1>
+           <h1 data-template="app">Hello, world!</h1>
         </template>
         
         <script src="../build/magery.min.js"></script>
         <script>
          var templates = Magery.compileTemplates();
-         
-         templates['app'].bind({
-             element: document.getElementById('container')
-         });
+         templates['app'].bind('container');
         </script>
     </body>
 </html>

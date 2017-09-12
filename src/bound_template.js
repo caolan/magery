@@ -1,10 +1,10 @@
 var patch = require('./patch');
 
 
-function BoundTemplate(template, options) {
-    this.handlers = options.handlers;
-    this.data = options.data;
-    this.patcher = options.patcher;
+function BoundTemplate(template, patcher, data, handlers) {
+    this.handlers = handlers;
+    this.data = data;
+    this.patcher = patcher;
     this.template = template;
     this.text_buffer = '';
     this.update_queued = false;

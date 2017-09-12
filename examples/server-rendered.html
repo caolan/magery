@@ -27,10 +27,8 @@
 
          // bind template to all elements with data-bind='greeting' attribute
          templates['greeting'].bindAll({
-             handlers: {
-                 updateName: function (event) {
-                     this.data.name = event.target.value;
-                 }
+             updateName: function (event) {
+                 this.data.name = event.target.value;
              }
          });
         </script>

@@ -21,21 +21,16 @@
         <script src="../build/magery.js"></script>
         <script>
          var templates = Magery.compileTemplates();
+         var data = {app: {items: []}};
 
-         window.app = templates['main'].bind({
-             element: document.getElementById('container'),
-             data: {
-                 app: {items: []}
+         window.app = templates['main'].bind('container', data, {
+             addItem: function (app) {
+                 app.items.push({name: '' + Math.random()});
              },
-             handlers: {
-                 addItem: function (app) {
-                     app.items.push({name: '' + Math.random()});
-                 },
-                 removeItem: function (app, item) {
-                     app.items = app.items.filter(function (x) {
-                         return x !== item;
-                     });
-                 }
+             removeItem: function (app, item) {
+                 app.items = app.items.filter(function (x) {
+                     return x !== item;
+                 });
              }
          });
         </script>

@@ -17,16 +17,11 @@
         <script src="../build/magery.js"></script>
         <script>
          var templates = Magery.compileTemplates();
+         var data = {name: 'world'};
          
-         window.app = templates['main'].bind({
-             element: document.getElementById('container'),
-             data: {
-                 name: 'world'
-             },
-             handlers: {
-                 updateName: function (event) {
-                     this.data.name = event.target.value;
-                 }
+         window.app = templates['main'].bind('container', data, {
+             updateName: function (event) {
+                 this.data.name = event.target.value;
              }
          });
         </script>

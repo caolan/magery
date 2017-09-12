@@ -636,21 +636,29 @@ var compile =
 	    this.name = name;
 	}
 
-	Template.prototype.bind = function (options) {
-	    options.patcher = options.patcher || new patch.Patcher(options.element);
-	    var bound = new BoundTemplate(this, options);
+	Template.prototype.bindPatcher = function (patcher, data, handlers) {
+	    var bound = new BoundTemplate(this, patcher, data, handlers);
 	    bound.update();
 	    return bound;
 	};
 
-	Template.prototype.bindAll = function (options) {
+	Template.prototype.bind = function (node, data, handlers) {
+	    if (typeof(node) === 'string') {
+	        node = document.getElementById(node);
+	    }
+	    return this.bindPatcher(
+	        new patch.Patcher(node),
+	        data,
+	        handlers
+	    );
+	};
+
+	Template.prototype.bindAll = function (handlers) {
 	    var self = this;
 	    var nodes = document.querySelectorAll('[data-bind="' + this.name + '"]');
 	    return Array.prototype.map.call(nodes, function (node) {
-	        var opt = utils.shallowClone(options);
-	        opt.data = opt.data || JSON.parse(node.getAttribute('data-context'));
-	        opt.element = node;
-	        return self.bind(opt);
+	        var data = JSON.parse(node.getAttribute('data-context'));
+	        return self.bind(node, data, handlers);
 	    });
 	};
 
@@ -664,10 +672,10 @@ var compile =
 	var patch = __webpack_require__(8);
 
 
-	function BoundTemplate(template, options) {
-	    this.handlers = options.handlers;
-	    this.data = options.data;
-	    this.patcher = options.patcher;
+	function BoundTemplate(template, patcher, data, handlers) {
+	    this.handlers = handlers;
+	    this.data = data;
+	    this.patcher = patcher;
 	    this.template = template;
 	    this.text_buffer = '';
 	    this.update_queued = false;

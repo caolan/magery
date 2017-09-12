@@ -44,24 +44,20 @@
         <script src="../build/magery.js"></script>
         <script>
          var templates = Magery.compileTemplates();
-
-         templates['main'].bind({
-             element: document.getElementById('container'),
-             data: {
-                 user: {
-                     id: 123,
-                     name: 'Example'
-                 }
-             },
-             handlers: {
-                 saveUser: function (event) {
-                     event.preventDefault();
-                     var form = event.target;
-                     this.data.user = {
-                         id: form.user_id.value,
-                         name: form.user_name.value
-                     };
-                 }
+         var data = {
+             user: {
+                 id: 123,
+                 name: 'Example'
+             }
+         };
+         templates['main'].bind('container', data, {
+             saveUser: function (event) {
+                 event.preventDefault();
+                 var form = event.target;
+                 this.data.user = {
+                     id: form.user_id.value,
+                     name: form.user_name.value
+                 };
              }
          });
         </script>

@@ -93,10 +93,7 @@ To display the "app" template we need a HTML page:
     <script src="magery.min.js"></script>
     <script>
       var templates = Magery.compileTemplates();
-      
-      templates['app'].bind({
-        element: document.getElementById('container')
-      });
+      templates['app'].bind('container');
     </script>
   </body>
 </html>
@@ -121,15 +118,10 @@ displayed. Properties of the data object can then be rendered using
 </template>
 ```
 
-Your initial data can be provided as an option to `bind()`:
+Your initial data can be provided as the second argument to `bind()`:
 
 ```javascript
-templates['app'].bind({
-  element: document.getElementById('container'),
-  data: {
-    name: "galaxy"
-  }
-);
+templates['app'].bind('container', {name: 'galaxy'});
 ```
 
 This will display "Hello, galaxy!". [View page][hello-galaxy].
@@ -159,19 +151,15 @@ The value of the textbox is set to the current `name` (from the `data`
 object), and when an `input` event occurs, we're going to call the
 `updateName()` function with the event.
 
-The `updateName()` function is provided to `bind()` using the
-`handlers` option:
+The `updateName()` function is provided to `bind()` as part of the
+`handlers` argument:
 
 ```javascript
-templates['app'].bind({
-  element: document.getElementById('container'),
-  data: {
-    name: 'galaxy'
-  },
-  handlers: {
-    updateName: function (event) {
-      this.data.name = event.target.value;
-    }
+var data = {name: 'galaxy'};
+
+templates['app'].bind('container', data, {
+  updateName: function (event) {
+    this.data.name = event.target.value;
   }
 });
 ```
@@ -398,11 +386,9 @@ Template:
 JavaScript:
 ``` javascript
 templates['number-form'].bindAll({
-  handlers: {
-    updateNumber: function (event) {
-      if (/^[0-9]*$/.test(event.target.value) {
-        this.data.number = event.target.value;
-      }
+  updateNumber: function (event) {
+    if (/^[0-9]*$/.test(event.target.value) {
+      this.data.number = event.target.value;
     }
   }
 });
@@ -588,10 +574,8 @@ Here's an example of a server-rendered page (with comments added):
 
       // bind template to all elements with data-bind='greeting' attribute
       templates['greeting'].bindAll({
-        handlers: {
-          updateName: function (event) {
-            this.data.name = event.target.value;
-          }
+        updateName: function (event) {
+          this.data.name = event.target.value;
         }
       });
       
@@ -600,10 +584,10 @@ Here's an example of a server-rendered page (with comments added):
 </html>
 ```
 
-When using `bindAll()` you do not need to provide `data` or `element`
-options. The elements are found by their `data-bind` attributes, and
-the data for each element is loaded from its `data-context`
-attribute.
+When using `bindAll()` you only need to provide the `handlers`
+argument and not the `data` or `node` arguments. The elements are
+found by their `data-bind` attributes, and the data for each element
+is loaded from its `data-context` attribute.
 
 ### Server and client example
 

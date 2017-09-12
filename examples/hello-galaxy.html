@@ -14,13 +14,7 @@
         <script src="../build/magery.min.js"></script>
         <script>
          var templates = Magery.compileTemplates();
-         
-         templates['app'].bind({
-             element: document.getElementById('container'),
-             data: {
-                 name: 'galaxy'
-             }
-         });
+         templates['app'].bind('container', {name: 'galaxy'});
         </script>
     </body>
 </html>
