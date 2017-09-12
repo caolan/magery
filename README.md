@@ -66,9 +66,7 @@ Magery (2017-08-28):         ###                                        12 kb
 Magery uses HTML templates to update the page:
 
 ```html
-<template class="magery-templates">
-  <h1 data-template="app">Hello, world!</h1>
-</template>
+<h1 data-template="app">Hello, world!</h1>
 ```
 
 Each template is identified by its `data-template` attribute. The
