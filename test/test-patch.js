@@ -56,7 +56,7 @@ suite('patch', function () {
 
     test('flat children', function () {
         var div = makeElement(
-            '<div>' +
+            '<div data-bind="foo">' +
                 '<i>asdf</i>' +
                 '<em>baz</em>' +
                 '</div>'
@@ -82,7 +82,7 @@ suite('patch', function () {
 
     test('nested children', function () {
         var div = makeElement(
-            '<div>' +
+            '<div data-bind="foo">' +
                 '<i>foo</i>' +
                 '<p>' +
                 '<em>qux</em>' +
@@ -112,7 +112,7 @@ suite('patch', function () {
 
     test('single span vs div', function () {
         var div = makeElement(
-            '<div>' +
+            '<div data-bind="foo">' +
                 '<span>Hello</span>' +
                 '</div>'
         );
@@ -135,7 +135,7 @@ suite('patch', function () {
 
     test('comment nodes in DOM', function () {
         var div = makeElement(
-            '<div>' +
+            '<div data-bind="foo">' +
                 '<!-- comment -->' +
                 '<span>Hello</span>' +
                 '<!-- comment2 -->' +
@@ -162,7 +162,7 @@ suite('patch', function () {
 
     test('same outer element, different inner', function () {
         var div = makeElement(
-            '<div><div><b>Hello</b></div></div>'
+            '<div data-bind="foo"><div><b>Hello</b></div></div>'
         );
         var templates = createTemplateNode(
             '<div data-template="foo">' +
@@ -183,7 +183,7 @@ suite('patch', function () {
 
     test('different inner text', function () {
         var div = makeElement(
-            '<div>' +
+            '<div data-bind="foo">' +
                 '<b>Hello</b>' +
                 '</div>'
         );
@@ -204,7 +204,7 @@ suite('patch', function () {
 
     test('different element class', function () {
         var div = makeElement(
-            '<div>' +
+            '<div data-bind="foo">' +
                 '<b class="one">Hello</b>' +
                 '</div>'
         );
@@ -225,7 +225,7 @@ suite('patch', function () {
 
     test('remove attributes not rendered', function () {
         var div = makeElement(
-            '<div>' +
+            '<div data-bind="foo">' +
                 '<a class="btn" href="#" rel="me">test</a>' +
                 '</div>'
         );
@@ -248,7 +248,7 @@ suite('patch', function () {
 
     test('managing attributes across multiple renders', function () {
         var div = makeElement(
-            '<div>' +
+            '<div data-bind="foo">' +
                 '<a class="btn" href="#" rel="me">test</a>' +
                 '</div>'
         );
@@ -284,7 +284,7 @@ suite('patch', function () {
 
     test('same DOM means no change', function () {
         var div = makeElement(
-            '<div>' +
+            '<div data-bind="foo">' +
                 '<b class="one">test</b>' +
                 '</div>'
         );
@@ -305,7 +305,7 @@ suite('patch', function () {
 
     test('multiple siblings', function () {
         var div = makeElement(
-            '<div>' +
+            '<div data-bind="foo">' +
                 '<b>one</b>' +
                 '<i>two</i>' +
                 '<em>three</em>' +
@@ -333,7 +333,7 @@ suite('patch', function () {
 
     test('append sibling', function () {
         var div = makeElement(
-            '<div>' +
+            '<div data-bind="foo">' +
                 '<b>one</b>' +
                 '</div>'
         );
@@ -356,7 +356,7 @@ suite('patch', function () {
 
     test('remove sibling from end', function () {
         var div = makeElement(
-            '<div>' +
+            '<div data-bind="foo">' +
                 '<b>one</b>' +
                 '<i>two</i>' +
                 '</div>'
@@ -379,7 +379,7 @@ suite('patch', function () {
  
     test('replace node, keep sibling', function () {
         var div = makeElement(
-            '<div>' +
+            '<div data-bind="foo">' +
                 '<b>one</b>' +
                 '<b>two</b>' +
                 '</div>'
@@ -405,7 +405,7 @@ suite('patch', function () {
 
     test('replace all siblings', function () {
         var div = makeElement(
-            '<div>' +
+            '<div data-bind="foo">' +
                 '<b>one</b>' +
                 '<b>two</b>' +
                 '</div>'
@@ -433,7 +433,7 @@ suite('patch', function () {
 
     test('insert middle sibling', function () {
         var div = makeElement(
-            '<div>' +
+            '<div data-bind="foo">' +
                 '<b>one</b>' +
                 '<em>three</em>' +
                 '</div>'
@@ -458,7 +458,7 @@ suite('patch', function () {
 
     test('remove sibling with keys', function () {
         var div = makeElement(
-            '<ul>' +
+            '<ul data-bind="foo">' +
               '<li>one</li>' +
               '<li>two</li>' +
               '<li>three</li>' +
@@ -492,7 +492,7 @@ suite('patch', function () {
         });
         assert.equal(
             div.outerHTML,
-            '<ul>' +
+            '<ul data-bind="foo">' +
               '<li>two</li>' +
               '<li>three</li>' +
             '</ul>'
@@ -505,7 +505,7 @@ suite('patch', function () {
 
     test('re-order siblings with keys', function () {
         var div = makeElement(
-            '<ul>' +
+            '<ul data-bind="foo">' +
               '<li>one</li>' +
               '<li>two</li>' +
               '<li>three</li>' +
@@ -540,7 +540,7 @@ suite('patch', function () {
         });
         assert.equal(
             div.outerHTML,
-            '<ul>' +
+            '<ul data-bind="foo">' +
               '<li>three</li>' +
               '<li>one</li>' +
               '<li>two</li>' +
@@ -556,7 +556,7 @@ suite('patch', function () {
 
     test('prepend sibling with keys', function () {
         var div = makeElement(
-            '<ul>' +
+            '<ul data-bind="foo">' +
               '<li>one</li>' +
               '<li>two</li>' +
               '<li>three</li>' +
@@ -592,7 +592,7 @@ suite('patch', function () {
         });
         assert.equal(
             div.outerHTML,
-            '<ul>' +
+            '<ul data-bind="foo">' +
               '<li>zero</li>' +
               '<li>one</li>' +
               '<li>two</li>' +
@@ -608,7 +608,7 @@ suite('patch', function () {
 
     test('append sibling with keys', function () {
         var div = makeElement(
-            '<ul>' +
+            '<ul data-bind="foo">' +
               '<li>one</li>' +
               '<li>two</li>' +
               '<li>three</li>' +
@@ -644,7 +644,7 @@ suite('patch', function () {
         });
         assert.equal(
             div.outerHTML,
-            '<ul>' +
+            '<ul data-bind="foo">' +
               '<li>one</li>' +
               '<li>two</li>' +
               '<li>three</li>' +
@@ -659,7 +659,7 @@ suite('patch', function () {
 
     test('insert middle sibling with keys', function () {
         var div = makeElement(
-            '<ul>' +
+            '<ul data-bind="foo">' +
               '<li>one</li>' +
               '<li>two</li>' +
               '<li>three</li>' +
@@ -695,7 +695,7 @@ suite('patch', function () {
         });
         assert.equal(
             div.outerHTML,
-            '<ul>' +
+            '<ul data-bind="foo">' +
               '<li>one</li>' +
               '<li>two</li>' +
               '<li>2.5</li>' +
