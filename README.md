@@ -66,7 +66,9 @@ Magery (2017-08-28):         ###                                        12 kb
 Magery uses HTML templates to update the page:
 
 ```html
-<h1 data-template="app">Hello, world!</h1>
+<h1 data-template="app">
+  Hello, world!
+</h1>
 ```
 
 Each template is identified by its `data-template` attribute. The
@@ -85,7 +87,9 @@ To display the "app" template we need a HTML page:
     <div id="container"></div>
 
     <template class="magery-templates">
-      <h1 data-template="app">Hello, world!</h1>
+      <h1 data-template="app">
+        Hello, world!
+      </h1>
     </template>
 
     <script src="magery.min.js"></script>
@@ -112,7 +116,9 @@ displayed. Properties of the data object can then be rendered using
 
 ```html
 <template class="magery-templates">
-  <h1 data-template="app">Hello, {{name}}!</h1>
+  <h1 data-template="app">
+    Hello, {{name}}!
+  </h1>
 </template>
 ```
 
