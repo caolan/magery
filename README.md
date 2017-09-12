@@ -22,9 +22,9 @@ update the page simply by changing the JSON data.
 
 ## Aims
 
-* To make it easier to enhance your multi-page website with JavaScript
+* To make it easier to enhance your _multi-page_ website with JavaScript
 * To work with your choice of back end language
-* To provide clean separation between your data and markup
+* To use the latest DOM patching techniques and reduce plumbing
 * To be [relatively lightweight](#file-size) so you can use it for small
   (or large) enhancements without the commitment of a big dependency
 
@@ -440,7 +440,7 @@ The attributes will be processed in the following order:
 ### `<template>`
 
 This is just a standard HTML5 `<template>` element, but you may
-encounter it while Magery. When embedding templates, Magery will
+encounter it while using Magery. When embedding templates, Magery will
 include the definitions inside `<template class="magery-templates">`
 tags so they can be easily found by `magery.compileTemplates()` later.
 
