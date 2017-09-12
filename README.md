@@ -530,6 +530,12 @@ options. The elements are found by their `data-bind` attributes, and
 the data for each element is loaded from it's `data-context`
 attribute.
 
+### Server and client example
+
+For a small but complete server-side rendering + client-side
+enhancements example, see
+the [python-magery example directory][python-example].
+
 
 [magery-js]: https://raw.githubusercontent.com/caolan/magery/master/build/magery.js
 [magery-min-js]: https://raw.githubusercontent.com/caolan/magery/master/build/magery.min.js
@@ -537,5 +543,6 @@ attribute.
 [hello-galaxy]: https://caolan.github.io/magery/examples/hello-galaxy.html
 [hello-universe]: https://caolan.github.io/magery/examples/hello-universe.html
 [blog-post]: https://caolan.org/posts/progressive_enhancement_and_modern_javascript.html
+[python-example]: https://github.com/caolan/python-magery/tree/master/example
 [testsuite]: https://github.com/caolan/magery-tests
 [ci]: https://travis-ci.org/caolan/magery
