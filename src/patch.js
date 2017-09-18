@@ -127,7 +127,7 @@ function makeHandler(type) {
                 }
                 return utils.lookup(node.data, arg);
             });
-            node.bound_template.applyHandler(handler.name, args);
+            node.template.handlers[handler.name].apply(null, args);
         }
         if (node.tagName === 'INPUT') {
             var nodeType = node.getAttribute('type');
@@ -160,13 +160,13 @@ function setListener(node, type) {
     }
 }
 
-Patcher.prototype.eventListener = function (type, value, data, bound_template) {
+Patcher.prototype.eventListener = function (type, value, data, template) {
     var node = this.parent;
     if (node.data !== data) {
         node.data = data;
     }
-    if (node.bound_template !== bound_template) {
-        node.bound_template = bound_template;
+    if (node.template !== template) {
+        node.template = template;
     }
     setListener(node, type);
     var handler = node.handlers[type];

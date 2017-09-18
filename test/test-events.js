@@ -48,13 +48,13 @@ suite('events', function () {
                 '<button onclick="clicked(event)">click me</button>' +
                 '</div>');
         var data = {};
-        templates['main'].bind(container, data, {
+        templates['main'].bind({
             clicked: function (event) {
                 assert.equal(event.target, child(container, 0));
-                assert.deepEqual(this.data, data);
                 done();
             }
         });
+        templates['main'].patch(container, data);
         click(child(container, 0));
     });
 
@@ -65,12 +65,13 @@ suite('events', function () {
                 '<button onclick="clicked(user)">click me</button>' +
                 '</div>');
         var data = {user: {name: 'test'}};
-        templates['main'].bind(container, data, {
+        templates['main'].bind({
             clicked: function (user) {
                 assert.deepEqual(user, {name: 'test'});
                 done();
             }
         });
+        templates['main'].patch(container, data);
         click(child(container, 0));
     });
     
@@ -81,13 +82,14 @@ suite('events', function () {
                 '<button onclick="clicked(event, user)">click me</button>' +
                 '</div>');
         var data = {user: {name: 'test'}};
-        templates['main'].bind(container, data, {
+        templates['main'].bind({
             clicked: function (event, user) {
                 assert.equal(event.target, child(container, 0));
                 assert.deepEqual(user, {name: 'test'});
                 done();
             }
         });
+        templates['main'].patch(container, data);
         click(child(container, 0));
     });
 
@@ -107,26 +109,27 @@ suite('events', function () {
     //     click(child(container, 0));
     // });
 
-    test('page is updated after event handler returns', function (done) {
-        var container = document.createElement('div');
-        var templates = createTemplateNode(
-            '<div data-template="main">' +
-                '<div id="counter">{{app.counter}}</div>' +
-                '<button onclick="increment(app)">add one</button>' +
-                '</div>');
-        var data = {app: {counter: 0}};
-        templates['main'].bind(container, data, {
-            increment: function (app) {
-                app.counter++;
-            }
-        });
-        assert.equal(child(container, 0).textContent, '0');
-        click(child(container, 1));
-        assert.equal(child(container, 0).textContent, '1');
-        click(child(container, 1));
-        assert.equal(child(container, 0).textContent, '2');
-        done();
-    });
+    // test('page is updated after event handler returns', function (done) {
+    //     var container = document.createElement('div');
+    //     var templates = createTemplateNode(
+    //         '<div data-template="main">' +
+    //             '<div id="counter">{{app.counter}}</div>' +
+    //             '<button onclick="increment(app)">add one</button>' +
+    //             '</div>');
+    //     var data = {app: {counter: 0}};
+    //     templates['main'].bind({
+    //         increment: function (app) {
+    //             app.counter++;
+    //         }
+    //     });
+    //     templates['main'].patch(container, data);
+    //     assert.equal(child(container, 0).textContent, '0');
+    //     click(child(container, 1));
+    //     assert.equal(child(container, 0).textContent, '1');
+    //     click(child(container, 1));
+    //     assert.equal(child(container, 0).textContent, '2');
+    //     done();
+    // });
     
     test('reference named item in loop', function () {
         var container = document.createElement('div');
@@ -136,11 +139,12 @@ suite('events', function () {
                 '</div>');
         var data = {items: [{name: 'one'}, {name: 'two'}, {name: 'three'}]};
         var calls = [];
-        templates['main'].bind(container, data, {
+        templates['main'].bind({
             test: function (item) {
                 calls.push(item.name);
             }
         });
+        templates['main'].patch(container, data);
         click(child(container, 0));
         click(child(container, 1));
         click(child(container, 2));
@@ -155,11 +159,13 @@ suite('events', function () {
                 '</div>');
         var data = {user: {id: '123'}};
         var calls = [];
-        templates['main'].bind(container, data, {
+        templates['main'].bind({
             updateID: function (user, event) {
                 user.id = event.target.value.replace(/[^0-9]/g, '');
+                templates['main'].patch(container, data);
             }
         });
+        templates['main'].patch(container, data);
         input(child(container, 0), '123abc4');
         assert.equal(child(container, 0).value, '1234');
         input(child(container, 0), '12345');
@@ -177,40 +183,16 @@ suite('events', function () {
                 '<input type="text" value="{{user.name}}" data-managed="true" oninput="updateID(user, event)">' +
                 '</div>');
         var data = {user: {name: 'test'}};
-        templates['main'].bind(container, data, {
+        templates['main'].bind({
             updateID: function (user, event) {
                 user.name = event.target.value;
+                templates['main'].patch(container, data);
             }
         });
+        templates['main'].patch(container, data);
         assert.equal(child(container, 0).value, 'test');
         input(child(container, 0), '<h1>test</h1>');
         assert.equal(child(container, 0).value, '<h1>test</h1>');
-    });
-
-    test('trigger() should not run update() if an update is already queued', function () {
-        var container = document.createElement('div');
-        var templates = createTemplateNode(
-            '<div data-template="main">' +
-                '<input type="text" value="{{input}}" data-managed="true">' +
-                '<button onclick="clearBtn()">clear</button>' +
-                '</div>');
-        var data = {input: 'test'};
-        var bound = templates['main'].bind(container, data, {
-            clearBtn: function (event) {
-                this.trigger('clearInput');
-            },
-            clearInput: function () {
-                this.data.input = '';
-            }
-        });
-        var calls = 0;
-        var _update = bound.update;
-        bound.update = function () {
-            calls++;
-            return _update.apply(this, arguments);
-        };
-        click(child(container, 1));
-        assert.equal(calls, 1);
     });
 
     test('text input value reset to match template data on input', function () {
@@ -220,7 +202,7 @@ suite('events', function () {
                 '<input data-managed="true" type="text" value="{{name}}">' +
                 '</div>');
         var data = {name: 'testing'};
-        templates['main'].bind(container, data);
+        templates['main'].patch(container, data);
         var input = child(container, 0);
         input.value = 'foo';
         assert.equal(input.value, 'foo');
@@ -238,11 +220,13 @@ suite('events', function () {
                 '<input data-managed="true" type="text" value="{{name}}" oninput="updateInput()">' +
                 '</div>');
         var data = {name: 'testing'};
-        templates['main'].bind(container, data, {
+        templates['main'].bind({
             updateInput: function () {
-                this.data.name = 'bar';
+                data.name = 'bar';
+                templates['main'].patch(container, data);
             }
         });
+        templates['main'].patch(container, data);
         var input = child(container, 0);
         input.value = 'foo';
         assert.equal(input.value, 'foo');
@@ -295,7 +279,7 @@ suite('events', function () {
                 '<input data-managed="true" data-unless="checked" type="checkbox">' +
                 '</div>');
         var data = {checked: true};
-        templates['main'].bind(container, data);
+        templates['main'].patch(container, data);
         var input = child(container, 0);
         document.body.appendChild(container);
         assert.ok(input.checked);
@@ -315,11 +299,12 @@ suite('events', function () {
                 '<input data-unless="checked" type="checkbox" onclick="toggle()">' +
                 '</div>');
         var data = {checked: true};
-        templates['main'].bind(container, data, {
+        templates['main'].bind({
             toggle: function () {
-                this.data.checked = !this.data.checked;
+                data.checked = !data.checked;
             }
         });
+        templates['main'].patch(container, data);
         var input = child(container, 0);
         document.body.appendChild(container);
         assert.ok(input.checked);
@@ -351,7 +336,7 @@ suite('events', function () {
                 {value: 'three', checked: false}
             ]
         };
-        templates['main'].bind(container, data);
+        templates['main'].patch(container, data);
         var radioOne = child(container, 0, 0);
         var radioTwo = child(container, 1, 0);
         var radioThree = child(container, 2, 0);
@@ -385,13 +370,15 @@ suite('events', function () {
                 {value: 'three', checked: false}
             ]
         };
-        templates['main'].bind(container, data, {
+        templates['main'].bind({
             pick: function (value) {
-                this.data.options.forEach(function (option) {
+                data.options.forEach(function (option) {
                     option.checked = (option.value === value);
                 });
+                templates['main'].patch(container, data);
             }
         });
+        templates['main'].patch(container, data);
         var radioOne = child(container, 0, 0);
         var radioTwo = child(container, 1, 0);
         var radioThree = child(container, 2, 0);
@@ -432,7 +419,7 @@ suite('events', function () {
                 {value: 3, label: 'three', selected: false}
             ]
         };
-        templates['main'].bind(container, data);
+        templates['main'].patch(container, data);
         var select = child(container, 0);
         var optionOne = child(select, 0);
         var optionTwo = child(select, 1);

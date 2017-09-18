@@ -5,8 +5,12 @@
         <title>Example: simple list</title>
     </head>
     <body>
+        <!-- target element -->
+        <div id="container"></div>
+
+        <!-- templates -->
         <template class="magery-templates">
-            <div data-template="main">
+            <div data-template="main" id="container">
                 <ul>
                     <li data-each="item in app.items">
                         {{item.name}} <button onclick="removeItem(app, item)">X</button>
@@ -16,23 +20,30 @@
             </div>
         </template>
         
-        <div id="container"></div>
-        
         <script src="../build/magery.js"></script>
         <script>
-         var templates = Magery.compileTemplates();
+         var templates = Magery.compileTemplates('.magery-templates');
+         var element = document.getElementById('container');
          var data = {app: {items: []}};
 
-         window.app = templates['main'].bind('container', data, {
+         function patch() {
+             templates['main'].patch(element, data);
+         }
+
+         templates['main'].bind({
              addItem: function (app) {
                  app.items.push({name: '' + Math.random()});
+                 patch();
              },
              removeItem: function (app, item) {
                  app.items = app.items.filter(function (x) {
                      return x !== item;
                  });
+                 patch();
              }
          });
+
+         patch();
         </script>
     </body>
 </html>

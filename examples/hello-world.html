@@ -3,20 +3,24 @@
     <head>
         <meta charset="UTF-8">
         <title>My App</title>
+        <script src="../build/magery.min.js"></script>
     </head>
     <body>
-        <div id="container"></div>
-        
+        <!-- template -->
         <template class="magery-templates">
-            <h1 data-template="app">
+            <h1 data-template="greeting" id="hello">
                 Hello, world!
             </h1>
         </template>
         
-        <script src="../build/magery.min.js"></script>
+        <!-- target element -->
+        <h1 id="hello"></h1>
+        
+        <!-- patch the target using the template -->
         <script>
-         var templates = Magery.compileTemplates();
-         templates['app'].bind('container');
+         var templates = Magery.compileTemplates('.magery-templates');
+         var element = document.getElementById('hello');
+         templates['greeting'].patch(element);
         </script>
     </body>
 </html>

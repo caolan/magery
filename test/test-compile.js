@@ -27,12 +27,11 @@ suite('compile', function () {
 
     function patch(templates, name, next_data, prev_data) {
         var calls = [];
-        var bound = new Magery.BoundTemplate(
-            templates[name], 
-            test_patcher(calls),
-            next_data
-        );
-        bound.update();
+        var state = {
+            patcher: test_patcher(calls),
+            text_buffer: ''
+        };
+        templates[name].render(state, next_data, prev_data);
         return calls;
     }
 

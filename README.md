@@ -1,12 +1,12 @@
 # Magery
 
-An easy-to-use JavaScript framework that can work with server-side
+Easy-to-use JavaScript templates that can work with server-side
 rendering in any language.
 
-Magery uses HTML5 templates and JSON data to render the page. On the
-server, these templates are simple enough to be rendered without a
-JavaScript runtime. On the client, they can be used to dynamically
-update the page simply by changing the JSON data.
+Magery uses HTML5 templates and JSON data to patch the DOM and update
+the page. On the server, these templates are simple enough to be
+rendered without a JavaScript runtime. On the client, they can be used
+to dynamically update the page in response to JavaScript events.
 
 * [Aims](#aims)
 * [Download](#download)
@@ -14,6 +14,7 @@ update the page simply by changing the JSON data.
   - [Getting started](#getting-started)
   - [Attributes](#attributes)
   - [Tags](#tags)
+  - [JavaScript API](#javascript-api)
   - [Server-side rendering](#server-side-rendering)
 * [Examples](https://github.com/caolan/magery/tree/master/examples)
 * [Test suite](https://caolan.github.io/magery/test/)
@@ -24,15 +25,15 @@ update the page simply by changing the JSON data.
 
 * To make it easier to enhance your _multi-page_ website with JavaScript
 * To work with your choice of back end language
-* To use the latest DOM patching techniques and reduce plumbing
-* To be [relatively lightweight](#file-size) so you can use it for small
-  (or large) enhancements without the commitment of a big dependency
+* To use the latest DOM patching and state management techniques
+* To be [relatively small](#file-size) so you can use it for little
+  (or large) enhancements
 
-I wrote this library to prove that you don't _need_ a 'single page
-app' to build large dynamic websites. If you're interested in the
-motivations behind this framework, you might like to read the [blog
-post][blog-post] that started it (Magery's syntax has since been
-updated).
+I wrote this library to prove that you don't need a 'single page app'
+to build great dynamic websites. If you're interested in the
+motivations behind this framework, you might like to read
+the [blog post][blog-post] that started it (Magery's syntax has since
+been updated).
 
 ## Download
 
@@ -47,11 +48,12 @@ Include one of the above in your HTML:
 
 ### File size
 
-While there are smaller frameworks out there, Magery aims to sit on
-the more lightweight end of the file size range. This is to encourage
-its use for relatively small improvements to server-generated pages.
+While there are no doubt smaller libraries out there, Magery aims to
+sit on the more lightweight end of the file size range. This is to
+encourage its use for relatively small improvements to
+server-generated pages.
 
-A comparison of some minified production builds:
+A comparison with some popular minified production builds:
 
 ```
 Angular v1.6.4:              ########################################  163 kb
@@ -63,119 +65,135 @@ Magery (2017-08-28):         ###                                        12 kb
 
 ## Getting started
 
-Magery uses HTML templates to update the page:
+Magery uses HTML5 templates to update the page:
 
 ```html
-<h1 data-template="app">
+<h1 data-template="greeting">
   Hello, world!
 </h1>
 ```
 
 Each template is identified by its `data-template` attribute. The
-template above is "app".
+template above is named `greeting`.
 
-### Render a template
+### Updating the page
 
-To display the "app" template we need a HTML page:
+To display the `greeting` template we need a HTML page to display it on:
 
 ```html
+<!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8">
     <title>My App</title>
   </head>
   <body>
-    <div id="container"></div>
-
+    <!-- target element -->
+    <h1 id="hello"></h1>
+    
+    <!-- template -->
     <template class="magery-templates">
-      <h1 data-template="app">
+      <h1 data-template="greeting" id="hello">
         Hello, world!
       </h1>
     </template>
 
+    <!-- patch the target using the template -->
     <script src="magery.min.js"></script>
     <script>
-      var templates = Magery.compileTemplates();
-      templates['app'].bind('container');
+      var templates = Magery.compileTemplates('.magery-templates');
+      var element = document.getElementById('hello');
+      
+      templates['greeting'].patch(element);
     </script>
   </body>
 </html>
 ```
 
-This page includes a container element to render the template into,
-the "app" template itself, and a script block which binds the "app"
-template to the container element. 
+This page includes the `greeting` template, a target `<h1>` element
+that gets patched using the template, and a script block which
+compiles the template and calls `.patch()` on the target `<h1>`.
 
 Open [this page][hello-world] in the browser and you should see
-"Hello, world!".
+"Hello, world!" displayed in the `<h1>` tag.
 
-### Provide data
+### Providing data
 
 You can pass JSON data into your templates to change what is
-displayed. Properties of the data object can then be rendered using
-`{{` curly braces `}}`:
+displayed. Properties of the data object can be rendered using `{{`
+curly braces `}}`:
 
 ```html
 <template class="magery-templates">
-  <h1 data-template="app">
-    Hello, {{name}}!
+  <h1 data-template="greeting" id="hello">
+    Hello, {{ name }}!
   </h1>
 </template>
 ```
 
-Your initial data can be provided as the second argument to `bind()`:
+Your initial data can be provided as the second argument to `patch()`:
 
 ```javascript
-templates['app'].bind('container', {name: 'galaxy'});
+templates['greeting'].patch(element, {name: 'galaxy'});
 ```
 
 This will display "Hello, galaxy!". [View page][hello-galaxy].
 
-### Attach event handlers
+### Attaching event handlers
 
-After binding a template using `bind()`, the elements on the page can
-be modified by listening for events and updating the data property on
-the fly.
-
-Let's make our greeting page universal by using a textbox to set the
-correct name:
+After compiling a template, event handlers can be attached to the
+template using `bind()`. Let's add a 'name' input to update our
+greeting:
 
 ```html
+<!-- target element -->
+<div id="container"></div>
+
+<!-- template -->
 <template class="magery-templates">
-  <div data-template="app">
-    <h1>Hello, {{name}}!</h1>
-  
-    <input type="text"
-           value="{{name}}"
-           oninput="updateName(event)" />
+
+  <div data-template="app" id="container">
+    <h1>Hello, {{ name }}!</h1>
+    <input type="text" value="{{ name }}" oninput="updateName(event)" />
   </div>
+  
 </template>
 ```
 
 The value of the textbox is set to the current `name` (from the `data`
-object), and when an `input` event occurs, we're going to call the
-`updateName()` function with the event.
+object), and when an `input` event occurs on the textbox, we're going
+to call the `updateName()` handler with the event.
 
-The `updateName()` function is provided to `bind()` as part of the
-`handlers` argument:
+The `updateName()` function is attached to the template using `bind()`:
 
 ```javascript
+var templates = document.compileTemplates(.'magery-templates');
+var container = document.getElementById('container');
 var data = {name: 'galaxy'};
 
-templates['app'].bind('container', data, {
+templates['app'].bind({
   updateName: function (event) {
-    this.data.name = event.target.value;
+    // update the data object, then patch the page
+    data.name = event.target.value;
+    templates['app'].patch(container, data);
   }
 });
+
+// initial patch sets up event handlers
+templates['app'].patch(container, data);
 ```
 
-By modifying `this.data`, the `updateName()` function causes the page
-to dynamically update to match the new template data. You can now type
-"universe" into the textbox and see the welcome message update to
-"Hello, universe!" as you type. [View page][hello-universe].
+By calling `patch()`, the `updateName()` function causes the page to
+dynamically update to match the new data. You can now type "universe"
+into the textbox and see the welcome message update to "Hello,
+universe!" as you type. [View page][hello-universe].
 
-You now know how to use `bind()`. Once you've had a look at the
-available template [attributes](#attributes) and [tags](#tags), you
-should be ready to get started with [server-side rendering](#server-side-rendering).
+You now know how to use `compileTemplates()`, `bind()` and `patch()` -
+which is the entirety of the Magery [JavaScript API](#javascript-api)!
+
+Once you've had a look at the available
+template [attributes](#attributes) and [tags](#tags), you should be
+ready to try [server-side rendering](#server-side-rendering).
 
 ## Attributes
 
@@ -517,6 +535,110 @@ current context in the rendering context of the sub-template. In the
 above example the data property `user.name` is set to `name` inside
 the `hello` template.
 
+## JavaScript API
+
+### `Magery.compileTemplates(selector)`
+
+Find and compile Magery templates in the current HTML document.
+
+#### Arguments
+
+* __selector__ - the CSS selector for a parent element which contains zero or more templates
+
+#### Return value
+
+Returns an object containing `Template` objects, keyed by template
+name (taken from their `data-template` attributes).
+
+#### Example
+
+``` javascript
+var templates = Magery.compileTemplates('.magery-templates');
+var templates = Magery.compileTemplates('#myTemplates');
+var templates = Magery.compileTemplates('template');
+
+// access the returned Template() objects using template[name]
+```
+
+### `Template.bind(handlers)`
+
+Attach event handlers to a template. The event handlers will not be
+bound to existing DOM elements until `Template.patch()` is called.
+
+#### Arguments
+
+* __handlers__ - an object containing event handler functions keyed by name
+
+#### Return value
+
+Undefined.
+
+#### Example
+
+``` javascript
+var data = {items: []};
+
+templates[name].bind({
+    updateCounter: function () {
+        data.counter++;
+    },
+    removeItem: function (event, id) {
+        data.items = items.filter(function (item) {
+            return item.id !== id;
+        });
+    }
+});
+```
+
+The arguments passed to event handler functions are dictated by the
+`on*` attribute which triggers it:
+
+``` html
+<button onclick="updateCounter()">
+  Add one
+</button>
+
+<ul data-each="item in items">
+  <li id="{{ item.id }}">
+    {{ item.name }}
+    <button onclick="removeItem(event, item.id)">
+      Remove
+    </button>
+  </li>
+</ul>
+```
+
+The `event` argument (used with `removeItem()` above) is special, and
+refers to the event which triggered the handler (which is how `on*`
+attributes normally work in browsers).
+
+### `Template.patch(element, next_data, [prev_data])`
+
+Updates `element` to match the output of running the template with
+`next_data` as it's context.
+
+#### Arguments
+
+* __element__ - The DOM element to be patched
+* __next_data__ - The data to render the template with
+* __prev_data__ - _(optional)_ - The data used for the last render,
+  which can be used to optimise the patching process by skipping
+  unchanged properties. Useful in conjunction with immutable data
+  structures.
+  
+#### Return value
+
+Undefined.
+
+#### Example
+
+``` javascript
+var element = document.querySelector('#target');
+var data = {name: 'test'};
+
+templates['example'].patch(element, data);
+```
+
 ## Server-side rendering
 
 Magery has been designed to work with server-side rendering in any
@@ -528,77 +650,6 @@ include your library here.
 ### Languages
 
 - Python - [python-magery](https://github.com/caolan/python-magery)
-
-### Working with server-rendered components
-
-#### Embedding templates
-
-A template can be embedded in the page by adding `data-embed="true"`
-to a template element's attributes. The server-side library will then
-include the template definition itself in the rendered page, and add a
-`data-context` attribute containing the current JSON context data.
-
-#### Binding to embedded templates
-
-When a template is rendered on the page the template name is included
-in the `data-bind` attribute of the element. This means, that instead
-of calling `bind()` on each individual component, you can bind to all
-components of a given type using `bindAll()`.
-
-Here's an example of a server-rendered page (with comments added):
-
-```html
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Server-rendered page</title>
-  </head>
-  <body>
-    <!-- the output itself -->
-    <div data-bind="greeting" data-context='{"name":"world"}'>
-      <h1>Hello, world!</h1>
-      <input value="world">
-    </div>
-
-    <!-- the embedded template -->
-    <template class="magery-templates">
-      <div data-template="greeting" data-embed="true">
-        <h1>Hello, {{name}}!</h1>
-        <input value="{{name}}" oninput="updateName(event)">
-      </div>
-    </template>
-
-    <!-- our javascript -->
-    <script src="magery.min.js"></script>
-    <script>
-    
-      // load templates from all .magery-templates elements on page
-      var templates = Magery.compileTemplates();
-
-      // bind template to all elements with data-bind='greeting' attribute
-      templates['greeting'].bindAll({
-        updateName: function (event) {
-          this.data.name = event.target.value;
-        }
-      });
-      
-    </script>
-  </body>
-</html>
-```
-
-When using `bindAll()` you only need to provide the `handlers`
-argument and not the `data` or `node` arguments. The elements are
-found by their `data-bind` attributes, and the data for each element
-is loaded from its `data-context` attribute.
-
-### Server and client example
-
-For a small but complete server-side rendering + client-side
-enhancements example, see
-the [python-magery example directory][python-example].
-
 
 [magery-js]: https://raw.githubusercontent.com/caolan/magery/master/build/magery.js
 [magery-min-js]: https://raw.githubusercontent.com/caolan/magery/master/build/magery.min.js

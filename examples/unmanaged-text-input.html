@@ -5,8 +5,12 @@
         <title>Example: unmanaged text input</title>
     </head>
     <body>
+        <!-- target element -->
+        <div id="container"></div>
+
+        <!-- templates -->
         <template class="magery-templates">
-            <div data-template="main">
+            <div data-template="main" id="container">
                 <h1>User</h1>
                 <table>
                     <tr>
@@ -39,27 +43,34 @@
             </div>
         </template>
         
-        <div id="container"></div>
-        
         <script src="../build/magery.js"></script>
         <script>
-         var templates = Magery.compileTemplates();
+         var templates = Magery.compileTemplates('.magery-templates');
+         var element = document.getElementById('container');
          var data = {
              user: {
                  id: 123,
                  name: 'Example'
              }
          };
-         templates['main'].bind('container', data, {
+
+         function patch() {
+             templates['main'].patch(element, data);
+         }
+         
+         templates['main'].bind({
              saveUser: function (event) {
                  event.preventDefault();
                  var form = event.target;
-                 this.data.user = {
+                 data.user = {
                      id: form.user_id.value,
                      name: form.user_name.value
                  };
+                 patch();
              }
          });
+
+         patch();
         </script>
     </body>
 </html>

@@ -5,28 +5,36 @@
         <title>My App</title>
     </head>
     <body>
+        <!-- target element -->
         <div id="container"></div>
 
+        <!-- template -->
         <template class="magery-templates">
-            <div data-template="app">
+            
+            <div data-template="app" id="container">
                 <h1>Hello, {{name}}!</h1>
-
-                <input type="text"
-                       value="{{name}}"
-                       oninput="updateName(event)" />
+                <input type="text" value="{{name}}" oninput="updateName(event)" />
             </div>
+            
         </template>
 
+        <!-- patch the target using the template -->
         <script src="../build/magery.js"></script>
         <script>
-         var templates = Magery.compileTemplates();
+         var templates = Magery.compileTemplates('.magery-templates');
+         var container = document.getElementById('container');
          var data = {name: 'galaxy'};
 
-         templates['app'].bind('container', data, {
+         templates['app'].bind({
              updateName: function (event) {
-                 this.data.name = event.target.value;
+                 // update the data object, then patch the page
+                 data.name = event.target.value;
+                 templates['app'].patch(container, data);
              }
          });
+         
+         // initial patch sets up event handlers
+         templates['app'].patch(container, data);
         </script>
     </body>
 </html>

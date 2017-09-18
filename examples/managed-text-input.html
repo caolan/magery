@@ -5,8 +5,12 @@
         <title>Example: managed text input</title>
     </head>
     <body>
+        <!-- target element -->
+        <div id="container"></div>
+        
+        <!-- templates -->
         <template class="magery-templates">
-            <div data-template="main">
+            <div data-template="main" id="container">
                 <h1>Number: {{number_str}}</h1>
                 <p>
                     The input below should only allow you to enter digits
@@ -22,20 +26,22 @@
             </div>
         </template>
         
-        <div id="container"></div>
-        
         <script src="../build/magery.js"></script>
         <script>
-         var templates = Magery.compileTemplates();
+         var templates = Magery.compileTemplates('.magery-templates');
+         var container = document.getElementById('container');
          var data = {number_str: ''};
 
-         templates['main'].bind('container', data, {
+         templates['main'].bind({
              updateNumber: function (event) {
                  if (/^[0-9]*$/.test(event.target.value)) {
-                     this.data.number_str = event.target.value;
+                     data.number_str = event.target.value;
+                     templates['main'].patch(container, data);
                  }
              }
          });
+
+         templates['main'].patch(container, data);
         </script>
     </body>
 </html>

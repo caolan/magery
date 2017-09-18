@@ -7,18 +7,18 @@ var Template = require('./template');
 function run_all(xs) {
     var funs = xs.filter(function (x) { return x; });
     var length = funs.length;
-    return function (bound, next_data, prev_data, inner) {
+    return function (state, next_data, prev_data, inner) {
         var index = -1;
         while (++index < length) {
-            funs[index](bound, next_data, prev_data, inner);
+            funs[index](state, next_data, prev_data, inner);
         }
     };
 }
 
-function flushText(bound) {
-    if (bound.text_buffer) {
-        bound.patcher.text(bound.text_buffer);
-        bound.text_buffer = '';
+function flushText(state) {
+    if (state.text_buffer) {
+        state.patcher.text(state.text_buffer);
+        state.text_buffer = '';
     }
 }
 
@@ -58,8 +58,8 @@ function compileExpandVars(str, boolean) {
 function compileText(node) {
     var txt = node.textContent;
     var expand = compileExpandVars(txt);
-    return function (bound, next_data, prev_data, inner) {
-        bound.text_buffer += expand(next_data);
+    return function (state, next_data, prev_data, inner) {
+        state.text_buffer += expand(next_data);
     };
 }
 
@@ -97,7 +97,7 @@ function compileElement(templates, node) {
         }
     }
     var tag = node.tagName.toLowerCase();
-    var render = function (bound, next_data, prev_data, inner) {
+    var render = function (state, next_data, prev_data, inner) {
         if (templates[tag]) {
             var next_data2 = {};
             var prev_data2 = {};
@@ -107,31 +107,31 @@ function compileElement(templates, node) {
                 next_data2[attr_name] = utils.lookup(next_data, path);
                 prev_data2[attr_name] = utils.lookup(prev_data, path);
             }
-            templates[tag].render(bound, next_data2, prev_data2, function () {
-                children(bound, next_data, prev_data, inner);
+            templates[tag].render(state, next_data2, prev_data2, function () {
+                children(state, next_data, prev_data, inner);
             });
             return;
         }
         var key = expand_key ? expand_key(next_data) : null;
-        flushText(bound);
-        bound.patcher.enterTag(node.tagName, key);
+        flushText(state);
+        state.patcher.enterTag(node.tagName, key);
         for (var attr_name in attrs) {
             var value = attrs[attr_name](next_data);
             if (value || !(html.attributes[attr_name] & html.BOOLEAN_ATTRIBUTE)) {
-                bound.patcher.attribute(attr_name, value);
+                state.patcher.attribute(attr_name, value);
             }
         }
         for (var event_name in events) {
-            bound.patcher.eventListener(
+            state.patcher.eventListener(
                 event_name,
                 events[event_name],
                 next_data,
-                bound
+                state.template
             );
         }
-        children(bound, next_data, prev_data, inner);
-        flushText(bound);
-        bound.patcher.exitTag();
+        children(state, next_data, prev_data, inner);
+        flushText(state);
+        state.patcher.exitTag();
     };
     if (node.dataset.template) {
         var template_name = node.dataset.template;
@@ -163,18 +163,18 @@ function isTruthy(x) {
 
 function compileUnless(node, render) {
     var path = utils.propertyPath(node.dataset.unless);
-    return function (bound, next_data, prev_data, inner) {
+    return function (state, next_data, prev_data, inner) {
         if (!isTruthy(utils.lookup(next_data, path))) {
-            render(bound, next_data, prev_data, inner);
+            render(state, next_data, prev_data, inner);
         }
     };
 }
 
 function compileIf(node, render) {
     var path = utils.propertyPath(node.dataset.if);
-    return function (bound, next_data, prev_data, inner) {
+    return function (state, next_data, prev_data, inner) {
         if (isTruthy(utils.lookup(next_data, path))) {
-            render(bound, next_data, prev_data, inner);
+            render(state, next_data, prev_data, inner);
         }
     };
 }
@@ -183,7 +183,7 @@ function compileEach(node, render) {
     var parts = node.dataset.each.split(' in ');
     var name = parts[0];
     var path = utils.propertyPath(parts[1]);
-    return function (bound, next_data, prev_data, inner) {
+    return function (state, next_data, prev_data, inner) {
         var next_arr = utils.lookup(next_data, path);
         var prev_arr = utils.lookup(prev_data, path);
         var length = next_arr.length;
@@ -193,7 +193,7 @@ function compileEach(node, render) {
             var prev_data2 = utils.shallowClone(prev_data);
             next_data2[name] = next_arr[index];
             prev_data2[name] = prev_arr && prev_arr[index];
-            render(bound, next_data2, prev_data2, inner);
+            render(state, next_data2, prev_data2, inner);
         }
     };
 }
@@ -204,7 +204,7 @@ function compileNode(templates, node) {
     }
     else if (utils.isElementNode(node)) {
         if (node.tagName === 'TEMPLATE-CHILDREN') {
-            return function (bound, next_data, prev_data, inner) {
+            return function (state, next_data, prev_data, inner) {
                 inner && inner();
             };
         }
@@ -224,7 +224,6 @@ function compileChildren(templates, parent) {
 
 module.exports = function (node, templates) {
     templates = templates || {};
-    node = node || '.magery-templates';
     if (typeof node === 'string') {
         node = document.querySelectorAll(node);
     }

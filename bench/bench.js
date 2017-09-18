@@ -50,14 +50,11 @@ benchsuite('Add 100 elements to a list, one at a time (no keys)', function () {
             );
         },
         fn: function () {
-            var app = this.templates['app'].bind({
-                element: document.createElement('ul'),
-                data: {items: []},
-                handlers: {}
-            });
+            var element = document.createElement('ul');
+            var data = {items: []};
             for (var i = 0; i < 100; i++) {
-                app.data.items.push({name: 'item' + i});
-                app.update();
+                data.items.push({name: 'item' + i});
+                this.templates['app'].patch(element, data);
             }
         }
     });
@@ -98,14 +95,11 @@ benchsuite('Add 100 elements to a list, one at a time (keys)', function () {
             );
         },
         fn: function () {
-            var app = this.templates['app'].bind({
-                element: document.createElement('ul'),
-                data: {items: []},
-                handlers: {}
-            });
+            var element = document.createElement('ul');
+            var data = {items: []};
             for (var i = 0; i < 100; i++) {
-                app.data.items.push({id: i, name: 'item' + i});
-                app.update();
+                data.items.push({id: i, name: 'item' + i});
+                this.templates['app'].patch(element, data);
             }
         }
     });
@@ -155,14 +149,10 @@ benchsuite('Randomly remove elements from 100 length list, one at a time (no key
         },
         fn: function () {
             var data = {items: this.items.slice()};
-            var app = this.templates['app'].bind({
-                element: document.createElement('ul'),
-                data: data,
-                handlers: {}
-            });
+            var element = document.createElement('ul');
             for (var i = 0; i < 100; i++) {
-                app.data.items.splice(random(app.data.items.length - 1), 1);
-                app.update();
+                data.items.splice(random(data.items.length - 1), 1);
+                this.templates['app'].patch(element, data);
             }
         }
     });
@@ -211,15 +201,11 @@ benchsuite('Randomly remove elements from 100 length list, one at a time (keys)'
             }
         },
         fn: function () {
+            var element = document.createElement('ul');
             var data = {items: this.items.slice()};
-            var app = this.templates['app'].bind({
-                element: document.createElement('ul'),
-                data: data,
-                handlers: {}
-            });
             for (var i = 0; i < 100; i++) {
-                app.data.items.splice(random(app.data.items.length - 1), 1);
-                app.update();
+                data.items.splice(random(data.items.length - 1), 1);
+                this.templates['app'].patch(element, data);
             }
         }
     });
@@ -274,14 +260,11 @@ benchsuite('Add 100 more complex elements to a list, one at a time', function ()
             );
         },
         fn: function () {
-            var app = this.templates['app'].bind({
-                element: document.createElement('div'),
-                data: {items: []},
-                handlers: {}
-            });
+            var element = document.createElement('div');
+            var data = {items: []};
             for (var i = 0; i < 100; i++) {
-                app.data.items.push({id: i, name: 'item' + i});
-                app.update();
+                data.items.push({id: i, name: 'item' + i});
+                this.templates['app'].patch(element, data);
             }
         }
     });
@@ -333,20 +316,19 @@ benchsuite('Live update a managed text box', function () {
             );
         },
         fn: function () {
-            var el = document.createElement('input');
-            var app = this.templates['app'].bind({
-                element: el,
-                data: {name: ''},
-                handlers: {
-                    updateInput: function (ev) {
-                        this.data.name = ev.target.value;
-                    }
+            var element = document.createElement('input');
+            var data = {name: ''};
+            this.templates['app'].bind({
+                updateInput: function (ev) {
+                    data.name = ev.target.value;
+                    this.templates['app'].patch(element, data);
                 }
             });
+            this.templates['app'].patch(element, data);
             for (var i = 0; i < 100; i++) {
                 var str = test_string.substring(0, i + 1);
-                el.value = str;
-                input(el, str);
+                element.value = str;
+                input(element, str);
             }
         }
     });

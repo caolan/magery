@@ -62,18 +62,18 @@ var compile =
 	function run_all(xs) {
 	    var funs = xs.filter(function (x) { return x; });
 	    var length = funs.length;
-	    return function (bound, next_data, prev_data, inner) {
+	    return function (state, next_data, prev_data, inner) {
 	        var index = -1;
 	        while (++index < length) {
-	            funs[index](bound, next_data, prev_data, inner);
+	            funs[index](state, next_data, prev_data, inner);
 	        }
 	    };
 	}
 
-	function flushText(bound) {
-	    if (bound.text_buffer) {
-	        bound.patcher.text(bound.text_buffer);
-	        bound.text_buffer = '';
+	function flushText(state) {
+	    if (state.text_buffer) {
+	        state.patcher.text(state.text_buffer);
+	        state.text_buffer = '';
 	    }
 	}
 
@@ -113,8 +113,8 @@ var compile =
 	function compileText(node) {
 	    var txt = node.textContent;
 	    var expand = compileExpandVars(txt);
-	    return function (bound, next_data, prev_data, inner) {
-	        bound.text_buffer += expand(next_data);
+	    return function (state, next_data, prev_data, inner) {
+	        state.text_buffer += expand(next_data);
 	    };
 	}
 
@@ -152,7 +152,7 @@ var compile =
 	        }
 	    }
 	    var tag = node.tagName.toLowerCase();
-	    var render = function (bound, next_data, prev_data, inner) {
+	    var render = function (state, next_data, prev_data, inner) {
 	        if (templates[tag]) {
 	            var next_data2 = {};
 	            var prev_data2 = {};
@@ -162,31 +162,31 @@ var compile =
 	                next_data2[attr_name] = utils.lookup(next_data, path);
 	                prev_data2[attr_name] = utils.lookup(prev_data, path);
 	            }
-	            templates[tag].render(bound, next_data2, prev_data2, function () {
-	                children(bound, next_data, prev_data, inner);
+	            templates[tag].render(state, next_data2, prev_data2, function () {
+	                children(state, next_data, prev_data, inner);
 	            });
 	            return;
 	        }
 	        var key = expand_key ? expand_key(next_data) : null;
-	        flushText(bound);
-	        bound.patcher.enterTag(node.tagName, key);
+	        flushText(state);
+	        state.patcher.enterTag(node.tagName, key);
 	        for (var attr_name in attrs) {
 	            var value = attrs[attr_name](next_data);
 	            if (value || !(html.attributes[attr_name] & html.BOOLEAN_ATTRIBUTE)) {
-	                bound.patcher.attribute(attr_name, value);
+	                state.patcher.attribute(attr_name, value);
 	            }
 	        }
 	        for (var event_name in events) {
-	            bound.patcher.eventListener(
+	            state.patcher.eventListener(
 	                event_name,
 	                events[event_name],
 	                next_data,
-	                bound
+	                state.template
 	            );
 	        }
-	        children(bound, next_data, prev_data, inner);
-	        flushText(bound);
-	        bound.patcher.exitTag();
+	        children(state, next_data, prev_data, inner);
+	        flushText(state);
+	        state.patcher.exitTag();
 	    };
 	    if (node.dataset.template) {
 	        var template_name = node.dataset.template;
@@ -218,18 +218,18 @@ var compile =
 
 	function compileUnless(node, render) {
 	    var path = utils.propertyPath(node.dataset.unless);
-	    return function (bound, next_data, prev_data, inner) {
+	    return function (state, next_data, prev_data, inner) {
 	        if (!isTruthy(utils.lookup(next_data, path))) {
-	            render(bound, next_data, prev_data, inner);
+	            render(state, next_data, prev_data, inner);
 	        }
 	    };
 	}
 
 	function compileIf(node, render) {
 	    var path = utils.propertyPath(node.dataset.if);
-	    return function (bound, next_data, prev_data, inner) {
+	    return function (state, next_data, prev_data, inner) {
 	        if (isTruthy(utils.lookup(next_data, path))) {
-	            render(bound, next_data, prev_data, inner);
+	            render(state, next_data, prev_data, inner);
 	        }
 	    };
 	}
@@ -238,7 +238,7 @@ var compile =
 	    var parts = node.dataset.each.split(' in ');
 	    var name = parts[0];
 	    var path = utils.propertyPath(parts[1]);
-	    return function (bound, next_data, prev_data, inner) {
+	    return function (state, next_data, prev_data, inner) {
 	        var next_arr = utils.lookup(next_data, path);
 	        var prev_arr = utils.lookup(prev_data, path);
 	        var length = next_arr.length;
@@ -248,7 +248,7 @@ var compile =
 	            var prev_data2 = utils.shallowClone(prev_data);
 	            next_data2[name] = next_arr[index];
 	            prev_data2[name] = prev_arr && prev_arr[index];
-	            render(bound, next_data2, prev_data2, inner);
+	            render(state, next_data2, prev_data2, inner);
 	        }
 	    };
 	}
@@ -259,7 +259,7 @@ var compile =
 	    }
 	    else if (utils.isElementNode(node)) {
 	        if (node.tagName === 'TEMPLATE-CHILDREN') {
-	            return function (bound, next_data, prev_data, inner) {
+	            return function (state, next_data, prev_data, inner) {
 	                inner && inner();
 	            };
 	        }
@@ -279,7 +279,6 @@ var compile =
 
 	module.exports = function (node, templates) {
 	    templates = templates || {};
-	    node = node || '.magery-templates';
 	    if (typeof node === 'string') {
 	        node = document.querySelectorAll(node);
 	    }
@@ -626,40 +625,27 @@ var compile =
 /* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var BoundTemplate = __webpack_require__(7);
+	var transforms = __webpack_require__(7);
 	var patch = __webpack_require__(8);
-	var utils = __webpack_require__(4);
 
 
 	function Template(name, render) {
 	    this.render = render;
 	    this.name = name;
+	    this.handlers = {};
 	}
 
-	Template.prototype.bindPatcher = function (patcher, data, handlers) {
-	    var bound = new BoundTemplate(this, patcher, data, handlers);
-	    bound.update();
-	    return bound;
+	Template.prototype.bind = function (handlers) {
+	    this.handlers = handlers;
 	};
 
-	Template.prototype.bind = function (node, data, handlers) {
-	    if (typeof(node) === 'string') {
-	        node = document.getElementById(node);
-	    }
-	    return this.bindPatcher(
-	        new patch.Patcher(node),
-	        data,
-	        handlers
-	    );
-	};
-
-	Template.prototype.bindAll = function (handlers) {
-	    var self = this;
-	    var nodes = document.querySelectorAll('[data-bind="' + this.name + '"]');
-	    return Array.prototype.map.call(nodes, function (node) {
-	        var data = JSON.parse(node.getAttribute('data-context'));
-	        return self.bind(node, data, handlers);
-	    });
+	Template.prototype.patch = function (element, next_data, prev_data) {
+	    var state = {
+	        patcher: new patch.Patcher(element, transforms),
+	        template: this,
+	        text_buffer: ''
+	    };
+	    this.render(state, next_data, prev_data);
 	};
 
 	module.exports = Template;
@@ -669,39 +655,72 @@ var compile =
 /* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var patch = __webpack_require__(8);
+	/**
+	 * DOM mutation procedures called by the patcher. This module provides
+	 * a cleaner API for our purposes and a place to intercept and
+	 * monitor mutations during testing.
+	 */
+
+	var html = __webpack_require__(3);
 
 
-	function BoundTemplate(template, patcher, data, handlers) {
-	    this.handlers = handlers;
-	    this.data = data;
-	    this.patcher = patcher;
-	    this.template = template;
-	    this.text_buffer = '';
-	    this.update_queued = false;
-	}
-
-	BoundTemplate.prototype.update = function () {
-	    this.patcher.reset();
-	    this.template.render(this, this.data, null);
-	    this.update_queued = false;
+	exports.insertTextNode = function (parent, before, str) {
+	    var node = document.createTextNode(str);
+	    parent.insertBefore(node, before);
+	    return node;
 	};
 
-	BoundTemplate.prototype.trigger = function (name /* args... */) {
-	    var args = Array.prototype.slice.call(arguments, 1);
-	    return this.applyHandler(name, args);
+	exports.replaceText = function (node, str) {
+	    node.textContent = str;
+	    return node;
 	};
 
-	BoundTemplate.prototype.applyHandler = function (name, args) {
-	    var queued = this.update_queued;
-	    this.update_queued = true;
-	    this.handlers[name].apply(this, args);
-	    if (!queued) {
-	        this.update();
+	exports.replaceChild = function (parent, node, old) {
+	    parent.replaceChild(node, old);
+	    return node;
+	};
+
+	exports.appendChild = function (parent, node) {
+	    parent.appendChild(node);
+	    return node;
+	};
+
+	exports.insertElement = function (parent, before, tag) {
+	    var node = document.createElement(tag);
+	    parent.insertBefore(node, before);
+	    return node;
+	};
+
+	exports.removeChild = function (parent, node) {
+	    parent.removeChild(node);
+	    return node;
+	};
+
+	exports.setAttribute = function (node, name, value) {
+	    if (html.attributes[name] & html.USE_PROPERTY) {
+	        node[name] = value;
 	    }
+	    node.setAttribute(name, value);
+	    return node;
 	};
 
-	module.exports = BoundTemplate;
+	exports.removeAttribute = function (node, name) {
+	    if (html.attributes[name] & html.USE_PROPERTY) {
+	        node[name] = false;
+	    }
+	    node.removeAttribute(name);
+	    return node;
+	};
+
+	exports.addEventListener = function (node, name, handler) {
+	    node.addEventListener(name, handler, false);
+	    return node;
+	};
+
+	exports.removeEventListener = function (node, name, handler) {
+	    node.removeEventListener(name, handler);
+	    return node;
+	};
 
 
 /***/ }),
@@ -715,9 +734,9 @@ var compile =
 	 * DOM, performing DOM mutation only through transform calls.
 	 */
 
-	var transforms = __webpack_require__(9);
+	var transforms = __webpack_require__(7);
 	var utils = __webpack_require__(4);
-	var Set = __webpack_require__(10);
+	var Set = __webpack_require__(9);
 
 	var ELEMENT_NODE = 1;
 	var TEXT_NODE = 3;
@@ -837,7 +856,7 @@ var compile =
 	                }
 	                return utils.lookup(node.data, arg);
 	            });
-	            node.bound_template.applyHandler(handler.name, args);
+	            node.template.handlers[handler.name].apply(null, args);
 	        }
 	        if (node.tagName === 'INPUT') {
 	            var nodeType = node.getAttribute('type');
@@ -870,13 +889,13 @@ var compile =
 	    }
 	}
 
-	Patcher.prototype.eventListener = function (type, value, data, bound_template) {
+	Patcher.prototype.eventListener = function (type, value, data, template) {
 	    var node = this.parent;
 	    if (node.data !== data) {
 	        node.data = data;
 	    }
-	    if (node.bound_template !== bound_template) {
-	        node.bound_template = bound_template;
+	    if (node.template !== template) {
+	        node.template = template;
 	    }
 	    setListener(node, type);
 	    var handler = node.handlers[type];
@@ -1011,78 +1030,6 @@ var compile =
 
 /***/ }),
 /* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	/**
-	 * DOM mutation procedures called by the patcher. This module provides
-	 * a cleaner API for our purposes and a place to intercept and
-	 * monitor mutations during testing.
-	 */
-
-	var html = __webpack_require__(3);
-
-
-	exports.insertTextNode = function (parent, before, str) {
-	    var node = document.createTextNode(str);
-	    parent.insertBefore(node, before);
-	    return node;
-	};
-
-	exports.replaceText = function (node, str) {
-	    node.textContent = str;
-	    return node;
-	};
-
-	exports.replaceChild = function (parent, node, old) {
-	    parent.replaceChild(node, old);
-	    return node;
-	};
-
-	exports.appendChild = function (parent, node) {
-	    parent.appendChild(node);
-	    return node;
-	};
-
-	exports.insertElement = function (parent, before, tag) {
-	    var node = document.createElement(tag);
-	    parent.insertBefore(node, before);
-	    return node;
-	};
-
-	exports.removeChild = function (parent, node) {
-	    parent.removeChild(node);
-	    return node;
-	};
-
-	exports.setAttribute = function (node, name, value) {
-	    if (html.attributes[name] & html.USE_PROPERTY) {
-	        node[name] = value;
-	    }
-	    node.setAttribute(name, value);
-	    return node;
-	};
-
-	exports.removeAttribute = function (node, name) {
-	    if (html.attributes[name] & html.USE_PROPERTY) {
-	        node[name] = false;
-	    }
-	    node.removeAttribute(name);
-	    return node;
-	};
-
-	exports.addEventListener = function (node, name, handler) {
-	    node.addEventListener(name, handler, false);
-	    return node;
-	};
-
-	exports.removeEventListener = function (node, name, handler) {
-	    node.removeEventListener(name, handler);
-	    return node;
-	};
-
-
-/***/ }),
-/* 10 */
 /***/ (function(module, exports) {
 
 	function Set() {

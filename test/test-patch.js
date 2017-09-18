@@ -68,10 +68,12 @@ suite('patch', function () {
                 '<em>baz</em>' +
                 '</div>');
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var next_data = {};
+        var bound = templates['foo'].render(state, next_data);
         assert.equal(div.innerHTML, '<i>foo</i><b>bar</b><em>baz</em>');
         assert.deepEqual(transform_log, [
             'replaceText',
@@ -98,10 +100,12 @@ suite('patch', function () {
                 '</p>' +
                 '</div>');
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var next_data = {};
+        var bound = templates['foo'].render(state, next_data);
         assert.equal(div.innerHTML, '<i>foo</i><p><b>bar</b><em>baz</em></p>');
         assert.deepEqual(transform_log, [
             'insertElement',
@@ -121,10 +125,12 @@ suite('patch', function () {
                 '<b>Hello</b>' +
                 '</div>');
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var next_data = {};
+        var bound = templates['foo'].render(state, next_data);
         assert.equal(div.innerHTML, '<b>Hello</b>');
         assert.deepEqual(transform_log, [
             'insertElement',
@@ -146,10 +152,12 @@ suite('patch', function () {
                 '<b>Hello</b>' +
                 '</div>');
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var next_data = {};
+        var bound = templates['foo'].render(state, next_data);
         assert.equal(div.innerHTML, '<b>Hello</b>');
         assert.deepEqual(transform_log, [
             'insertElement',
@@ -169,10 +177,12 @@ suite('patch', function () {
                 '<div><i>Hello</i></div>' +
                 '</div>');
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var next_data = {};
+        var bound = templates['foo'].render(state, next_data);
         assert.equal(div.innerHTML, '<div><i>Hello</i></div>');
         assert.deepEqual(transform_log, [
             'insertElement',
@@ -192,10 +202,12 @@ suite('patch', function () {
                 '<b>Hi</b>' +
                 '</div>');
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var next_data = {};
+        var bound = templates['foo'].render(state, next_data);
         assert.equal(div.innerHTML, '<b>Hi</b>');
         assert.deepEqual(transform_log, [
             'replaceText'
@@ -213,10 +225,12 @@ suite('patch', function () {
                 '<b class="two">Hello</b>' +
                 '</div>');
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var next_data = {};
+        var bound = templates['foo'].render(state, next_data);
         assert.equal(div.innerHTML, '<b class="two">Hello</b>');
         assert.deepEqual(transform_log, [
             'setAttribute'
@@ -234,10 +248,12 @@ suite('patch', function () {
                 '<a href="http://example.com">test</a>' +
                 '</div>');
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var next_data = {};
+        var bound = templates['foo'].render(state, next_data);
         assert.equal(div.innerHTML, '<a href="http://example.com">test</a>');
         assert.deepEqual(transform_log, [
             'setAttribute',
@@ -258,10 +274,11 @@ suite('patch', function () {
                 '<a data-unless="me" class="btn" href="#">test</a>' +
                 '</div>');
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {me: true}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var bound = templates['foo'].render(state, {me: true});
         assert.equal(
             div.innerHTML,
             '<a class="btn" href="#" rel="me">test</a>'
@@ -269,10 +286,11 @@ suite('patch', function () {
         assert.deepEqual(transform_log, [
         ]);
         transform_log = [];
-        bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {me: false}
-        );
+        state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        bound = templates['foo'].render(state, {me: false});
         assert.equal(
             div.innerHTML,
             '<a class="btn" href="#">test</a>'
@@ -294,10 +312,11 @@ suite('patch', function () {
                 '</div>'
         );
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {name: 'test'}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var bound = templates['foo'].render(state, {name: 'test'});
         assert.equal(div.innerHTML, '<b class="one">test</b>');
         assert.deepEqual(transform_log, [
         ]);
@@ -318,10 +337,12 @@ suite('patch', function () {
                 '<em>three</em>' +
                 '</div>');
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var next_data = {};
+        var bound = templates['foo'].render(state, next_data);
         assert.equal(
             div.innerHTML,
             '<b>one</b><i class="test">two</i><em>three</em>'
@@ -343,10 +364,12 @@ suite('patch', function () {
                 '<i>two</i>' +
                 '</div>');
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var next_data = {};
+        var bound = templates['foo'].render(state, next_data);
         assert.equal(div.innerHTML, '<b>one</b><i>two</i>');
         assert.deepEqual(transform_log, [
             'insertElement',
@@ -367,10 +390,12 @@ suite('patch', function () {
                 '</div>');
         
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var next_data = {};
+        var bound = templates['foo'].render(state, next_data);
         assert.equal(div.innerHTML, '<b>one</b>');
         assert.deepEqual(transform_log, [
             'removeChild'
@@ -390,10 +415,12 @@ suite('patch', function () {
                 '<b>two</b>' +
                 '</div>');
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var next_data = {};
+        var bound = templates['foo'].render(state, next_data);
         assert.equal(div.innerHTML, '<i>one</i><b>two</b>');
         assert.deepEqual(transform_log, [
             'insertElement',
@@ -416,10 +443,12 @@ suite('patch', function () {
                 '<i>two</i>' +
                 '</div>');
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var next_data = {};
+        var bound = templates['foo'].render(state, next_data);
         assert.equal(div.innerHTML, '<i>one</i><i>two</i>');
         assert.deepEqual(transform_log, [
             'insertElement',
@@ -445,10 +474,12 @@ suite('patch', function () {
                 '<em>three</em>' +
                 '</div>');
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var next_data = {};
+        var bound = templates['foo'].render(state, next_data);
         assert.equal(div.innerHTML, '<b>one</b><i>two</i><em>three</em>');
         assert.deepEqual(transform_log, [
             'insertElement',
@@ -477,19 +508,23 @@ suite('patch', function () {
         ]};
         // first render sets up keymaps
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            data
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var bound = templates['foo'].render(state, data);
         // second render using keys
         transform_log = [];
-        bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {items: [
+        state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        bound = templates['foo'].render(state, {
+            items: [
                 data.items[1],
                 data.items[2]
-            ]}
-        );
+            ]
+        });
         assert.equal(
             div.outerHTML,
             '<ul data-bind="foo">' +
@@ -524,20 +559,24 @@ suite('patch', function () {
         ]};
         // first render sets up keymaps
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            data
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        templates['foo'].render(state, data);
         // second render using keys
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {items: [
+        state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        templates['foo'].render(state, {
+            items: [
                 data.items[2],
                 data.items[0],
                 data.items[1]
-            ]}
-        );
+            ]
+        });
         assert.equal(
             div.outerHTML,
             '<ul data-bind="foo">' +
@@ -575,21 +614,25 @@ suite('patch', function () {
         ]};
         // first render sets up keymaps
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            data
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var bound = templates['foo'].render(state, data);
         // second render using keys
         transform_log = [];
-        bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {items: [
+        state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        bound = templates['foo'].render(state, {
+            items: [
                 {id: 'zero'},
                 data.items[0],
                 data.items[1],
                 data.items[2]
-            ]}
-        );
+            ]
+        });
         assert.equal(
             div.outerHTML,
             '<ul data-bind="foo">' +
@@ -627,21 +670,25 @@ suite('patch', function () {
         ]};
         // first render sets up keymaps
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            data
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var bound = templates['foo'].render(state, data);
         // second render using keys
         transform_log = [];
-        bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {items: [
+        state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        bound = templates['foo'].render(state, {
+            items: [
                 data.items[0],
                 data.items[1],
                 data.items[2],
                 {id: 'four'}
-            ]}
-        );
+            ]
+        });
         assert.equal(
             div.outerHTML,
             '<ul data-bind="foo">' +
@@ -678,21 +725,25 @@ suite('patch', function () {
         ]};
         // first render sets up keymaps
         transform_log = [];
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            data
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var bound = templates['foo'].render(state, data);
         // second render using keys
         transform_log = [];
-        bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {items: [
+        state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        bound = templates['foo'].render(state, {
+            items: [
                 data.items[0],
                 data.items[1],
                 {id: '2.5'},
                 data.items[2]
-            ]}
-        );
+            ]
+        });
         assert.equal(
             div.outerHTML,
             '<ul data-bind="foo">' +
@@ -714,15 +765,21 @@ suite('patch', function () {
             '<div data-template="foo">' +
                 '<span>Hello, {{name}}!</span>' +
                 '</div>');
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {name: 'world'}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var bound = templates['foo'].render(state, {
+            name: 'world'
+        });
         assert.equal(div.childNodes[0].innerHTML, 'Hello, world!');
-        bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {name: '<script>alert("bad stuff");</script>'}
-        );
+        state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        bound = templates['foo'].render(state, {
+            name: '<script>alert("bad stuff");</script>'
+        });
         assert.equal(
             div.childNodes[0].innerHTML,
             'Hello, &lt;script&gt;alert("bad stuff");&lt;/script&gt;!'
@@ -735,15 +792,21 @@ suite('patch', function () {
             '<div data-template="foo">' +
                 '<span>Hello, {{ name }}!</span>' +
                 '</div>');
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {name: 'world'}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var bound = templates['foo'].render(state, {
+            name: 'world'
+        });
         assert.equal(div.childNodes[0].innerHTML, 'Hello, world!');
-        bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {name: '<script>alert("bad stuff");</script>'}
-        );
+        state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        bound = templates['foo'].render(state, {
+            name: '<script>alert("bad stuff");</script>'
+        });
         assert.equal(
             div.childNodes[0].innerHTML,
             'Hello, &lt;script&gt;alert("bad stuff");&lt;/script&gt;!'
@@ -756,10 +819,12 @@ suite('patch', function () {
             '<div data-template="foo">' +
                 '<span class="{{type}}">foo</span>' +
                 '</div>');
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {type: 'test" onclick="throw new Error(\'fail\');'}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var next_data = {type: 'test" onclick="throw new Error(\'fail\');'};
+        var bound = templates['foo'].render(state, next_data);
         assert.equal(
             div.childNodes[0].className,
             'test" onclick="throw new Error(\'fail\');'
@@ -858,20 +923,29 @@ suite('patch', function () {
                 '<input data-if="complete" type="checkbox" checked />' +
                 '<input data-unless="complete" type="checkbox" />' +
                 '</div>');
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {complete: false}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var bound = templates['foo'].render(state, {
+            complete: false
+        });
         assert.strictEqual(child(div, 0).checked, false, 'one');
-        bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {complete: true}
-        );
+        state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        bound = templates['foo'].render(state, {
+            complete: true
+        });
         assert.strictEqual(child(div, 0).checked, true, 'two');
-        bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {complete: false}
-        );
+        state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        bound = templates['foo'].render(state, {
+            complete: false
+        });
         assert.strictEqual(child(div, 0).checked, false, 'three');
     });
 
@@ -881,20 +955,29 @@ suite('patch', function () {
             '<div data-template="foo">' +
                 '<input type="text" value="{{message}}" />' +
                 '</div>');
-        var bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {message: ''}
-        );
+        var state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        var bound = templates['foo'].render(state, {
+            message: ''
+        });
         assert.strictEqual(child(div, 0).value, "");
-        bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {message: 'testing'}
-        );
+        state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        bound = templates['foo'].render(state, {
+            message: 'testing'
+        });
         assert.strictEqual(child(div, 0).value, "testing");
-        bound = templates['foo'].bindPatcher(
-            new patch.Patcher(div, test_transforms),
-            {message: 'asdf'}
-        );
+        state = {
+            patcher: new patch.Patcher(div, test_transforms),
+            text_buffer: ''
+        };
+        bound = templates['foo'].render(state, {
+            message: 'asdf'
+        });
         assert.strictEqual(child(div, 0).value, "asdf");
     });
 

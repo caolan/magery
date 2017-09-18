@@ -5,18 +5,23 @@
         <title>My App</title>
     </head>
     <body>
-        <div id="container"></div>
+        <!-- target element -->
+        <h1 id="hello"></h1>
 
+        <!-- template -->
         <template class="magery-templates">
-            <h1 data-template="app">
+            <h1 data-template="greeting" id="hello">
                 Hello, {{name}}!
             </h1>
         </template>
 
+        <!-- patch the target using the template -->
         <script src="../build/magery.min.js"></script>
         <script>
-         var templates = Magery.compileTemplates();
-         templates['app'].bind('container', {name: 'galaxy'});
+         var templates = Magery.compileTemplates('.magery-templates');
+         var element = document.getElementById('hello');
+         
+         templates['greeting'].patch(element, {name: 'galaxy'});
         </script>
     </body>
 </html>

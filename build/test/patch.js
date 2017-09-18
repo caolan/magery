@@ -160,7 +160,78 @@ var patch =
 /***/ }),
 /* 5 */,
 /* 6 */,
-/* 7 */,
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	/**
+	 * DOM mutation procedures called by the patcher. This module provides
+	 * a cleaner API for our purposes and a place to intercept and
+	 * monitor mutations during testing.
+	 */
+
+	var html = __webpack_require__(3);
+
+
+	exports.insertTextNode = function (parent, before, str) {
+	    var node = document.createTextNode(str);
+	    parent.insertBefore(node, before);
+	    return node;
+	};
+
+	exports.replaceText = function (node, str) {
+	    node.textContent = str;
+	    return node;
+	};
+
+	exports.replaceChild = function (parent, node, old) {
+	    parent.replaceChild(node, old);
+	    return node;
+	};
+
+	exports.appendChild = function (parent, node) {
+	    parent.appendChild(node);
+	    return node;
+	};
+
+	exports.insertElement = function (parent, before, tag) {
+	    var node = document.createElement(tag);
+	    parent.insertBefore(node, before);
+	    return node;
+	};
+
+	exports.removeChild = function (parent, node) {
+	    parent.removeChild(node);
+	    return node;
+	};
+
+	exports.setAttribute = function (node, name, value) {
+	    if (html.attributes[name] & html.USE_PROPERTY) {
+	        node[name] = value;
+	    }
+	    node.setAttribute(name, value);
+	    return node;
+	};
+
+	exports.removeAttribute = function (node, name) {
+	    if (html.attributes[name] & html.USE_PROPERTY) {
+	        node[name] = false;
+	    }
+	    node.removeAttribute(name);
+	    return node;
+	};
+
+	exports.addEventListener = function (node, name, handler) {
+	    node.addEventListener(name, handler, false);
+	    return node;
+	};
+
+	exports.removeEventListener = function (node, name, handler) {
+	    node.removeEventListener(name, handler);
+	    return node;
+	};
+
+
+/***/ }),
 /* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -171,9 +242,9 @@ var patch =
 	 * DOM, performing DOM mutation only through transform calls.
 	 */
 
-	var transforms = __webpack_require__(9);
+	var transforms = __webpack_require__(7);
 	var utils = __webpack_require__(4);
-	var Set = __webpack_require__(10);
+	var Set = __webpack_require__(9);
 
 	var ELEMENT_NODE = 1;
 	var TEXT_NODE = 3;
@@ -293,7 +364,7 @@ var patch =
 	                }
 	                return utils.lookup(node.data, arg);
 	            });
-	            node.bound_template.applyHandler(handler.name, args);
+	            node.template.handlers[handler.name].apply(null, args);
 	        }
 	        if (node.tagName === 'INPUT') {
 	            var nodeType = node.getAttribute('type');
@@ -326,13 +397,13 @@ var patch =
 	    }
 	}
 
-	Patcher.prototype.eventListener = function (type, value, data, bound_template) {
+	Patcher.prototype.eventListener = function (type, value, data, template) {
 	    var node = this.parent;
 	    if (node.data !== data) {
 	        node.data = data;
 	    }
-	    if (node.bound_template !== bound_template) {
-	        node.bound_template = bound_template;
+	    if (node.template !== template) {
+	        node.template = template;
 	    }
 	    setListener(node, type);
 	    var handler = node.handlers[type];
@@ -467,78 +538,6 @@ var patch =
 
 /***/ }),
 /* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	/**
-	 * DOM mutation procedures called by the patcher. This module provides
-	 * a cleaner API for our purposes and a place to intercept and
-	 * monitor mutations during testing.
-	 */
-
-	var html = __webpack_require__(3);
-
-
-	exports.insertTextNode = function (parent, before, str) {
-	    var node = document.createTextNode(str);
-	    parent.insertBefore(node, before);
-	    return node;
-	};
-
-	exports.replaceText = function (node, str) {
-	    node.textContent = str;
-	    return node;
-	};
-
-	exports.replaceChild = function (parent, node, old) {
-	    parent.replaceChild(node, old);
-	    return node;
-	};
-
-	exports.appendChild = function (parent, node) {
-	    parent.appendChild(node);
-	    return node;
-	};
-
-	exports.insertElement = function (parent, before, tag) {
-	    var node = document.createElement(tag);
-	    parent.insertBefore(node, before);
-	    return node;
-	};
-
-	exports.removeChild = function (parent, node) {
-	    parent.removeChild(node);
-	    return node;
-	};
-
-	exports.setAttribute = function (node, name, value) {
-	    if (html.attributes[name] & html.USE_PROPERTY) {
-	        node[name] = value;
-	    }
-	    node.setAttribute(name, value);
-	    return node;
-	};
-
-	exports.removeAttribute = function (node, name) {
-	    if (html.attributes[name] & html.USE_PROPERTY) {
-	        node[name] = false;
-	    }
-	    node.removeAttribute(name);
-	    return node;
-	};
-
-	exports.addEventListener = function (node, name, handler) {
-	    node.addEventListener(name, handler, false);
-	    return node;
-	};
-
-	exports.removeEventListener = function (node, name, handler) {
-	    node.removeEventListener(name, handler);
-	    return node;
-	};
-
-
-/***/ }),
-/* 10 */
 /***/ (function(module, exports) {
 
 	function Set() {

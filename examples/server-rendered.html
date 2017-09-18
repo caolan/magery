@@ -23,14 +23,24 @@
         <script src="../build/magery.min.js"></script>
         <script>
          // load templates from all .magery-templates elements on page
-         var templates = Magery.compileTemplates();
+         var templates = Magery.compileTemplates('.magery-templates');
+
+         // find output rendered by server
+         var element = document.querySelector('[data-bind=greeting]');
+
+         // parse embedded context data from the element
+         var data = JSON.parse(element.getAttribute('data-context'));
 
          // bind template to all elements with data-bind='greeting' attribute
-         templates['greeting'].bindAll({
+         templates['greeting'].bind({
              updateName: function (event) {
-                 this.data.name = event.target.value;
+                 data.name = event.target.value;
+                 templates['greeting'].patch(element, data);
              }
          });
+
+         // set up initial event handlers
+         templates['greeting'].patch(element, data);
         </script>
     </body>
 </html>
