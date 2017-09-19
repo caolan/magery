@@ -60,8 +60,8 @@ has since been updated).
 :PROPERTIES:
 :custom_id: download
 :END:
-- [[file:build/magery.js][magery.js]] (development)
-- [[file:build/magery.min.js][magery.min.js]] (production)
+- [[https://raw.githubusercontent.com/caolan/magery/master/build/magery.js][magery.js]] (development)
+- [[https://raw.githubusercontent.com/caolan/magery/master/build/magery.min.js][magery.min.js]] (production)
 
 *** File size
 :PROPERTIES:
