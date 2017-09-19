@@ -47,10 +47,12 @@ to dynamically update the page in response to JavaScript events.
   enhancements
 
 I wrote this library to prove that you don't need a 'single page app'
-to build great dynamic websites. Hopefully it can save at least one
-developer of a reliable, accessible, beautiful multi-page website from
-throwing it all out the window because of the inevitable tangle of
-jQuery. If you're interested in the motivations behind this library,
+to build great dynamic websites. In many cases the best possible user
+experience is a multi-page website with thoughtful JavaScript
+enhancements. The only downside is the almost-inevitable tangle of
+jQuery that goes with it. Magery is an attempt to fix that.
+
+If you're interested in the motivations behind this library,
 you might like to read the [[https://caolan.org/posts/progressive_enhancement_and_modern_javascript.html][blog post]] that started it (Magery's syntax
 has since been updated).
 
