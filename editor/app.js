@@ -59,15 +59,11 @@ catch (e) {
 
 loadTemplates();
 
-var app = templates['main'].bind({
-    element: document.getElementById('result'),
-    data: data,
-    handlers: {}
-});
+var element = document.getElementById('result');
     
 function patch() {
     try {
-        app.update();
+        templates['main'].patch(element, data);
     }
     catch (e) {
         // user might still be editing
@@ -78,7 +74,6 @@ function patch() {
 function updateTemplates() {
     try {
         loadTemplates();
-        app.template = templates['main'];
         return true;
     }
     catch (e) {
@@ -89,7 +84,7 @@ function updateTemplates() {
 
 function updateJSON() {
     try {
-        app.data = JSON.parse(json_editor.getValue());
+        data = JSON.parse(json_editor.getValue());
         return true;
     }
     catch (e) {
