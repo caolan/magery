@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Counter</title>
+    <meta charset="utf-8">
+  </head>
+  <body>
+    <template class="magery-templates">
+
+      <div data-template="hello">
+        <button onclick="sayHello(name)">click me</button>
+      </div>
+
+    </template>
+
+    <div id="example"></div>
+
+    <script src="../build/magery.min.js"></script>
+    <script>
+
+      var templates = Magery.compileTemplates('.magery-templates');
+      var element = document.getElementById('example');
+      var data = {name: 'testing'};
+
+      // add event handlers
+      templates['hello'].bind({
+        sayHello: function (name) {
+          alert('Hello, ' + name + '!');
+        }
+      });
+
+      // patch the page
+      templates['hello'].patch(element, data);
+
+    </script>
+  </body>
+</html>

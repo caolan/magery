@@ -43,7 +43,7 @@ to dynamically update the page in response to JavaScript events.
 :END:
 - To make enhancing your /multi-page/ website with JavaScript easier
 - To work with your choice of back end language
-- To be [[File size][relatively small]] so you can use it for little (or large)
+- To be [[#file-size][relatively small]] so you can use it for little (or large)
   enhancements
 
 I wrote this library to prove that you don't need a 'single page app'
@@ -62,6 +62,9 @@ has since been updated).
 - [[file:build/magery.min.js][magery.min.js]] (production)
 
 *** File size
+:PROPERTIES:
+:custom_id: file-size
+:END:
 While there are no doubt smaller libraries out there, Magery is
 positioned on the more lightweight end of the spectrum. This is to
 encourage its use for relatively small improvements to
@@ -117,7 +120,7 @@ and patching the DOM:
   </html>
 #+END_SRC
 
-You also can [[file:examples/example.html][view this example in the browser]], or see the [[file:examples][other
+You also can [[https://caolan.github.io/magery/examples/example.html][view this example in the browser]], or see the [[file:examples][other
 examples]].
 
 ** Template syntax
@@ -128,7 +131,7 @@ examples]].
 :PROPERTIES:
 :custom_id: variables
 :END:
-You can pass JSON data to [[#template-patch][Template.patch()]] as a context for your
+You can pass JSON data to [[#templatepatchtarget-data-prev_data-compare][Template.patch()]] as a context for your
 templates. Properties of the context object can be inserted into the
 page using ~{{~ double curly braces ~}}~:
 
@@ -172,7 +175,7 @@ insert the attribute if the variable is /truthy/ (i.e. not ~0~,
 :END:
 This is how you define a template. A template name must consist only
 of the lower-case letters =a-z= and =-=, so they can be used as
-[[Components][component tags]].
+[[#components][component tags]].
 
 Once rendered, the name provided in the ~data-template~ attribute will
 be added to the rendered element's ~data-bind~ attribute (this is
@@ -275,12 +278,12 @@ Result:
 :custom_id: data-key
 :END:
 Helps Magery match up elements between page updates for improved
-preformance. The attribute can use the normal variable ~{{~ expansion
+performance. The attribute can use the normal variable ~{{~ expansion
 ~}}~ syntax and its value _must_ be unique within the parent element.
 
 This attribute is particularly useful when combined with the
 ~data-each~ attribute but it can be used elsewhere too. See the
-[[data-each]] examples for more information.
+[[#data-each][data-each]] examples for more information.
 
 **** data-if
 :PROPERTIES:
@@ -316,7 +319,7 @@ Result:
 :PROPERTIES:
 :custom_id: data-unless
 :END:
-This is the compliment to [[data-if]], and will display the element only
+This is the compliment to [[#data-if][data-if]], and will display the element only
 if the property evaluates to false. Note that an empty Array in Magery
 is considered false.
 
@@ -384,7 +387,8 @@ JavaScript:
   });
 #+END_SRC
 
-For a complete example, see [[file:examples/managed-text-input.html][examples/managed-text-input.html]].
+For a complete example, see [[file:examples/managed-text-input.html][examples/managed-text-input.html]] ([[https://caolan.github.io/magery/examples/managed-text-input.html][view in
+browser]]).
 
 **** data-embed
 :PROPERTIES:
@@ -394,7 +398,7 @@ This is only used for server-side rendering. Adding a ~data-embed~
 property to an element will include the current context data in the
 final output. A ~data-context~ attribute will be added to the rendered
 element which contains the current JSON context data. For more information
-see [[Server-side rendering]].
+see [[#server-side-rendering][Server-side rendering]].
 
 **** Processing order
 :PROPERTIES:
@@ -524,7 +528,7 @@ using the special ~event~ argument:
 
 The handler name (e.g. ~updateField~ above) is matched against the
 current template's bound event handlers. These functions can be bound
-to a template using [[#template-bind][Template.bind()]].
+to a template using [[#templatebindhandlers][Template.bind()]].
 
 **** Example
 #+BEGIN_SRC html :tangle examples/events.html
@@ -570,7 +574,8 @@ to a template using [[#template-bind][Template.bind()]].
   </html>
 #+END_SRC
 
-See the [[file:examples][examples]] directory for other ways to use events.
+[[https://caolan.github.io/magery/examples/events.html][View this in your browser]], or see the [[file:examples][examples]] directory for other
+ways to use events.
 
 ** API
 :PROPERTIES:

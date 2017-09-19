@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Example</title>
+    <meta charset="utf-8">
+  </head>
+  <body>
+    <!-- target -->
+    <h1 id="hello"></h1>
+
+    <!-- templates -->
+    <template id="myTemplates">
+
+      <h1 data-template="greeting">
+        Hello, {{ name }}!
+      </h1>
+
+    </template>
+
+    <!-- javascript -->
+    <script src="../build/magery.min.js"></script>
+    <script>
+      var templates = Magery.compileTemplates('#myTemplates');
+      var target = document.getElementById('hello');
+      var data = {"name": "world"};
+
+      templates['greeting'].patch(target, data);
+    </script>
+  </body>
+</html>
