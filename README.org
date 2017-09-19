@@ -7,37 +7,40 @@ JavaScript. On the server, these templates are simple enough to be
 rendered without a JavaScript runtime. On the client, they can be used
 to dynamically update the page in response to JavaScript events.
 
-- [[Aims]]
-- [[Download]]
-- [[Example]]
-- [[Template syntax]]
-  - [[Variables]]
-  - [[Booleans]]
-  - [[Attributes]]
-    - [[data-template]]
-    - [[data-each]]
-    - [[data-key]]
-    - [[data-if]]
-    - [[data-unless]]
-    - [[data-managed]]
-    - [[data-embed]]
-    - [[Processing order]]
-  - [[Tags]]
-    - [[template-children]]
-    - [[Components]]
-  - [[Events]]
-- [[API]]
-  - [[#magery-compileTemplates][Magery.compileTemplates]]
-  - [[#template-bind][Template.bind]]
-  - [[#template-patch][Template.patch]]
-- [[Immutable data]]
-- [[State management]]
-- [[Server-side rendering]]
+- [[#aims][Aims]]
+- [[#download][Download]]
+- [[#example][Example]]
+- [[#template-syntax][Template syntax]]
+  - [[#variables][Variables]]
+  - [[#booleans][Booleans]]
+  - [[#attributes][Attributes]]
+    - [[#data-template][data-template]]
+    - [[#data-each][data-each]]
+    - [[#data-key][data-key]]
+    - [[#data-if][data-if]]
+    - [[#data-unless][data-unless]]
+    - [[#data-managed][data-managed]]
+    - [[#data-embed][data-embed]]
+    - [[#processing-order][Processing order]]
+  - [[#tags][Tags]]
+    - [[#template-children][template-children]]
+    - [[#components][Components]]
+  - [[#events][Events]]
+- [[#api][API]]
+  - [[#magerycompiletemplatesselector][Magery.compileTemplates]]
+  - [[#templatebindhandlers][Template.bind]]
+  - [[#templatepatchtarget-data-prev_data-compare][Template.patch]]
+- [[#immutable-data][Immutable data]]
+- [[#state-management][State management]]
+- [[#server-side-rendering][Server-side rendering]]
 - [[https://caolan.github.io/magery/test/][Tests]]
 - [[https://caolan.github.io/magery/bench/][Benchmarks]]
 - [[https://caolan.github.io/magery/editor/][Live editor]]
 
 ** Aims
+:PROPERTIES:
+:custom_id: aims
+:END:
 - To make enhancing your /multi-page/ website with JavaScript easier
 - To work with your choice of back end language
 - To be [[File size][relatively small]] so you can use it for little (or large)
@@ -52,6 +55,9 @@ you might like to read the [[https://caolan.org/posts/progressive_enhancement_an
 has since been updated).
 
 ** Download
+:PROPERTIES:
+:custom_id: download
+:END:
 - [[file:build/magery.js][magery.js]] (development)
 - [[file:build/magery.min.js][magery.min.js]] (production)
 
@@ -72,6 +78,9 @@ A comparison with some popular minified production builds:
 #+END_SRC
 
 ** Example
+:PROPERTIES:
+:custom_id: example
+:END:
 A basic 'Hello, world!' example which demonstrates compiling templates
 and patching the DOM:
 
@@ -112,7 +121,13 @@ You also can [[file:examples/example.html][view this example in the browser]], o
 examples]].
 
 ** Template syntax
+:PROPERTIES:
+:custom_id: template-syntax
+:END:
 *** Variables
+:PROPERTIES:
+:custom_id: variables
+:END:
 You can pass JSON data to [[#template-patch][Template.patch()]] as a context for your
 templates. Properties of the context object can be inserted into the
 page using ~{{~ double curly braces ~}}~:
@@ -129,6 +144,9 @@ values are escaped so it is not possible to insert raw HTML into the
 page.
 
 *** Booleans
+:PROPERTIES:
+:custom_id: booleans
+:END:
 Some attributes do not hold values and are either on/off depending on
 their presence. The ~checked~ attribute is a good example:
 
@@ -145,7 +163,13 @@ insert the attribute if the variable is /truthy/ (i.e. not ~0~,
 #+END_SRC
 
 *** Attributes
+:PROPERTIES:
+:custom_id: attributes
+:END:
 **** data-template
+:PROPERTIES:
+:custom_id: data-template
+:END:
 This is how you define a template. A template name must consist only
 of the lower-case letters =a-z= and =-=, so they can be used as
 [[Components][component tags]].
@@ -175,6 +199,9 @@ Result:
 #+END_SRC
 
 **** data-each
+:PROPERTIES:
+:custom_id: data-each
+:END:
 Loop over an array, rendering the current element for each item in the
 array. This attribute's value should be in the form ~"item in array"~
 where ~item~ is the name to use for the current item being rendered,
@@ -244,6 +271,9 @@ Result:
 #+END_SRC
 
 **** data-key
+:PROPERTIES:
+:custom_id: data-key
+:END:
 Helps Magery match up elements between page updates for improved
 preformance. The attribute can use the normal variable ~{{~ expansion
 ~}}~ syntax and its value _must_ be unique within the parent element.
@@ -253,6 +283,9 @@ This attribute is particularly useful when combined with the
 [[data-each]] examples for more information.
 
 **** data-if
+:PROPERTIES:
+:custom_id: data-if
+:END:
 Conditionally expands the element if a context property evaluates to
 true. Note that an empty Array in Magery is considered false.
 
@@ -280,6 +313,9 @@ Result:
 #+END_SRC
 
 **** data-unless
+:PROPERTIES:
+:custom_id: data-unless
+:END:
 This is the compliment to [[data-if]], and will display the element only
 if the property evaluates to false. Note that an empty Array in Magery
 is considered false.
@@ -308,6 +344,9 @@ Result:
 #+END_SRC
 
 **** data-managed
+:PROPERTIES:
+:custom_id: data-managed
+:END:
 This attribute is for use with HTML form elements, and will force the
 state of the element to match the template data.
 
@@ -348,6 +387,9 @@ JavaScript:
 For a complete example, see [[file:examples/managed-text-input.html][examples/managed-text-input.html]].
 
 **** data-embed
+:PROPERTIES:
+:custom_id: data-embed
+:END:
 This is only used for server-side rendering. Adding a ~data-embed~
 property to an element will include the current context data in the
 final output. A ~data-context~ attribute will be added to the rendered
@@ -355,6 +397,9 @@ element which contains the current JSON context data. For more information
 see [[Server-side rendering]].
 
 **** Processing order
+:PROPERTIES:
+:custom_id: processing-order
+:END:
 It is possible to add multiple template attributes to a single
 element, though not all combinations make sense. The attributes will
 be processed in the following order:
@@ -366,7 +411,13 @@ be processed in the following order:
 - ~data-key~
 
 *** Tags
+:PROPERTIES:
+:custom_id: tags
+:END:
 **** template-children
+:PROPERTIES:
+:custom_id: template-children
+:END:
 Expands child nodes from the calling template, if any were provided.
 Note: any child nodes or attributes on this tag will be ignored.
 
@@ -414,6 +465,9 @@ Result:
 #+END_SRC
 
 **** Components
+:PROPERTIES:
+:custom_id: components
+:END:
 Templates can be rendered by other templates as components. To do
 this, simply use the template name as a custom tag. For example, the
 following template:
@@ -444,6 +498,9 @@ These literals can also be useful for configuring generic event
 handlers (e.g. by providing a target URL to POST data to).
 
 *** Events
+:PROPERTIES:
+:custom_id: events
+:END:
 Listeners can be attached to elements using the ~on*~ attributes (e.g.
 ~onclick~). Although the templates use the attribute syntax, the event
 handlers will in reality be attached using ~addEventListener()~:
@@ -516,9 +573,12 @@ to a template using [[#template-bind][Template.bind()]].
 See the [[file:examples][examples]] directory for other ways to use events.
 
 ** API
+:PROPERTIES:
+:custom_id: api
+:END:
 *** Magery.compileTemplates(selector)
 :PROPERTIES:
-:custom_id: magery-compiletemplates
+:custom_id: magerycompiletemplatesselector
 :END:
 Find and compile Magery templates in the current HTML document.
 
@@ -541,7 +601,7 @@ name (taken from their ~data-template~ attributes).
 
 *** Template.bind(handlers)
 :PROPERTIES:
-:custom_id: template-bind
+:custom_id: templatebindhandlers
 :END:
 Attach event handlers to a template. The event handlers will not be
 bound to existing DOM elements until ~Template.patch()~ is called.
@@ -575,7 +635,7 @@ details.
 
 *** Template.patch(target, data, [prev_data, compare])
 :PROPERTIES:
-:custom_id: template-patch
+:custom_id: templatepatchtarget-data-prev_data-compare
 :END:
 
 Updates ~element~ to match the output of running the template with
@@ -605,12 +665,21 @@ Undefined.
 #+END_SRC
 
 ** Immutable data
+:PROPERTIES:
+:custom_id: immutable-data
+:END:
 TODO example with Immutable.js
 
 ** State management
+:PROPERTIES:
+:custom_id: state-management
+:END:
 TODO example with Redux.
 
 ** Server-side rendering
+:PROPERTIES:
+:custom_id: Server-side rendering
+:END:
 Magery has been designed to work with server-side rendering in any
 language. If you'd like to create a new server-side library then you
 can use the cross-platform [[https://github.com/caolan/magery-tests][Magery test suite]] to get you started. If
