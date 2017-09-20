@@ -1,6 +1,5 @@
 var html = require('./html');
 var utils = require('./utils');
-var active_paths = require('./active_paths');
 var Template = require('./template');
 
 
@@ -243,7 +242,6 @@ module.exports = function (node, templates) {
         if (node.tagName === 'TEMPLATE' && node.content) {
             node = node.content;
         }
-        active_paths.markPaths(node);
         utils.eachNode(node.childNodes, compileNode.bind(null, templates));
     }
     return templates;
