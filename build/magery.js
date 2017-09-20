@@ -120,6 +120,14 @@ var Magery =
 	    };
 	}
 
+	function compileTemplateRender(templates, name, render) {
+	    return function (state, next_data, prev_data, inner) {
+	        var state2 = Object.assign({}, state);
+	        state2.template = templates[name];
+	        return render(state2, next_data, prev_data, inner);
+	    };
+	}
+
 	function compileElement(templates, node) {
 	    var children = compileChildren(templates, node);
 	    var expand_key = null;
@@ -195,6 +203,7 @@ var Magery =
 	        if (templates[template_name]) {
 	            throw new Error("Template '" + template_name + "' already exists");
 	        }
+	        render = compileTemplateRender(templates, template_name, render);
 	        templates[template_name] = new Template(template_name, render);
 	    }
 	    else {

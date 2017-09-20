@@ -440,6 +440,145 @@ suite('events', function () {
         }, 0);
     });
 
+    test('bind handlers on nested template definition', function (done) {
+        var container = document.createElement('div');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<div data-template="entry">' +
+                    '<p>{{ item_one.name }}: {{ item_one.count }}</p>' +
+                    '<button onclick="incrementCount()">Add one</button>' +
+                '</div>' +
+                '<button onclick="incrementCount()">Add one</button>' +
+            '</div>'
+        );
+        var data = {
+            item_one: {
+                name: 'one',
+                count: 0
+            },
+            item_two: {
+                name: 'two',
+                count: 0
+            }
+        };
+        templates['main'].bind({
+            incrementCount: function () {
+                data.item_two.count++;
+            }
+        });
+        templates['entry'].bind({
+            incrementCount: function () {
+                data.item_one.count++;
+            }
+        });
+        templates['main'].patch(container, data);
+        var btn1 = child(container, 0, 1);
+        var btn2 = child(container, 1);
+        assert.equal(data.item_one.count, 0, 'item_one.count after patch');
+        assert.equal(data.item_two.count, 0, 'item_two.count after patch');
+        click(btn1);
+        assert.equal(data.item_one.count, 1, 'item_one.count after click btn1');
+        assert.equal(data.item_two.count, 0, 'item_two.count after click btn1');
+        click(btn2);
+        assert.equal(data.item_one.count, 1, 'item_one.count after click btn2');
+        assert.equal(data.item_two.count, 1, 'item_two count after click btn2');
+        done();
+    });
+
+    test('bind handlers on components', function (done) {
+        var container = document.createElement('div');
+        var templates = createTemplateNode(
+            '<div data-template="entry">' +
+                '<p>{{ item.name }}: {{ item.count }}</p>' +
+                '<button onclick="incrementCount()">Add one</button>' +
+            '</div>' +
+            '<div data-template="main">' +
+                '<entry item="item_one"></entry>' +
+                '<button onclick="incrementCount()">Add one</button>' +
+            '</div>'
+        );
+        var data = {
+            item_one: {
+                name: 'one',
+                count: 0
+            },
+            item_two: {
+                name: 'two',
+                count: 0
+            }
+        };
+        templates['main'].bind({
+            incrementCount: function () {
+                data.item_two.count++;
+            }
+        });
+        templates['entry'].bind({
+            incrementCount: function () {
+                data.item_one.count++;
+            }
+        });
+        templates['main'].patch(container, data);
+        var btn1 = child(container, 0, 1);
+        var btn2 = child(container, 1);
+        assert.equal(data.item_one.count, 0, 'item_one.count after patch');
+        assert.equal(data.item_two.count, 0, 'item_two.count after patch');
+        click(btn1);
+        assert.equal(data.item_one.count, 1, 'item_one.count after click btn1');
+        assert.equal(data.item_two.count, 0, 'item_two.count after click btn1');
+        click(btn2);
+        assert.equal(data.item_one.count, 1, 'item_one.count after click btn2');
+        assert.equal(data.item_two.count, 1, 'item_two count after click btn2');
+        done();
+    });
+
+    test('bind handlers inside template-children', function (done) {
+        var container = document.createElement('div');
+        var templates = createTemplateNode(
+            '<div data-template="entry">' +
+                '<p>{{ item.name }}: {{ item.count }}</p>' +
+                '<button onclick="incrementCount()">Add one</button>' +
+                '<template-children></template-children>' +
+            '</div>' +
+            '<div data-template="main">' +
+                '<entry item="item_one">' +
+                    '<button onclick="incrementCount()">Add one</button>' +
+                '</entry>' +
+            '</div>'
+        );
+        var data = {
+            item_one: {
+                name: 'one',
+                count: 0
+            },
+            item_two: {
+                name: 'two',
+                count: 0
+            }
+        };
+        templates['main'].bind({
+            incrementCount: function () {
+                data.item_two.count++;
+            }
+        });
+        templates['entry'].bind({
+            incrementCount: function () {
+                data.item_one.count++;
+            }
+        });
+        templates['main'].patch(container, data);
+        var btn1 = child(container, 0, 1);
+        var btn2 = child(container, 0, 2);
+        assert.equal(data.item_one.count, 0, 'item_one.count after patch');
+        assert.equal(data.item_two.count, 0, 'item_two.count after patch');
+        click(btn1);
+        assert.equal(data.item_one.count, 1, 'item_one.count after click btn1');
+        assert.equal(data.item_two.count, 0, 'item_two.count after click btn1');
+        click(btn2);
+        assert.equal(data.item_one.count, 1, 'item_one.count after click btn2');
+        assert.equal(data.item_two.count, 1, 'item_two count after click btn2');
+        done();
+    });
+
     // test('update select via dispatch', function (done) {
     //     var container = document.createElement('div');
     //     var src = '' +
