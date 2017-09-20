@@ -724,7 +724,7 @@ suite('compile', function () {
             '<b data-template="bar">{{meta.year}}</b>' +
             '<div data-template="foo">' +
                 '<h1>title</h1>' +
-                '<bar meta="article.meta"></bar>' +
+                '<bar meta="{{ article.meta }}"></bar>' +
             '</div>');
         var prev_data = {};
         var next_data = {
@@ -743,6 +743,54 @@ suite('compile', function () {
         assert.deepEqual(patcher_calls[5], ['enterTag', 'B', null]);
         assert.deepEqual(patcher_calls[6], ['attribute', 'data-bind', 'bar']);
         assert.deepEqual(patcher_calls[7], ['text', '2015']);
+        assert.deepEqual(patcher_calls[8], ['exitTag']);
+        assert.deepEqual(patcher_calls[9], ['exitTag']);
+        assert.equal(patcher_calls.length, 10);
+    });
+
+    test('call another template with fixed string values', function () {
+        var templates = createTemplateNode(
+            '<b data-template="bar">{{ msg }}</b>' +
+            '<div data-template="foo">' +
+                '<h1>title</h1>' +
+                '<bar msg="test"></bar>' +
+            '</div>');
+        var prev_data = {};
+        var next_data = {};
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['attribute', 'data-bind', 'foo']);
+        assert.deepEqual(patcher_calls[2], ['enterTag', 'H1', null]);
+        assert.deepEqual(patcher_calls[3], ['text', 'title']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'B', null]);
+        assert.deepEqual(patcher_calls[6], ['attribute', 'data-bind', 'bar']);
+        assert.deepEqual(patcher_calls[7], ['text', 'test']);
+        assert.deepEqual(patcher_calls[8], ['exitTag']);
+        assert.deepEqual(patcher_calls[9], ['exitTag']);
+        assert.equal(patcher_calls.length, 10);
+    });
+
+    test('call another template with interpolated string values', function () {
+        var templates = createTemplateNode(
+            '<b data-template="bar">{{ msg }}</b>' +
+            '<div data-template="foo">' +
+                '<h1>title</h1>' +
+                '<bar msg="test-{{ name }}-asdf"></bar>' +
+            '</div>');
+        var prev_data = {};
+        var next_data = {
+            name: 'example'
+        };
+        var patcher_calls = patch(templates, 'foo', next_data, prev_data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['attribute', 'data-bind', 'foo']);
+        assert.deepEqual(patcher_calls[2], ['enterTag', 'H1', null]);
+        assert.deepEqual(patcher_calls[3], ['text', 'title']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'B', null]);
+        assert.deepEqual(patcher_calls[6], ['attribute', 'data-bind', 'bar']);
+        assert.deepEqual(patcher_calls[7], ['text', 'test-example-asdf']);
         assert.deepEqual(patcher_calls[8], ['exitTag']);
         assert.deepEqual(patcher_calls[9], ['exitTag']);
         assert.equal(patcher_calls.length, 10);
@@ -780,14 +828,14 @@ suite('compile', function () {
         var templates = createTemplateNode(
             '<div data-template="foo">' +
                 '<h1>title</h1>' +
-                '<bar article="article">' +
-                '<i>inner</i>' +
+                '<bar article="{{ article }}">' +
+                    '<i>inner</i>' +
                 '</bar>' +
-                '</div>' +
-                '<div data-template="bar">' +
+            '</div>' +
+            '<div data-template="bar">' +
                 '<b>{{article.title}}</b>' +
                 '<template-children />' +
-                '</div>');
+            '</div>');
         var prev_data = {};
         var next_data = {
             article: {
@@ -859,31 +907,32 @@ suite('compile', function () {
     test('nested expansions', function () {
         var templates = createTemplateNode(
             '<div data-template="root">' +
-                '<one article="article">' +
-                '<i>root</i>' +
+                '<one article="{{ article }}">' +
+                    '<i>root</i>' +
                 '</one>' +
-                '</div>' +
+            '</div>' +
                 
-                '<div data-template="one">' +
+            '<div data-template="one">' +
                 '<h1>title</h1>' +
-                '<two meta="article.meta">' +
-                '<i>one.1</i>' +
-                '<three>' +
-                '<i>one.2</i>' +
-                '<template-children></template-children>' +
-                '</three>' +
+                '<two meta="{{ article.meta }}">' +
+                    '<i>one.1</i>' +
+                    '<three>' +
+                        '<i>one.2</i>' +
+                        '<template-children></template-children>' +
+                    '</three>' +
                 '</two>' +
-                '</div>' +
+            '</div>' +
 
-                '<div data-template="two">' +
+            '<div data-template="two">' +
                 '<b>{{meta.year}}</b>' +
                 '<template-children></template-children>' +
-                '</div>' +
+            '</div>' +
                 
-                '<div data-template="three">' +
+            '<div data-template="three">' +
                 '<b>three</b>' +
                 '<template-children></template-children>' +
-                '</div>');
+            '</div>'
+        );
         var prev_data = {};
         var next_data = {
             article: {

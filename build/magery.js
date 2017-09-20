@@ -167,10 +167,8 @@ var Magery =
 	            var next_data2 = {};
 	            var prev_data2 = {};
 	            for (var attr_name in attrs) {
-	                var value = attrs[attr_name](next_data);
-	                var path = utils.propertyPath(value);
-	                next_data2[attr_name] = utils.lookup(next_data, path);
-	                prev_data2[attr_name] = utils.lookup(prev_data, path);
+	                next_data2[attr_name] = attrs[attr_name](next_data);
+	                prev_data2[attr_name] = attrs[attr_name](prev_data);
 	            }
 	            templates[tag].render(state, next_data2, prev_data2, function () {
 	                children(state, next_data, prev_data, inner);
