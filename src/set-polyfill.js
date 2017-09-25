@@ -1,14 +1,24 @@
-function Set() {
+// use built in Set() if available
+if (typeof Set === 'undefined') {
+
+function SetPolyfill() {
     this.values = [];
 }
 
-Set.prototype.add = function (x) {
+SetPolyfill.prototype.add = function (x) {
     this.values.push(x);
 };
 
-Set.prototype.has = function (x) {
+SetPolyfill.prototype.has = function (x) {
     return this.values.indexOf(x) !== -1;
 };
 
-// use built in Set() if available
-module.exports = window.Set || Set;
+SetPolyfill.prototype.clear = function () {
+    this.values = [];
+};
+
+    module.exports = SetPolyfill;
+}
+else {
+	module.exports = Set;
+}

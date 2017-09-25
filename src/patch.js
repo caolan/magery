@@ -89,8 +89,18 @@ Patcher.prototype.reset = function () {
 // };
 
 Patcher.prototype.stepInto = function (node) {
-    node.visited_attributes = new Set();
-    node.visited_events = new Set();
+    if (node.visited_attributes) {
+        node.visited_attributes.clear();
+    }
+    else {
+        node.visited_attributes = new Set();
+    }
+    if (node.visited_events) {
+        node.visited_events.clear();
+    }
+    else {
+        node.visited_events = new Set();
+    }
     this.parent = node;
     this.current = node.firstChild;
 };
@@ -293,7 +303,33 @@ Patcher.prototype.skip = function (tag, key) {
     this.current = node.nextSibling;
 };
 
+Patcher.prototype.lookup = utils.lookup;
+
+Patcher.prototype.isTruthy = function (x) {
+    if (Array.isArray(x)) {
+        return x.length > 0;
+    }
+    return x;
+};
+
+Patcher.prototype.each = function (data, name, iterable, f) {
+    for (var i = 0, len = iterable.length; i < len; i++) {
+        var data2 = utils.shallowClone(data);
+        data2[name] = iterable[i];
+        f(data2);
+    }
+};
+
+Patcher.prototype.render = function (templates, name, data, inner) {
+    var template = templates[name];
+    template._render(template, templates, this, data, inner);
+};
+
 // Patcher.prototype.end = function (data) {
 //     // deleteChildren(this.transforms, this.parent, this.current);
 //     // this.parent = null;
 // };
+
+exports.patch = function (element, templates, name, data) {
+    new Patcher(element).render(templates, name, data);
+};

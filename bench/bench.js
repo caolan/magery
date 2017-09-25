@@ -6,7 +6,8 @@ function createTemplateNode(src) {
         el.id = 'test-templates';
     }
     el.innerHTML = src;
-    return Magery.compileTemplates(el);
+    var code = Magery.compile.compileToString(el.content);
+    return eval(code);
 }
 
 function random (max) {
@@ -44,17 +45,19 @@ benchsuite('Add 100 elements to a list, one at a time (no keys)', function () {
             this.templates = createTemplateNode(
                 '<ul data-template="app">' +
                     '<li data-each="item in items">' +
-                    '{{item.name}}' +
+                        '{{item.name}}' +
                     '</li>' +
-                    '</ul>'
+                '</ul>'
             );
         },
         fn: function () {
-            var element = document.createElement('ul');
             var data = {items: []};
+            var container = document.createElement('div');
+            var element = document.createElement('ul');
+            container.appendChild(element);
             for (var i = 0; i < 100; i++) {
                 data.items.push({name: 'item' + i});
-                this.templates['app'].patch(element, data);
+                Magery.patch(element, this.templates, 'app', data);
             }
         }
     });
@@ -95,16 +98,18 @@ benchsuite('Add 100 elements to a list, one at a time (keys)', function () {
             );
         },
         fn: function () {
+            var container = document.createElement('div');
             var element = document.createElement('ul');
+            container.appendChild(element);
             var data = {items: []};
             for (var i = 0; i < 100; i++) {
                 data.items.push({id: i, name: 'item' + i});
-                this.templates['app'].patch(element, data);
+                Magery.patch(element, this.templates, 'app', data);
             }
         }
     });
 });
- 
+
 benchsuite('Randomly remove elements from 100 length list, one at a time (no keys)', function () {
     bench({
         name: 'React',
@@ -149,10 +154,12 @@ benchsuite('Randomly remove elements from 100 length list, one at a time (no key
         },
         fn: function () {
             var data = {items: this.items.slice()};
+            var container = document.createElement('div');
             var element = document.createElement('ul');
+            container.appendChild(element);
             for (var i = 0; i < 100; i++) {
                 data.items.splice(random(data.items.length - 1), 1);
-                this.templates['app'].patch(element, data);
+                Magery.patch(element, this.templates, 'app', data);
             }
         }
     });
@@ -201,11 +208,13 @@ benchsuite('Randomly remove elements from 100 length list, one at a time (keys)'
             }
         },
         fn: function () {
+            var container = document.createElement('div');
             var element = document.createElement('ul');
+            container.appendChild(element);
             var data = {items: this.items.slice()};
             for (var i = 0; i < 100; i++) {
                 data.items.splice(random(data.items.length - 1), 1);
-                this.templates['app'].patch(element, data);
+                Magery.patch(element, this.templates, 'app', data);
             }
         }
     });
@@ -260,11 +269,13 @@ benchsuite('Add 100 more complex elements to a list, one at a time', function ()
             );
         },
         fn: function () {
+            var container = document.createElement('div');
             var element = document.createElement('div');
+            container.appendChild(element);
             var data = {items: []};
             for (var i = 0; i < 100; i++) {
                 data.items.push({id: i, name: 'item' + i});
-                this.templates['app'].patch(element, data);
+                Magery.patch(element, this.templates, 'app', data);
             }
         }
     });
@@ -321,10 +332,10 @@ benchsuite('Live update a managed text box', function () {
             this.templates['app'].bind({
                 updateInput: function (ev) {
                     data.name = ev.target.value;
-                    this.templates['app'].patch(element, data);
+                    Magery.patch(element, this.templates, 'app', data);
                 }
             });
-            this.templates['app'].patch(element, data);
+            Magery.patch(element, this.templates, 'app', data);
             for (var i = 0; i < 100; i++) {
                 var str = test_string.substring(0, i + 1);
                 element.value = str;

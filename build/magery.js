@@ -46,8 +46,11 @@ var Magery =
 /***/ (function(module, exports, __webpack_require__) {
 
 	module.exports = {
-	    compileTemplates: __webpack_require__(1),
-	    Template: __webpack_require__(4)
+	    compile: __webpack_require__(1),
+	    Template: __webpack_require__(4),
+	    lookup: __webpack_require__(2).lookup,
+	    Patcher: __webpack_require__(5).Patcher,
+	    patch: __webpack_require__(5).patch
 	};
 
 
@@ -55,293 +58,244 @@ var Magery =
 /* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var html = __webpack_require__(2);
-	var utils = __webpack_require__(3);
-	var Template = __webpack_require__(4);
+	var utils = __webpack_require__(2);
+	var html = __webpack_require__(3);
 
+	// these tags are assumed to be normal HTML, all other tags are
+	// assumed to be template references
+	var HTML_TAGS = [
+	    'A', 'ABBR', 'ACRONYM', 'ADDRESS', 'APPLET', 'AREA', 'ARTICLE', 'ASIDE',
+	    'AUDIO', 'B', 'BASE', 'BASEFONT', 'BDI', 'BDO', 'BGSOUND', 'BIG', 'BLINK',
+	    'BLOCKQUOTE', 'BODY', 'BR', 'BUTTON', 'CANVAS', 'CAPTION', 'CENTER', 'CITE',
+	    'CODE', 'COL', 'COLGROUP', 'COMMAND', 'CONTENT', 'DATA', 'DATALIST', 'DD',
+	    'DEL', 'DETAILS', 'DFN', 'DIALOG', 'DIR', 'DIV', 'DL', 'DT', 'ELEMENT',
+	    'EM', 'EMBED', 'FIELDSET', 'FIGCAPTION', 'FIGURE', 'FONT', 'FOOTER', 'FORM',
+	    'FRAME', 'FRAMESET', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'HEAD', 'HEADER',
+	    'HGROUP', 'HR', 'HTML', 'I', 'IFRAME', 'IMAGE', 'IMG', 'INPUT', 'INS',
+	    'ISINDEX', 'KBD', 'KEYGEN', 'LABEL', 'LEGEND', 'LI', 'LINK', 'LISTING',
+	    'MAIN', 'MAP', 'MARK', 'MARQUEE', 'MENU', 'MENUITEM', 'META', 'METER',
+	    'MULTICOL', 'NAV', 'NOBR', 'NOEMBED', 'NOFRAMES', 'NOSCRIPT', 'OBJECT',
+	    'OL', 'OPTGROUP', 'OPTION', 'OUTPUT', 'P', 'PARAM', 'PICTURE', 'PLAINTEXT',
+	    'PRE', 'PROGRESS', 'Q', 'RP', 'RT', 'RTC', 'RUBY', 'S', 'SAMP', 'SCRIPT',
+	    'SECTION', 'SELECT', 'SHADOW', 'SLOT', 'SMALL', 'SOURCE', 'SPACER', 'SPAN',
+	    'STRIKE', 'STRONG', 'STYLE', 'SUB', 'SUMMARY', 'SUP', 'TABLE', 'TBODY',
+	    'TD', 'TEMPLATE', 'TEXTAREA', 'TFOOT', 'TH', 'THEAD', 'TIME', 'TITLE', 'TR',
+	    'TRACK', 'TT', 'U', 'UL', 'VAR', 'VIDEO', 'WBR', 'XMP'
+	];
 
-	function run_all(xs) {
-	    var funs = xs.filter(function (x) { return x; });
-	    var length = funs.length;
-	    return function (state, next_data, prev_data, inner) {
-	        var index = -1;
-	        while (++index < length) {
-	            funs[index](state, next_data, prev_data, inner);
-	        }
-	    };
+	var IGNORED_ATTRS = [
+	    'data-each',
+	    'data-if',
+	    'data-unless',
+	    'data-key'
+	];
+
+	function compileLookup(path) {
+	    return 'p.lookup(data, ' + JSON.stringify(path) + ')';
 	}
 
-	function flushText(state) {
-	    if (state.text_buffer) {
-	        state.patcher.text(state.text_buffer);
-	        state.text_buffer = '';
+	function compileTemplateContext(node) {
+	    var result = '{';
+	    utils.eachAttribute(node, function (name, value) {
+	        if (IGNORED_ATTRS.indexOf(name) === -1) {
+	            result += JSON.stringify(name) + ": " + compileExpandVariables(value);
+	        }
+	    });
+	    return result + '}';
+	}
+
+	// TODO: split out into compileTemplateCall, compileInner, compileHTMLElement etc. ?
+	function compileElement(node, queue, write, is_root) {
+	    if (node.tagName === 'TEMPLATE-CHILDREN') {
+	        write('inner();\n');
+	        return;
+	    }
+	    if (!is_root && node.dataset.template) {
+	        // compile this template later
+	        queue.push(node);
+	        // but also expand the template here
+	        write('p.render(templates, ' + JSON.stringify(node.dataset.template) + ', data);\n');
+	        return;
+	    }
+	    if (node.dataset.if) {
+	        var predicate1_path = utils.propertyPath(node.dataset.if);
+	        write('if (p.isTruthy(' + compileLookup(predicate1_path) + ')) {\n');
+	    }
+	    if (node.dataset.unless) {
+	        var predicate2_path = utils.propertyPath(node.dataset.unless);
+	        write('if (!p.isTruthy(' + compileLookup(predicate2_path) + ')) {\n');
+	    }
+	    if (node.dataset.each) {
+	        var parts = node.dataset.each.split(/\s+in\s+/);
+	        var name = parts[0];
+	        var iterable_path = utils.propertyPath(parts[1]);
+	        write('p.each(' +
+	              'data, ' +
+	              JSON.stringify(name) + ', ' +
+	              compileLookup(iterable_path) + ', ' +
+	              'function (data) {\n');
+	    }
+	    var is_html = true;
+	    if (HTML_TAGS.indexOf(node.tagName) === -1) {
+	        // not a known HTML tag, assume template reference
+	        write('p.render(' +
+	              'templates, ' +
+	              JSON.stringify(node.tagName.toLowerCase()) + ', ' +
+	              compileTemplateContext(node) +
+	              (node.childNodes.length ? ', function () {' : ');') + '\n');
+	        is_html = false;
+	    }
+	    else {
+	        if (node.dataset.key) {
+	            write('p.enterTag(' +
+	                  JSON.stringify(node.tagName) + ', ' +
+	                  compileExpandVariables(node.dataset.key) + ');\n');
+	        }
+	        else {
+	            write('p.enterTag(' + JSON.stringify(node.tagName) + ', null);\n');
+	        }
+	        utils.eachAttribute(node, function (name, value) {
+	            if (name === 'data-template') {
+	                name = 'data-bind';
+	            }
+	            if (IGNORED_ATTRS.indexOf(name) !== -1) {
+	                return;
+	            }
+	            var event = name.match(/^on(.*)/);
+	            if (event) {
+	                var event_name = event[1];
+	                write('p.eventListener(' +
+	                      JSON.stringify(event[1]) + ', ' +
+	                      JSON.stringify(value) + ', ' +
+	                      'data, template);\n');
+	            }
+	            else if (html.attributes[name] & html.BOOLEAN_ATTRIBUTE) {
+	                if (value === "") {
+	                    // empty boolean attribute is always true
+	                    write('p.attribute(' + JSON.stringify(name) + ', true);\n');
+	                }
+	                else {
+	                    write('if (p.isTruthy(' + compileExpandVariables(value) + ')) {\n');
+	                    write('p.attribute(' + JSON.stringify(name) + ', true);\n');
+	                    write('}\n');
+	                }
+	            }
+	            else {
+	                write('p.attribute(' +
+	                      JSON.stringify(name) + ', ' +
+	                      compileExpandVariables(value) + ');\n');
+	            }
+	            
+	        });
+	    }
+	    utils.eachNode(node.childNodes, function (node) {
+	        compileNode(node, queue, write, false);
+	    });
+	    if (is_html) {
+	        write('p.exitTag();\n');
+	    }
+	    else if (node.childNodes.length) {
+	        // end inner function of template call
+	        write('});\n');
+	    }
+	    if (node.dataset.each) {
+	        write('});\n');
+	    }
+	    if (node.dataset.unless) {
+	        write('}\n');
+	    }
+	    if (node.dataset.if) {
+	        write('}\n');
 	    }
 	}
 
-	function compileExpandVars(str, boolean) {
-	    var parts = str.split(/{{|}}/);
+	function compileExpandVariables(str, boolean) {
+	    var parts = str.split(/{{\s*|\s*}}/);
 	    var length = parts.length;
 	    var i = -1;
 	    while (++i < length) {
 	        if (i % 2) {
-	            var path = utils.propertyPath(utils.trim(parts[i]));
+	            var path = utils.propertyPath(parts[i]);
 	            parts[i] = path;
 	        }
 	    }
 	    // presence of empty boolean property is actually truthy
 	    if (length == 1 && !parts[0] && boolean) {
-	        return function () {
-	            return true;
-	        };
-	    }
-	    // if the string has only one value expanded, return it directly
-	    else if (length == 3 && !parts[0] && !parts[2]) {
-	        return function (data) {
-	            return utils.lookup(data, parts[1]);
-	        };
+	        return 'true';
 	    }
 	    // otherwise build a result string by expanding nested variables
-	    return function (data) {
-	        var result = '';
-	        var i = -1;
-	        while (++i < length) {
-	            result += (i % 2) ? utils.lookup(data, parts[i]) : parts[i];
-	        }
-	        return result;
-	    };
-	}
-
-	function compileText(node) {
-	    var txt = node.textContent;
-	    var expand = compileExpandVars(txt);
-	    return function (state, next_data, prev_data, inner) {
-	        state.text_buffer += expand(next_data);
-	    };
-	}
-
-	function compileTemplateRender(templates, name, render) {
-	    return function (state, next_data, prev_data, inner) {
-	        var state2 = Object.assign({}, state);
-	        state2.template = templates[name];
-	        return render(state2, next_data, prev_data, inner);
-	    };
-	}
-
-	function compileElement(templates, node) {
-	    var children = compileChildren(templates, node);
-	    var expand_key = null;
-	    if (node.dataset.key) {
-	        expand_key = compileExpandVars(node.dataset.key);
-	    }
-	    var events = {};
-	    var attrs = {};
-	    for (var i = 0, len = node.attributes.length; i < len; i++) {
-	        var attr = node.attributes[i];
-	        var name = attr.name;
-	        if (name == 'data-each' ||
-	            name == 'data-if' ||
-	            name == 'data-unless' ||
-	            name == 'data-key') {
-	            continue;
-	        }
-	        if (name == 'data-template') {
-	            attrs['data-bind'] = compileExpandVars(attr.value, false);
-	            continue;
-	        }
-	        var event = name.match(/^on(.*)/, event);
-	        if (event) {
-	            var event_name = event[1];
-	            events[event_name] = attr.value;
-	        }
-	        else {
-	            attrs[name] = compileExpandVars(
-	                attr.value,
-	                html.attributes[name] & html.BOOLEAN_ATTRIBUTE
+	    var result_parts = [];
+	    var j = -1;
+	    while (++j < length) {
+	        if (parts[j].length) {
+	            result_parts.push(
+	                (j % 2) ? compileLookup(parts[j]): JSON.stringify(parts[j])
 	            );
 	        }
 	    }
-	    var tag = node.tagName.toLowerCase();
-	    var render = function (state, next_data, prev_data, inner) {
-	        if (templates[tag]) {
-	            var next_data2 = {};
-	            var prev_data2 = {};
-	            for (var attr_name in attrs) {
-	                next_data2[attr_name] = attrs[attr_name](next_data);
-	                prev_data2[attr_name] = attrs[attr_name](prev_data);
-	            }
-	            templates[tag].render(state, next_data2, prev_data2, function () {
-	                children(state, next_data, prev_data, inner);
-	            });
-	            return;
-	        }
-	        var key = expand_key ? expand_key(next_data) : null;
-	        flushText(state);
-	        state.patcher.enterTag(node.tagName, key);
-	        for (var attr_name in attrs) {
-	            var value = attrs[attr_name](next_data);
-	            if (value || !(html.attributes[attr_name] & html.BOOLEAN_ATTRIBUTE)) {
-	                state.patcher.attribute(attr_name, value);
-	            }
-	        }
-	        for (var event_name in events) {
-	            state.patcher.eventListener(
-	                event_name,
-	                events[event_name],
-	                next_data,
-	                state.template
-	            );
-	        }
-	        children(state, next_data, prev_data, inner);
-	        flushText(state);
-	        state.patcher.exitTag();
-	    };
-	    if (node.dataset.template) {
-	        var template_name = node.dataset.template;
-	        if (templates[template_name]) {
-	            throw new Error("Template '" + template_name + "' already exists");
-	        }
-	        render = compileTemplateRender(templates, template_name, render);
-	        templates[template_name] = new Template(template_name, render);
+	    if (!result_parts.length) {
+	        return JSON.stringify('');
+	    }
+	    return result_parts.join(' + ');
+	}
+
+	function compileText(node, write) {
+	    var arg = compileExpandVariables(node.textContent);
+	    if (arg[0] === '"') {
+	        write('p.text(' + arg + ');\n');
 	    }
 	    else {
-	        if (node.dataset.unless) {
-	            render = compileUnless(node, render);
-	        }
-	        if (node.dataset.if) {
-	            render = compileIf(node, render);
-	        }
-	        if (node.dataset.each) {
-	            render = compileEach(node, render);
-	        }
+	        // coerce to string
+	        write('p.text("" + ' + arg + ');\n');
 	    }
-	    return render;
 	}
 
-	function isTruthy(x) {
-	    if (Array.isArray(x)) {
-	        return x.length > 0;
-	    }
-	    return x;
+	function compileDocumentFragment(fragment, queue, write) {
+	    utils.eachNode(fragment.childNodes, function (node) {
+	        compileNode(node, queue, write, false);
+	    });
 	}
 
-	function compileUnless(node, render) {
-	    var path = utils.propertyPath(node.dataset.unless);
-	    return function (state, next_data, prev_data, inner) {
-	        if (!isTruthy(utils.lookup(next_data, path))) {
-	            render(state, next_data, prev_data, inner);
-	        }
-	    };
+	function compileNode(node, queue, write, is_root) {
+	    switch (node.nodeType) {
+	    case 1: compileElement(node, queue, write, is_root); break;
+	    case 3: compileText(node, write); break;
+	    case 11: compileDocumentFragment(node, queue, write); break;
+	    }
 	}
 
-	function compileIf(node, render) {
-	    var path = utils.propertyPath(node.dataset.if);
-	    return function (state, next_data, prev_data, inner) {
-	        if (isTruthy(utils.lookup(next_data, path))) {
-	            render(state, next_data, prev_data, inner);
-	        }
-	    };
-	}
+	function noop() {}
 
-	function compileEach(node, render) {
-	    var parts = node.dataset.each.split(' in ');
-	    var name = parts[0];
-	    var path = utils.propertyPath(parts[1]);
-	    return function (state, next_data, prev_data, inner) {
-	        var next_arr = utils.lookup(next_data, path);
-	        var prev_arr = utils.lookup(prev_data, path);
-	        var length = next_arr.length;
-	        var index = -1;
-	        while (++index < length) {
-	            var next_data2 = utils.shallowClone(next_data);
-	            var prev_data2 = utils.shallowClone(prev_data);
-	            next_data2[name] = next_arr[index];
-	            prev_data2[name] = prev_arr && prev_arr[index];
-	            render(state, next_data2, prev_data2, inner);
-	        }
-	    };
-	}
+	exports.compile = function (node, write) {
+	    var queue = [];
+	    compileNode(node, queue, noop, true);
+	    write('({\n');
+	    while (queue.length) {
+	        node = queue.shift();
+	        console.log(node);
+	        write(JSON.stringify(node.dataset.template) + ': ');
+	        write('new Magery.Template(function (template, templates, p, data, inner) {\n');
+	        compileNode(node, queue, write, true);
+	        write('})' + (queue.length ? ',' : '') + '\n');
+	    }
+	    write('})\n');
+	};
 
-	function compileNode(templates, node) {
-	    if (utils.isTextNode(node)) {
-	        return compileText(node);
-	    }
-	    else if (utils.isElementNode(node)) {
-	        if (node.tagName === 'TEMPLATE-CHILDREN') {
-	            return function (state, next_data, prev_data, inner) {
-	                inner && inner();
-	            };
-	        }
-	        return compileElement(templates, node);
-	    }
-	    return null;
-	}
+	exports.compileToString = function (node) {
+	    var result = '';
+	    exports.compile(node, function (str) {
+	        result += str;
+	    });
+	    return result;
+	};
 
-	function compileChildren(templates, parent) {
-	    return run_all(
-	        utils.mapNodes(
-	            parent.childNodes,
-	            compileNode.bind(null, templates)
-	        )
-	    );
-	}
-
-	module.exports = function (node, templates) {
-	    templates = templates || {};
-	    if (typeof node === 'string') {
-	        node = document.querySelectorAll(node);
-	    }
-	    if (node instanceof NodeList) {
-	        for (var i = 0, len = node.length; i < len; i++) {
-	            module.exports(node[i], templates);
-	        }
-	    }
-	    else {
-	        if (node.tagName === 'TEMPLATE' && node.content) {
-	            node = node.content;
-	        }
-	        utils.eachNode(node.childNodes, compileNode.bind(null, templates));
-	    }
-	    return templates;
+	exports.eval = function (node) {
+	    return eval(exports.compileToString(node));
 	};
 
 
 /***/ }),
 /* 2 */
-/***/ (function(module, exports) {
-
-	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
-	var USE_PROPERTY = exports.USE_PROPERTY = 2;
-
-	exports.attributes = {
-	    'allowfullscreen': BOOLEAN_ATTRIBUTE,
-	    'async': BOOLEAN_ATTRIBUTE,
-	    'autofocus': BOOLEAN_ATTRIBUTE,
-	    'autoplay': BOOLEAN_ATTRIBUTE,
-	    'capture': BOOLEAN_ATTRIBUTE,
-	    'checked': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'controls': BOOLEAN_ATTRIBUTE,
-	    'default': BOOLEAN_ATTRIBUTE,
-	    'defer': BOOLEAN_ATTRIBUTE,
-	    'disabled': BOOLEAN_ATTRIBUTE,
-	    'formnovalidate': BOOLEAN_ATTRIBUTE,
-	    'hidden': BOOLEAN_ATTRIBUTE,
-	    'itemscope': BOOLEAN_ATTRIBUTE,
-	    'loop': BOOLEAN_ATTRIBUTE,
-	    'multiple': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'muted': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'novalidate': BOOLEAN_ATTRIBUTE,
-	    'open': BOOLEAN_ATTRIBUTE,
-	    'readonly': BOOLEAN_ATTRIBUTE,
-	    'required': BOOLEAN_ATTRIBUTE,
-	    'reversed': BOOLEAN_ATTRIBUTE,
-	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'value': USE_PROPERTY
-	};
-
-
-
-/***/ }),
-/* 3 */
 /***/ (function(module, exports) {
 
 	var ELEMENT_NODE = 1;
@@ -408,21 +362,68 @@ var Magery =
 	};
 
 	exports.shallowClone = function (obj) {
-	    return Object.assign({}, obj);
+	    var result = {};
+	    for (var k in obj) {
+	        result[k] = obj[k];
+	    }
+	    return result;
+	    // return Object.assign({}, obj);
+	};
+
+	exports.eachAttribute = function (node, f) {
+	    var attrs = node.attributes;
+	    for (var i = 0, len = node.attributes.length; i < len; i++) {
+	        f(node.attributes[i].name, node.attributes[i].value);
+	    }
 	};
 
 
 /***/ }),
+/* 3 */
+/***/ (function(module, exports) {
+
+	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
+	var USE_PROPERTY = exports.USE_PROPERTY = 2;
+
+	exports.attributes = {
+	    'allowfullscreen': BOOLEAN_ATTRIBUTE,
+	    'async': BOOLEAN_ATTRIBUTE,
+	    'autofocus': BOOLEAN_ATTRIBUTE,
+	    'autoplay': BOOLEAN_ATTRIBUTE,
+	    'capture': BOOLEAN_ATTRIBUTE,
+	    'checked': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'controls': BOOLEAN_ATTRIBUTE,
+	    'default': BOOLEAN_ATTRIBUTE,
+	    'defer': BOOLEAN_ATTRIBUTE,
+	    'disabled': BOOLEAN_ATTRIBUTE,
+	    'formnovalidate': BOOLEAN_ATTRIBUTE,
+	    'hidden': BOOLEAN_ATTRIBUTE,
+	    'itemscope': BOOLEAN_ATTRIBUTE,
+	    'loop': BOOLEAN_ATTRIBUTE,
+	    'multiple': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'muted': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'novalidate': BOOLEAN_ATTRIBUTE,
+	    'open': BOOLEAN_ATTRIBUTE,
+	    'readonly': BOOLEAN_ATTRIBUTE,
+	    'required': BOOLEAN_ATTRIBUTE,
+	    'reversed': BOOLEAN_ATTRIBUTE,
+	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'value': USE_PROPERTY
+	};
+
+
+
+/***/ }),
 /* 4 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
-	var transforms = __webpack_require__(5);
-	var patch = __webpack_require__(6);
+	// var transforms = require('./transforms');
+	// var render = require('./render');
+	// var patch = require('./patch');
 
 
-	function Template(name, render) {
-	    this.render = render;
-	    this.name = name;
+	function Template(render) {
+	    this._render = render;
 	    this.handlers = {};
 	}
 
@@ -430,14 +431,10 @@ var Magery =
 	    this.handlers = handlers;
 	};
 
-	Template.prototype.patch = function (element, next_data, prev_data) {
-	    var state = {
-	        patcher: new patch.Patcher(element, transforms),
-	        template: this,
-	        text_buffer: ''
-	    };
-	    this.render(state, next_data, prev_data);
-	};
+	// Template.prototype.patch = function (element, data) {
+	//     var patcher = new patch.Patcher(element, transforms);
+	//     render(patcher, this.node, data, '');
+	// };
 
 	module.exports = Template;
 
@@ -447,86 +444,14 @@ var Magery =
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
-	 * DOM mutation procedures called by the patcher. This module provides
-	 * a cleaner API for our purposes and a place to intercept and
-	 * monitor mutations during testing.
-	 */
-
-	var html = __webpack_require__(2);
-
-
-	exports.insertTextNode = function (parent, before, str) {
-	    var node = document.createTextNode(str);
-	    parent.insertBefore(node, before);
-	    return node;
-	};
-
-	exports.replaceText = function (node, str) {
-	    node.textContent = str;
-	    return node;
-	};
-
-	exports.replaceChild = function (parent, node, old) {
-	    parent.replaceChild(node, old);
-	    return node;
-	};
-
-	exports.appendChild = function (parent, node) {
-	    parent.appendChild(node);
-	    return node;
-	};
-
-	exports.insertElement = function (parent, before, tag) {
-	    var node = document.createElement(tag);
-	    parent.insertBefore(node, before);
-	    return node;
-	};
-
-	exports.removeChild = function (parent, node) {
-	    parent.removeChild(node);
-	    return node;
-	};
-
-	exports.setAttribute = function (node, name, value) {
-	    if (html.attributes[name] & html.USE_PROPERTY) {
-	        node[name] = value;
-	    }
-	    node.setAttribute(name, value);
-	    return node;
-	};
-
-	exports.removeAttribute = function (node, name) {
-	    if (html.attributes[name] & html.USE_PROPERTY) {
-	        node[name] = false;
-	    }
-	    node.removeAttribute(name);
-	    return node;
-	};
-
-	exports.addEventListener = function (node, name, handler) {
-	    node.addEventListener(name, handler, false);
-	    return node;
-	};
-
-	exports.removeEventListener = function (node, name, handler) {
-	    node.removeEventListener(name, handler);
-	    return node;
-	};
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	/**
 	 * Processes render events (e.g. enterTag, exitTag) and matches them against the
 	 * current state of the DOM. Where there is a mismatch a transform function is
 	 * called to reconcile the differences. The Patcher code should only _read_ the
 	 * DOM, performing DOM mutation only through transform calls.
 	 */
 
-	var transforms = __webpack_require__(5);
-	var utils = __webpack_require__(3);
+	var transforms = __webpack_require__(6);
+	var utils = __webpack_require__(2);
 	var Set = __webpack_require__(7);
 
 	var ELEMENT_NODE = 1;
@@ -609,8 +534,18 @@ var Magery =
 	// };
 
 	Patcher.prototype.stepInto = function (node) {
-	    node.visited_attributes = new Set();
-	    node.visited_events = new Set();
+	    if (node.visited_attributes) {
+	        node.visited_attributes.clear();
+	    }
+	    else {
+	        node.visited_attributes = new Set();
+	    }
+	    if (node.visited_events) {
+	        node.visited_events.clear();
+	    }
+	    else {
+	        node.visited_events = new Set();
+	    }
 	    this.parent = node;
 	    this.current = node.firstChild;
 	};
@@ -813,30 +748,138 @@ var Magery =
 	    this.current = node.nextSibling;
 	};
 
+	Patcher.prototype.lookup = utils.lookup;
+
+	Patcher.prototype.isTruthy = function (x) {
+	    if (Array.isArray(x)) {
+	        return x.length > 0;
+	    }
+	    return x;
+	};
+
+	Patcher.prototype.each = function (data, name, iterable, f) {
+	    for (var i = 0, len = iterable.length; i < len; i++) {
+	        var data2 = utils.shallowClone(data);
+	        data2[name] = iterable[i];
+	        f(data2);
+	    }
+	};
+
+	Patcher.prototype.render = function (templates, name, data, inner) {
+	    var template = templates[name];
+	    template._render(template, templates, this, data, inner);
+	};
+
 	// Patcher.prototype.end = function (data) {
 	//     // deleteChildren(this.transforms, this.parent, this.current);
 	//     // this.parent = null;
 	// };
+
+	exports.patch = function (element, templates, name, data) {
+	    new Patcher(element).render(templates, name, data);
+	};
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	/**
+	 * DOM mutation procedures called by the patcher. This module provides
+	 * a cleaner API for our purposes and a place to intercept and
+	 * monitor mutations during testing.
+	 */
+
+	var html = __webpack_require__(3);
+
+
+	exports.insertTextNode = function (parent, before, str) {
+	    var node = document.createTextNode(str);
+	    parent.insertBefore(node, before);
+	    return node;
+	};
+
+	exports.replaceText = function (node, str) {
+	    node.textContent = str;
+	    return node;
+	};
+
+	exports.replaceChild = function (parent, node, old) {
+	    parent.replaceChild(node, old);
+	    return node;
+	};
+
+	exports.appendChild = function (parent, node) {
+	    parent.appendChild(node);
+	    return node;
+	};
+
+	exports.insertElement = function (parent, before, tag) {
+	    var node = document.createElement(tag);
+	    parent.insertBefore(node, before);
+	    return node;
+	};
+
+	exports.removeChild = function (parent, node) {
+	    parent.removeChild(node);
+	    return node;
+	};
+
+	exports.setAttribute = function (node, name, value) {
+	    if (html.attributes[name] & html.USE_PROPERTY) {
+	        node[name] = value;
+	    }
+	    node.setAttribute(name, value);
+	    return node;
+	};
+
+	exports.removeAttribute = function (node, name) {
+	    if (html.attributes[name] & html.USE_PROPERTY) {
+	        node[name] = false;
+	    }
+	    node.removeAttribute(name);
+	    return node;
+	};
+
+	exports.addEventListener = function (node, name, handler) {
+	    node.addEventListener(name, handler, false);
+	    return node;
+	};
+
+	exports.removeEventListener = function (node, name, handler) {
+	    node.removeEventListener(name, handler);
+	    return node;
+	};
 
 
 /***/ }),
 /* 7 */
 /***/ (function(module, exports) {
 
-	function Set() {
+	// use built in Set() if available
+	if (typeof Set === 'undefined') {
+
+	function SetPolyfill() {
 	    this.values = [];
 	}
 
-	Set.prototype.add = function (x) {
+	SetPolyfill.prototype.add = function (x) {
 	    this.values.push(x);
 	};
 
-	Set.prototype.has = function (x) {
+	SetPolyfill.prototype.has = function (x) {
 	    return this.values.indexOf(x) !== -1;
 	};
 
-	// use built in Set() if available
-	module.exports = window.Set || Set;
+	SetPolyfill.prototype.clear = function () {
+	    this.values = [];
+	};
+
+	    module.exports = SetPolyfill;
+	}
+	else {
+		module.exports = Set;
+	}
 
 
 /***/ })

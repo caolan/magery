@@ -1,6 +1,7 @@
 module.exports = {
     entry: {
         'compile': ['./src/compile.js'],
+        'render': ['./src/render.js'],
         'patch': ['./src/patch.js'],
         'transforms': ['./src/transforms.js'],
         'utils': ['./src/utils.js'],

@@ -1,10 +1,10 @@
-var transforms = require('./transforms');
-var patch = require('./patch');
+// var transforms = require('./transforms');
+// var render = require('./render');
+// var patch = require('./patch');
 
 
-function Template(name, render) {
-    this.render = render;
-    this.name = name;
+function Template(render) {
+    this._render = render;
     this.handlers = {};
 }
 
@@ -12,13 +12,9 @@ Template.prototype.bind = function (handlers) {
     this.handlers = handlers;
 };
 
-Template.prototype.patch = function (element, next_data, prev_data) {
-    var state = {
-        patcher: new patch.Patcher(element, transforms),
-        template: this,
-        text_buffer: ''
-    };
-    this.render(state, next_data, prev_data);
-};
+// Template.prototype.patch = function (element, data) {
+//     var patcher = new patch.Patcher(element, transforms);
+//     render(patcher, this.node, data, '');
+// };
 
 module.exports = Template;

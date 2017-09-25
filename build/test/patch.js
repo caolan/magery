@@ -45,48 +45,13 @@ var patch =
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(7);
+	module.exports = __webpack_require__(6);
 
 
 /***/ }),
 /* 1 */,
 /* 2 */,
 /* 3 */
-/***/ (function(module, exports) {
-
-	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
-	var USE_PROPERTY = exports.USE_PROPERTY = 2;
-
-	exports.attributes = {
-	    'allowfullscreen': BOOLEAN_ATTRIBUTE,
-	    'async': BOOLEAN_ATTRIBUTE,
-	    'autofocus': BOOLEAN_ATTRIBUTE,
-	    'autoplay': BOOLEAN_ATTRIBUTE,
-	    'capture': BOOLEAN_ATTRIBUTE,
-	    'checked': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'controls': BOOLEAN_ATTRIBUTE,
-	    'default': BOOLEAN_ATTRIBUTE,
-	    'defer': BOOLEAN_ATTRIBUTE,
-	    'disabled': BOOLEAN_ATTRIBUTE,
-	    'formnovalidate': BOOLEAN_ATTRIBUTE,
-	    'hidden': BOOLEAN_ATTRIBUTE,
-	    'itemscope': BOOLEAN_ATTRIBUTE,
-	    'loop': BOOLEAN_ATTRIBUTE,
-	    'multiple': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'muted': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'novalidate': BOOLEAN_ATTRIBUTE,
-	    'open': BOOLEAN_ATTRIBUTE,
-	    'readonly': BOOLEAN_ATTRIBUTE,
-	    'required': BOOLEAN_ATTRIBUTE,
-	    'reversed': BOOLEAN_ATTRIBUTE,
-	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'value': USE_PROPERTY
-	};
-
-
-
-/***/ }),
-/* 4 */
 /***/ (function(module, exports) {
 
 	var ELEMENT_NODE = 1;
@@ -153,85 +118,60 @@ var patch =
 	};
 
 	exports.shallowClone = function (obj) {
-	    return Object.assign({}, obj);
+	    var result = {};
+	    for (var k in obj) {
+	        result[k] = obj[k];
+	    }
+	    return result;
+	    // return Object.assign({}, obj);
 	};
+
+	exports.eachAttribute = function (node, f) {
+	    var attrs = node.attributes;
+	    for (var i = 0, len = node.attributes.length; i < len; i++) {
+	        f(node.attributes[i].name, node.attributes[i].value);
+	    }
+	};
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports) {
+
+	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
+	var USE_PROPERTY = exports.USE_PROPERTY = 2;
+
+	exports.attributes = {
+	    'allowfullscreen': BOOLEAN_ATTRIBUTE,
+	    'async': BOOLEAN_ATTRIBUTE,
+	    'autofocus': BOOLEAN_ATTRIBUTE,
+	    'autoplay': BOOLEAN_ATTRIBUTE,
+	    'capture': BOOLEAN_ATTRIBUTE,
+	    'checked': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'controls': BOOLEAN_ATTRIBUTE,
+	    'default': BOOLEAN_ATTRIBUTE,
+	    'defer': BOOLEAN_ATTRIBUTE,
+	    'disabled': BOOLEAN_ATTRIBUTE,
+	    'formnovalidate': BOOLEAN_ATTRIBUTE,
+	    'hidden': BOOLEAN_ATTRIBUTE,
+	    'itemscope': BOOLEAN_ATTRIBUTE,
+	    'loop': BOOLEAN_ATTRIBUTE,
+	    'multiple': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'muted': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'novalidate': BOOLEAN_ATTRIBUTE,
+	    'open': BOOLEAN_ATTRIBUTE,
+	    'readonly': BOOLEAN_ATTRIBUTE,
+	    'required': BOOLEAN_ATTRIBUTE,
+	    'reversed': BOOLEAN_ATTRIBUTE,
+	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'value': USE_PROPERTY
+	};
+
 
 
 /***/ }),
 /* 5 */,
 /* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	/**
-	 * DOM mutation procedures called by the patcher. This module provides
-	 * a cleaner API for our purposes and a place to intercept and
-	 * monitor mutations during testing.
-	 */
-
-	var html = __webpack_require__(3);
-
-
-	exports.insertTextNode = function (parent, before, str) {
-	    var node = document.createTextNode(str);
-	    parent.insertBefore(node, before);
-	    return node;
-	};
-
-	exports.replaceText = function (node, str) {
-	    node.textContent = str;
-	    return node;
-	};
-
-	exports.replaceChild = function (parent, node, old) {
-	    parent.replaceChild(node, old);
-	    return node;
-	};
-
-	exports.appendChild = function (parent, node) {
-	    parent.appendChild(node);
-	    return node;
-	};
-
-	exports.insertElement = function (parent, before, tag) {
-	    var node = document.createElement(tag);
-	    parent.insertBefore(node, before);
-	    return node;
-	};
-
-	exports.removeChild = function (parent, node) {
-	    parent.removeChild(node);
-	    return node;
-	};
-
-	exports.setAttribute = function (node, name, value) {
-	    if (html.attributes[name] & html.USE_PROPERTY) {
-	        node[name] = value;
-	    }
-	    node.setAttribute(name, value);
-	    return node;
-	};
-
-	exports.removeAttribute = function (node, name) {
-	    if (html.attributes[name] & html.USE_PROPERTY) {
-	        node[name] = false;
-	    }
-	    node.removeAttribute(name);
-	    return node;
-	};
-
-	exports.addEventListener = function (node, name, handler) {
-	    node.addEventListener(name, handler, false);
-	    return node;
-	};
-
-	exports.removeEventListener = function (node, name, handler) {
-	    node.removeEventListener(name, handler);
-	    return node;
-	};
-
-
-/***/ }),
-/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -241,8 +181,8 @@ var patch =
 	 * DOM, performing DOM mutation only through transform calls.
 	 */
 
-	var transforms = __webpack_require__(6);
-	var utils = __webpack_require__(4);
+	var transforms = __webpack_require__(7);
+	var utils = __webpack_require__(3);
 	var Set = __webpack_require__(8);
 
 	var ELEMENT_NODE = 1;
@@ -325,8 +265,18 @@ var patch =
 	// };
 
 	Patcher.prototype.stepInto = function (node) {
-	    node.visited_attributes = new Set();
-	    node.visited_events = new Set();
+	    if (node.visited_attributes) {
+	        node.visited_attributes.clear();
+	    }
+	    else {
+	        node.visited_attributes = new Set();
+	    }
+	    if (node.visited_events) {
+	        node.visited_events.clear();
+	    }
+	    else {
+	        node.visited_events = new Set();
+	    }
 	    this.parent = node;
 	    this.current = node.firstChild;
 	};
@@ -529,30 +479,138 @@ var patch =
 	    this.current = node.nextSibling;
 	};
 
+	Patcher.prototype.lookup = utils.lookup;
+
+	Patcher.prototype.isTruthy = function (x) {
+	    if (Array.isArray(x)) {
+	        return x.length > 0;
+	    }
+	    return x;
+	};
+
+	Patcher.prototype.each = function (data, name, iterable, f) {
+	    for (var i = 0, len = iterable.length; i < len; i++) {
+	        var data2 = utils.shallowClone(data);
+	        data2[name] = iterable[i];
+	        f(data2);
+	    }
+	};
+
+	Patcher.prototype.render = function (templates, name, data, inner) {
+	    var template = templates[name];
+	    template._render(template, templates, this, data, inner);
+	};
+
 	// Patcher.prototype.end = function (data) {
 	//     // deleteChildren(this.transforms, this.parent, this.current);
 	//     // this.parent = null;
 	// };
+
+	exports.patch = function (element, templates, name, data) {
+	    new Patcher(element).render(templates, name, data);
+	};
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	/**
+	 * DOM mutation procedures called by the patcher. This module provides
+	 * a cleaner API for our purposes and a place to intercept and
+	 * monitor mutations during testing.
+	 */
+
+	var html = __webpack_require__(4);
+
+
+	exports.insertTextNode = function (parent, before, str) {
+	    var node = document.createTextNode(str);
+	    parent.insertBefore(node, before);
+	    return node;
+	};
+
+	exports.replaceText = function (node, str) {
+	    node.textContent = str;
+	    return node;
+	};
+
+	exports.replaceChild = function (parent, node, old) {
+	    parent.replaceChild(node, old);
+	    return node;
+	};
+
+	exports.appendChild = function (parent, node) {
+	    parent.appendChild(node);
+	    return node;
+	};
+
+	exports.insertElement = function (parent, before, tag) {
+	    var node = document.createElement(tag);
+	    parent.insertBefore(node, before);
+	    return node;
+	};
+
+	exports.removeChild = function (parent, node) {
+	    parent.removeChild(node);
+	    return node;
+	};
+
+	exports.setAttribute = function (node, name, value) {
+	    if (html.attributes[name] & html.USE_PROPERTY) {
+	        node[name] = value;
+	    }
+	    node.setAttribute(name, value);
+	    return node;
+	};
+
+	exports.removeAttribute = function (node, name) {
+	    if (html.attributes[name] & html.USE_PROPERTY) {
+	        node[name] = false;
+	    }
+	    node.removeAttribute(name);
+	    return node;
+	};
+
+	exports.addEventListener = function (node, name, handler) {
+	    node.addEventListener(name, handler, false);
+	    return node;
+	};
+
+	exports.removeEventListener = function (node, name, handler) {
+	    node.removeEventListener(name, handler);
+	    return node;
+	};
 
 
 /***/ }),
 /* 8 */
 /***/ (function(module, exports) {
 
-	function Set() {
+	// use built in Set() if available
+	if (typeof Set === 'undefined') {
+
+	function SetPolyfill() {
 	    this.values = [];
 	}
 
-	Set.prototype.add = function (x) {
+	SetPolyfill.prototype.add = function (x) {
 	    this.values.push(x);
 	};
 
-	Set.prototype.has = function (x) {
+	SetPolyfill.prototype.has = function (x) {
 	    return this.values.indexOf(x) !== -1;
 	};
 
-	// use built in Set() if available
-	module.exports = window.Set || Set;
+	SetPolyfill.prototype.clear = function () {
+	    this.values = [];
+	};
+
+	    module.exports = SetPolyfill;
+	}
+	else {
+		module.exports = Set;
+	}
 
 
 /***/ })

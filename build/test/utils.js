@@ -45,14 +45,13 @@ var utils =
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(4);
+	module.exports = __webpack_require__(3);
 
 
 /***/ }),
 /* 1 */,
 /* 2 */,
-/* 3 */,
-/* 4 */
+/* 3 */
 /***/ (function(module, exports) {
 
 	var ELEMENT_NODE = 1;
@@ -119,7 +118,19 @@ var utils =
 	};
 
 	exports.shallowClone = function (obj) {
-	    return Object.assign({}, obj);
+	    var result = {};
+	    for (var k in obj) {
+	        result[k] = obj[k];
+	    }
+	    return result;
+	    // return Object.assign({}, obj);
+	};
+
+	exports.eachAttribute = function (node, f) {
+	    var attrs = node.attributes;
+	    for (var i = 0, len = node.attributes.length; i < len; i++) {
+	        f(node.attributes[i].name, node.attributes[i].value);
+	    }
 	};
 
 

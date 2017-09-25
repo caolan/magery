@@ -1,248 +1,234 @@
-var html = require('./html');
 var utils = require('./utils');
-var Template = require('./template');
+var html = require('./html');
 
+// these tags are assumed to be normal HTML, all other tags are
+// assumed to be template references
+var HTML_TAGS = [
+    'A', 'ABBR', 'ACRONYM', 'ADDRESS', 'APPLET', 'AREA', 'ARTICLE', 'ASIDE',
+    'AUDIO', 'B', 'BASE', 'BASEFONT', 'BDI', 'BDO', 'BGSOUND', 'BIG', 'BLINK',
+    'BLOCKQUOTE', 'BODY', 'BR', 'BUTTON', 'CANVAS', 'CAPTION', 'CENTER', 'CITE',
+    'CODE', 'COL', 'COLGROUP', 'COMMAND', 'CONTENT', 'DATA', 'DATALIST', 'DD',
+    'DEL', 'DETAILS', 'DFN', 'DIALOG', 'DIR', 'DIV', 'DL', 'DT', 'ELEMENT',
+    'EM', 'EMBED', 'FIELDSET', 'FIGCAPTION', 'FIGURE', 'FONT', 'FOOTER', 'FORM',
+    'FRAME', 'FRAMESET', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'HEAD', 'HEADER',
+    'HGROUP', 'HR', 'HTML', 'I', 'IFRAME', 'IMAGE', 'IMG', 'INPUT', 'INS',
+    'ISINDEX', 'KBD', 'KEYGEN', 'LABEL', 'LEGEND', 'LI', 'LINK', 'LISTING',
+    'MAIN', 'MAP', 'MARK', 'MARQUEE', 'MENU', 'MENUITEM', 'META', 'METER',
+    'MULTICOL', 'NAV', 'NOBR', 'NOEMBED', 'NOFRAMES', 'NOSCRIPT', 'OBJECT',
+    'OL', 'OPTGROUP', 'OPTION', 'OUTPUT', 'P', 'PARAM', 'PICTURE', 'PLAINTEXT',
+    'PRE', 'PROGRESS', 'Q', 'RP', 'RT', 'RTC', 'RUBY', 'S', 'SAMP', 'SCRIPT',
+    'SECTION', 'SELECT', 'SHADOW', 'SLOT', 'SMALL', 'SOURCE', 'SPACER', 'SPAN',
+    'STRIKE', 'STRONG', 'STYLE', 'SUB', 'SUMMARY', 'SUP', 'TABLE', 'TBODY',
+    'TD', 'TEMPLATE', 'TEXTAREA', 'TFOOT', 'TH', 'THEAD', 'TIME', 'TITLE', 'TR',
+    'TRACK', 'TT', 'U', 'UL', 'VAR', 'VIDEO', 'WBR', 'XMP'
+];
 
-function run_all(xs) {
-    var funs = xs.filter(function (x) { return x; });
-    var length = funs.length;
-    return function (state, next_data, prev_data, inner) {
-        var index = -1;
-        while (++index < length) {
-            funs[index](state, next_data, prev_data, inner);
-        }
-    };
+var IGNORED_ATTRS = [
+    'data-each',
+    'data-if',
+    'data-unless',
+    'data-key'
+];
+
+function compileLookup(path) {
+    return 'p.lookup(data, ' + JSON.stringify(path) + ')';
 }
 
-function flushText(state) {
-    if (state.text_buffer) {
-        state.patcher.text(state.text_buffer);
-        state.text_buffer = '';
+function compileTemplateContext(node) {
+    var result = '{';
+    utils.eachAttribute(node, function (name, value) {
+        if (IGNORED_ATTRS.indexOf(name) === -1) {
+            result += JSON.stringify(name) + ": " + compileExpandVariables(value);
+        }
+    });
+    return result + '}';
+}
+
+// TODO: split out into compileTemplateCall, compileInner, compileHTMLElement etc. ?
+function compileElement(node, queue, write, is_root) {
+    if (node.tagName === 'TEMPLATE-CHILDREN') {
+        write('inner();\n');
+        return;
+    }
+    if (!is_root && node.dataset.template) {
+        // compile this template later
+        queue.push(node);
+        // but also expand the template here
+        write('p.render(templates, ' + JSON.stringify(node.dataset.template) + ', data);\n');
+        return;
+    }
+    if (node.dataset.if) {
+        var predicate1_path = utils.propertyPath(node.dataset.if);
+        write('if (p.isTruthy(' + compileLookup(predicate1_path) + ')) {\n');
+    }
+    if (node.dataset.unless) {
+        var predicate2_path = utils.propertyPath(node.dataset.unless);
+        write('if (!p.isTruthy(' + compileLookup(predicate2_path) + ')) {\n');
+    }
+    if (node.dataset.each) {
+        var parts = node.dataset.each.split(/\s+in\s+/);
+        var name = parts[0];
+        var iterable_path = utils.propertyPath(parts[1]);
+        write('p.each(' +
+              'data, ' +
+              JSON.stringify(name) + ', ' +
+              compileLookup(iterable_path) + ', ' +
+              'function (data) {\n');
+    }
+    var is_html = true;
+    if (HTML_TAGS.indexOf(node.tagName) === -1) {
+        // not a known HTML tag, assume template reference
+        write('p.render(' +
+              'templates, ' +
+              JSON.stringify(node.tagName.toLowerCase()) + ', ' +
+              compileTemplateContext(node) +
+              (node.childNodes.length ? ', function () {' : ');') + '\n');
+        is_html = false;
+    }
+    else {
+        if (node.dataset.key) {
+            write('p.enterTag(' +
+                  JSON.stringify(node.tagName) + ', ' +
+                  compileExpandVariables(node.dataset.key) + ');\n');
+        }
+        else {
+            write('p.enterTag(' + JSON.stringify(node.tagName) + ', null);\n');
+        }
+        utils.eachAttribute(node, function (name, value) {
+            if (name === 'data-template') {
+                name = 'data-bind';
+            }
+            if (IGNORED_ATTRS.indexOf(name) !== -1) {
+                return;
+            }
+            var event = name.match(/^on(.*)/);
+            if (event) {
+                var event_name = event[1];
+                write('p.eventListener(' +
+                      JSON.stringify(event[1]) + ', ' +
+                      JSON.stringify(value) + ', ' +
+                      'data, template);\n');
+            }
+            else if (html.attributes[name] & html.BOOLEAN_ATTRIBUTE) {
+                if (value === "") {
+                    // empty boolean attribute is always true
+                    write('p.attribute(' + JSON.stringify(name) + ', true);\n');
+                }
+                else {
+                    write('if (p.isTruthy(' + compileExpandVariables(value) + ')) {\n');
+                    write('p.attribute(' + JSON.stringify(name) + ', true);\n');
+                    write('}\n');
+                }
+            }
+            else {
+                write('p.attribute(' +
+                      JSON.stringify(name) + ', ' +
+                      compileExpandVariables(value) + ');\n');
+            }
+            
+        });
+    }
+    utils.eachNode(node.childNodes, function (node) {
+        compileNode(node, queue, write, false);
+    });
+    if (is_html) {
+        write('p.exitTag();\n');
+    }
+    else if (node.childNodes.length) {
+        // end inner function of template call
+        write('});\n');
+    }
+    if (node.dataset.each) {
+        write('});\n');
+    }
+    if (node.dataset.unless) {
+        write('}\n');
+    }
+    if (node.dataset.if) {
+        write('}\n');
     }
 }
 
-function compileExpandVars(str, boolean) {
-    var parts = str.split(/{{|}}/);
+function compileExpandVariables(str, boolean) {
+    var parts = str.split(/{{\s*|\s*}}/);
     var length = parts.length;
     var i = -1;
     while (++i < length) {
         if (i % 2) {
-            var path = utils.propertyPath(utils.trim(parts[i]));
+            var path = utils.propertyPath(parts[i]);
             parts[i] = path;
         }
     }
     // presence of empty boolean property is actually truthy
     if (length == 1 && !parts[0] && boolean) {
-        return function () {
-            return true;
-        };
-    }
-    // if the string has only one value expanded, return it directly
-    else if (length == 3 && !parts[0] && !parts[2]) {
-        return function (data) {
-            return utils.lookup(data, parts[1]);
-        };
+        return 'true';
     }
     // otherwise build a result string by expanding nested variables
-    return function (data) {
-        var result = '';
-        var i = -1;
-        while (++i < length) {
-            result += (i % 2) ? utils.lookup(data, parts[i]) : parts[i];
-        }
-        return result;
-    };
-}
-
-function compileText(node) {
-    var txt = node.textContent;
-    var expand = compileExpandVars(txt);
-    return function (state, next_data, prev_data, inner) {
-        state.text_buffer += expand(next_data);
-    };
-}
-
-function compileTemplateRender(templates, name, render) {
-    return function (state, next_data, prev_data, inner) {
-        var state2 = Object.assign({}, state);
-        state2.template = templates[name];
-        return render(state2, next_data, prev_data, inner);
-    };
-}
-
-function compileElement(templates, node) {
-    var children = compileChildren(templates, node);
-    var expand_key = null;
-    if (node.dataset.key) {
-        expand_key = compileExpandVars(node.dataset.key);
-    }
-    var events = {};
-    var attrs = {};
-    for (var i = 0, len = node.attributes.length; i < len; i++) {
-        var attr = node.attributes[i];
-        var name = attr.name;
-        if (name == 'data-each' ||
-            name == 'data-if' ||
-            name == 'data-unless' ||
-            name == 'data-key') {
-            continue;
-        }
-        if (name == 'data-template') {
-            attrs['data-bind'] = compileExpandVars(attr.value, false);
-            continue;
-        }
-        var event = name.match(/^on(.*)/, event);
-        if (event) {
-            var event_name = event[1];
-            events[event_name] = attr.value;
-        }
-        else {
-            attrs[name] = compileExpandVars(
-                attr.value,
-                html.attributes[name] & html.BOOLEAN_ATTRIBUTE
+    var result_parts = [];
+    var j = -1;
+    while (++j < length) {
+        if (parts[j].length) {
+            result_parts.push(
+                (j % 2) ? compileLookup(parts[j]): JSON.stringify(parts[j])
             );
         }
     }
-    var tag = node.tagName.toLowerCase();
-    var render = function (state, next_data, prev_data, inner) {
-        if (templates[tag]) {
-            var next_data2 = {};
-            var prev_data2 = {};
-            for (var attr_name in attrs) {
-                next_data2[attr_name] = attrs[attr_name](next_data);
-                prev_data2[attr_name] = attrs[attr_name](prev_data);
-            }
-            templates[tag].render(state, next_data2, prev_data2, function () {
-                children(state, next_data, prev_data, inner);
-            });
-            return;
-        }
-        var key = expand_key ? expand_key(next_data) : null;
-        flushText(state);
-        state.patcher.enterTag(node.tagName, key);
-        for (var attr_name in attrs) {
-            var value = attrs[attr_name](next_data);
-            if (value || !(html.attributes[attr_name] & html.BOOLEAN_ATTRIBUTE)) {
-                state.patcher.attribute(attr_name, value);
-            }
-        }
-        for (var event_name in events) {
-            state.patcher.eventListener(
-                event_name,
-                events[event_name],
-                next_data,
-                state.template
-            );
-        }
-        children(state, next_data, prev_data, inner);
-        flushText(state);
-        state.patcher.exitTag();
-    };
-    if (node.dataset.template) {
-        var template_name = node.dataset.template;
-        if (templates[template_name]) {
-            throw new Error("Template '" + template_name + "' already exists");
-        }
-        render = compileTemplateRender(templates, template_name, render);
-        templates[template_name] = new Template(template_name, render);
+    if (!result_parts.length) {
+        return JSON.stringify('');
+    }
+    return result_parts.join(' + ');
+}
+
+function compileText(node, write) {
+    var arg = compileExpandVariables(node.textContent);
+    if (arg[0] === '"') {
+        write('p.text(' + arg + ');\n');
     }
     else {
-        if (node.dataset.unless) {
-            render = compileUnless(node, render);
-        }
-        if (node.dataset.if) {
-            render = compileIf(node, render);
-        }
-        if (node.dataset.each) {
-            render = compileEach(node, render);
-        }
+        // coerce to string
+        write('p.text("" + ' + arg + ');\n');
     }
-    return render;
 }
 
-function isTruthy(x) {
-    if (Array.isArray(x)) {
-        return x.length > 0;
-    }
-    return x;
+function compileDocumentFragment(fragment, queue, write) {
+    utils.eachNode(fragment.childNodes, function (node) {
+        compileNode(node, queue, write, false);
+    });
 }
 
-function compileUnless(node, render) {
-    var path = utils.propertyPath(node.dataset.unless);
-    return function (state, next_data, prev_data, inner) {
-        if (!isTruthy(utils.lookup(next_data, path))) {
-            render(state, next_data, prev_data, inner);
-        }
-    };
+function compileNode(node, queue, write, is_root) {
+    switch (node.nodeType) {
+    case 1: compileElement(node, queue, write, is_root); break;
+    case 3: compileText(node, write); break;
+    case 11: compileDocumentFragment(node, queue, write); break;
+    }
 }
 
-function compileIf(node, render) {
-    var path = utils.propertyPath(node.dataset.if);
-    return function (state, next_data, prev_data, inner) {
-        if (isTruthy(utils.lookup(next_data, path))) {
-            render(state, next_data, prev_data, inner);
-        }
-    };
-}
+function noop() {}
 
-function compileEach(node, render) {
-    var parts = node.dataset.each.split(' in ');
-    var name = parts[0];
-    var path = utils.propertyPath(parts[1]);
-    return function (state, next_data, prev_data, inner) {
-        var next_arr = utils.lookup(next_data, path);
-        var prev_arr = utils.lookup(prev_data, path);
-        var length = next_arr.length;
-        var index = -1;
-        while (++index < length) {
-            var next_data2 = utils.shallowClone(next_data);
-            var prev_data2 = utils.shallowClone(prev_data);
-            next_data2[name] = next_arr[index];
-            prev_data2[name] = prev_arr && prev_arr[index];
-            render(state, next_data2, prev_data2, inner);
-        }
-    };
-}
+exports.compile = function (node, write) {
+    var queue = [];
+    compileNode(node, queue, noop, true);
+    write('({\n');
+    while (queue.length) {
+        node = queue.shift();
+        console.log(node);
+        write(JSON.stringify(node.dataset.template) + ': ');
+        write('new Magery.Template(function (template, templates, p, data, inner) {\n');
+        compileNode(node, queue, write, true);
+        write('})' + (queue.length ? ',' : '') + '\n');
+    }
+    write('})\n');
+};
 
-function compileNode(templates, node) {
-    if (utils.isTextNode(node)) {
-        return compileText(node);
-    }
-    else if (utils.isElementNode(node)) {
-        if (node.tagName === 'TEMPLATE-CHILDREN') {
-            return function (state, next_data, prev_data, inner) {
-                inner && inner();
-            };
-        }
-        return compileElement(templates, node);
-    }
-    return null;
-}
+exports.compileToString = function (node) {
+    var result = '';
+    exports.compile(node, function (str) {
+        result += str;
+    });
+    return result;
+};
 
-function compileChildren(templates, parent) {
-    return run_all(
-        utils.mapNodes(
-            parent.childNodes,
-            compileNode.bind(null, templates)
-        )
-    );
-}
-
-module.exports = function (node, templates) {
-    templates = templates || {};
-    if (typeof node === 'string') {
-        node = document.querySelectorAll(node);
-    }
-    if (node instanceof NodeList) {
-        for (var i = 0, len = node.length; i < len; i++) {
-            module.exports(node[i], templates);
-        }
-    }
-    else {
-        if (node.tagName === 'TEMPLATE' && node.content) {
-            node = node.content;
-        }
-        utils.eachNode(node.childNodes, compileNode.bind(null, templates));
-    }
-    return templates;
+exports.eval = function (node) {
+    return eval(exports.compileToString(node));
 };
