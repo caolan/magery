@@ -102,13 +102,13 @@ var Magery =
 	}
 
 	function compileTemplateContext(node) {
-	    var result = '{';
+	    var result = [];
 	    utils.eachAttribute(node, function (name, value) {
 	        if (IGNORED_ATTRS.indexOf(name) === -1) {
-	            result += JSON.stringify(name) + ": " + compileExpandVariables(value);
+	            result.push(JSON.stringify(name) + ": " + compileExpandVariables(value));
 	        }
 	    });
-	    return result + '}';
+	    return '{' + result.join(', ') + '}';
 	}
 
 	// TODO: split out into compileTemplateCall, compileInner, compileHTMLElement etc. ?
@@ -124,14 +124,6 @@ var Magery =
 	        write('p.render(templates, ' + JSON.stringify(node.dataset.template) + ', data);\n');
 	        return;
 	    }
-	    if (node.dataset.if) {
-	        var predicate1_path = utils.propertyPath(node.dataset.if);
-	        write('if (p.isTruthy(' + compileLookup(predicate1_path) + ')) {\n');
-	    }
-	    if (node.dataset.unless) {
-	        var predicate2_path = utils.propertyPath(node.dataset.unless);
-	        write('if (!p.isTruthy(' + compileLookup(predicate2_path) + ')) {\n');
-	    }
 	    if (node.dataset.each) {
 	        var parts = node.dataset.each.split(/\s+in\s+/);
 	        var name = parts[0];
@@ -142,18 +134,38 @@ var Magery =
 	              compileLookup(iterable_path) + ', ' +
 	              'function (data) {\n');
 	    }
+	    if (node.dataset.if) {
+	        var predicate1_path = utils.propertyPath(node.dataset.if);
+	        write('if (p.isTruthy(' + compileLookup(predicate1_path) + ')) {\n');
+	    }
+	    if (node.dataset.unless) {
+	        var predicate2_path = utils.propertyPath(node.dataset.unless);
+	        write('if (!p.isTruthy(' + compileLookup(predicate2_path) + ')) {\n');
+	    }
 	    var is_html = true;
 	    if (HTML_TAGS.indexOf(node.tagName) === -1) {
 	        // not a known HTML tag, assume template reference
 	        write('p.render(' +
-	              'templates, ' +
-	              JSON.stringify(node.tagName.toLowerCase()) + ', ' +
-	              compileTemplateContext(node) +
+	              'templates' +
+	              ', ' + JSON.stringify(node.tagName.toLowerCase()) +
+	              ', ' + compileTemplateContext(node) +
+	              ', ' + (node.dataset.key ? compileExpandVariables(node.dataset.key) : 'null') +
 	              (node.childNodes.length ? ', function () {' : ');') + '\n');
 	        is_html = false;
 	    }
 	    else {
-	        if (node.dataset.key) {
+	        if (is_root) {
+	            // check if a key was passed into this template by caller
+	            if (node.dataset.key) {
+	                write('p.enterTag(' +
+	                      JSON.stringify(node.tagName) + ', ' +
+	                      'root_key || ' + compileExpandVariables(node.dataset.key) + ');\n');
+	            }
+	            else {
+	                write('p.enterTag(' + JSON.stringify(node.tagName) + ', root_key || null);\n');
+	            }
+	        }
+	        else if (node.dataset.key) {
 	            write('p.enterTag(' +
 	                  JSON.stringify(node.tagName) + ', ' +
 	                  compileExpandVariables(node.dataset.key) + ');\n');
@@ -205,14 +217,14 @@ var Magery =
 	        // end inner function of template call
 	        write('});\n');
 	    }
-	    if (node.dataset.each) {
-	        write('});\n');
-	    }
 	    if (node.dataset.unless) {
 	        write('}\n');
 	    }
 	    if (node.dataset.if) {
 	        write('}\n');
+	    }
+	    if (node.dataset.each) {
+	        write('});\n');
 	    }
 	}
 
@@ -280,7 +292,7 @@ var Magery =
 	    while (queue.length) {
 	        node = queue.shift();
 	        write(JSON.stringify(node.dataset.template) + ': ');
-	        write('new Magery.Template(function (template, templates, p, data, inner) {\n');
+	        write('new Magery.Template(function (template, templates, p, data, root_key, inner) {\n');
 	        compileNode(node, queue, write, true);
 	        write('})' + (queue.length ? ',' : '') + '\n');
 	    }
@@ -771,9 +783,9 @@ var Magery =
 	    }
 	};
 
-	Patcher.prototype.render = function (templates, name, data, inner) {
+	Patcher.prototype.render = function (templates, name, data, root_key, inner) {
 	    var template = templates[name];
-	    template._render(template, templates, this, data, inner);
+	    template._render(template, templates, this, data, root_key, inner);
 	};
 
 	// Patcher.prototype.end = function (data) {

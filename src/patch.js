@@ -320,9 +320,9 @@ Patcher.prototype.each = function (data, name, iterable, f) {
     }
 };
 
-Patcher.prototype.render = function (templates, name, data, inner) {
+Patcher.prototype.render = function (templates, name, data, root_key, inner) {
     var template = templates[name];
-    template._render(template, templates, this, data, inner);
+    template._render(template, templates, this, data, root_key, inner);
 };
 
 // Patcher.prototype.end = function (data) {

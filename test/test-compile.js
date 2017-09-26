@@ -543,10 +543,6 @@ suite('render', function () {
         assert.equal(patcher_calls.length, 9);
     });
 
-    // NOTE: one option for pre-compilation (and knowing if a tag is
-    // HTML or another template) would be to assume anything in the
-    // base set of HTML5 tags is HTML and anything else is a template
-    // reference (see https://developer.mozilla.org/en-US/docs/Web/HTML/Element)
     test('call another template block statically', function () {
         var templates = createTemplateNode(
             '<b data-template="bar">{{meta.year}}</b>' +
@@ -570,6 +566,33 @@ suite('render', function () {
         assert.deepEqual(patcher_calls[5], ['enterTag', 'B', null]);
         assert.deepEqual(patcher_calls[6], ['attribute', 'data-bind', 'bar']);
         assert.deepEqual(patcher_calls[7], ['text', '2015']);
+        assert.deepEqual(patcher_calls[8], ['exitTag']);
+        assert.deepEqual(patcher_calls[9], ['exitTag']);
+        assert.equal(patcher_calls.length, 10);
+    });
+
+    test('call another template block with multiple args', function () {
+        var templates = createTemplateNode(
+            '<b data-template="bar">{{ author }} ({{ year }})</b>' +
+            '<div data-template="foo">' +
+                '<h1>title</h1>' +
+                '<bar author="{{ article.author }}" year="{{ article.year }}"></bar>' +
+            '</div>');
+        var data = {
+            article: {
+                author: 'test',
+                year: 2015
+            }
+        };
+        var patcher_calls = _patch(templates, 'foo', data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['attribute', 'data-bind', 'foo']);
+        assert.deepEqual(patcher_calls[2], ['enterTag', 'H1', null]);
+        assert.deepEqual(patcher_calls[3], ['text', 'title']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'B', null]);
+        assert.deepEqual(patcher_calls[6], ['attribute', 'data-bind', 'bar']);
+        assert.deepEqual(patcher_calls[7], ['text', 'test (2015)']);
         assert.deepEqual(patcher_calls[8], ['exitTag']);
         assert.deepEqual(patcher_calls[9], ['exitTag']);
         assert.equal(patcher_calls.length, 10);
@@ -1601,6 +1624,197 @@ suite('render', function () {
         assert.deepEqual(patcher_calls[13], ['exitTag']);
         assert.deepEqual(patcher_calls[14], ['exitTag']);
         assert.equal(patcher_calls.length, 15);
+    });
+
+    test('data-each processed before data-if', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<p data-each="item in items" data-if="item.published">' +
+                    '{{ item.name }}' +
+                '</p>' +
+            '</div>'
+        );
+        var data = {items: [
+            {name: 'one', published: true},
+            {name: 'two', published: false},
+            {name: 'three', published: true}
+        ]};
+        var patcher_calls = _patch(templates, 'foo', data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['attribute', 'data-bind', 'foo']);
+        assert.deepEqual(patcher_calls[2], ['enterTag', 'P', null]);
+        assert.deepEqual(patcher_calls[3], ['text', 'one']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'P', null]);
+        assert.deepEqual(patcher_calls[6], ['text', 'three']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['exitTag']);
+        assert.equal(patcher_calls.length, 9);
+    });
+
+    test('data-each processed before data-unless', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<p data-each="item in items" data-unless="item.hidden">' +
+                    '{{ item.name }}' +
+                '</p>' +
+            '</div>'
+        );
+        var data = {items: [
+            {name: 'one', hidden: false},
+            {name: 'two', hidden: true},
+            {name: 'three', hidden: false}
+        ]};
+        var patcher_calls = _patch(templates, 'foo', data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['attribute', 'data-bind', 'foo']);
+        assert.deepEqual(patcher_calls[2], ['enterTag', 'P', null]);
+        assert.deepEqual(patcher_calls[3], ['text', 'one']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'P', null]);
+        assert.deepEqual(patcher_calls[6], ['text', 'three']);
+        assert.deepEqual(patcher_calls[7], ['exitTag']);
+        assert.deepEqual(patcher_calls[8], ['exitTag']);
+        assert.equal(patcher_calls.length, 9);
+    });
+
+    test('data-each on template call', function () {
+        var templates = createTemplateNode(
+            '<li data-template="entry">{{ name }}</li>' +
+            '<ul data-template="foo">' +
+                '<entry data-each="item in items" name="{{ item.name }}"></entry>' +
+            '</ul>'
+        );
+        var data = {items: [
+            {name: 'one'},
+            {name: 'two'},
+            {name: 'three'}
+        ]};
+        var patcher_calls = _patch(templates, 'foo', data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'UL', null]);
+        assert.deepEqual(patcher_calls[1], ['attribute', 'data-bind', 'foo']);
+        assert.deepEqual(patcher_calls[2], ['enterTag', 'LI', null]);
+        assert.deepEqual(patcher_calls[3], ['attribute', 'data-bind', 'entry']);
+        assert.deepEqual(patcher_calls[4], ['text', 'one']);
+        assert.deepEqual(patcher_calls[5], ['exitTag']);
+        assert.deepEqual(patcher_calls[6], ['enterTag', 'LI', null]);
+        assert.deepEqual(patcher_calls[7], ['attribute', 'data-bind', 'entry']);
+        assert.deepEqual(patcher_calls[8], ['text', 'two']);
+        assert.deepEqual(patcher_calls[9], ['exitTag']);
+        assert.deepEqual(patcher_calls[10], ['enterTag', 'LI', null]);
+        assert.deepEqual(patcher_calls[11], ['attribute', 'data-bind', 'entry']);
+        assert.deepEqual(patcher_calls[12], ['text', 'three']);
+        assert.deepEqual(patcher_calls[13], ['exitTag']);
+        assert.deepEqual(patcher_calls[14], ['exitTag']);
+        assert.equal(patcher_calls.length, 15);
+    });
+    
+    test('data-key on template call', function () {
+        var templates = createTemplateNode(
+            '<li data-template="entry">{{ name }}</li>' +
+            '<ul data-template="foo">' +
+                '<entry data-each="item in items" data-key="key{{ item.id }}" name="{{ item.name }}"></entry>' +
+            '</ul>'
+        );
+        var data = {items: [
+            {id: 1, name: 'one'},
+            {id: 2, name: 'two'},
+            {id: 3, name: 'three'}
+        ]};
+        var patcher_calls = _patch(templates, 'foo', data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'UL', null]);
+        assert.deepEqual(patcher_calls[1], ['attribute', 'data-bind', 'foo']);
+        assert.deepEqual(patcher_calls[2], ['enterTag', 'LI', 'key1']);
+        assert.deepEqual(patcher_calls[3], ['attribute', 'data-bind', 'entry']);
+        assert.deepEqual(patcher_calls[4], ['text', 'one']);
+        assert.deepEqual(patcher_calls[5], ['exitTag']);
+        assert.deepEqual(patcher_calls[6], ['enterTag', 'LI', 'key2']);
+        assert.deepEqual(patcher_calls[7], ['attribute', 'data-bind', 'entry']);
+        assert.deepEqual(patcher_calls[8], ['text', 'two']);
+        assert.deepEqual(patcher_calls[9], ['exitTag']);
+        assert.deepEqual(patcher_calls[10], ['enterTag', 'LI', 'key3']);
+        assert.deepEqual(patcher_calls[11], ['attribute', 'data-bind', 'entry']);
+        assert.deepEqual(patcher_calls[12], ['text', 'three']);
+        assert.deepEqual(patcher_calls[13], ['exitTag']);
+        assert.deepEqual(patcher_calls[14], ['exitTag']);
+        assert.equal(patcher_calls.length, 15);
+    });
+
+    test('data-if on template call', function () {
+        var templates = createTemplateNode(
+            '<h1 data-template="greeting">Hello, {{ name }}!</h1>' +
+            '<div data-template="foo">' +
+                '<greeting data-if="greet" name="{{ name }}"></greeting>' +
+            '</div>'
+        );
+        var data = {greet: true, name: 'world'};
+        var patcher_calls = _patch(templates, 'foo', data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['attribute', 'data-bind', 'foo']);
+        assert.deepEqual(patcher_calls[2], ['enterTag', 'H1', null]);
+        assert.deepEqual(patcher_calls[3], ['attribute', 'data-bind', 'greeting']);
+        assert.deepEqual(patcher_calls[4], ['text', 'Hello, world!']);
+        assert.deepEqual(patcher_calls[5], ['exitTag']);
+        assert.deepEqual(patcher_calls[6], ['exitTag']);
+        assert.equal(patcher_calls.length, 7);
+        data.greet = false;
+        patcher_calls = _patch(templates, 'foo', data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['attribute', 'data-bind', 'foo']);
+        assert.deepEqual(patcher_calls[2], ['exitTag']);
+        assert.equal(patcher_calls.length, 3);
+    });
+
+    test('data-unless on template call', function () {
+        var templates = createTemplateNode(
+            '<h1 data-template="greeting">Hello, {{ name }}!</h1>' +
+            '<div data-template="foo">' +
+                '<greeting data-unless="quiet" name="{{ name }}"></greeting>' +
+            '</div>'
+        );
+        var data = {quiet: false, name: 'world'};
+        var patcher_calls = _patch(templates, 'foo', data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['attribute', 'data-bind', 'foo']);
+        assert.deepEqual(patcher_calls[2], ['enterTag', 'H1', null]);
+        assert.deepEqual(patcher_calls[3], ['attribute', 'data-bind', 'greeting']);
+        assert.deepEqual(patcher_calls[4], ['text', 'Hello, world!']);
+        assert.deepEqual(patcher_calls[5], ['exitTag']);
+        assert.deepEqual(patcher_calls[6], ['exitTag']);
+        assert.equal(patcher_calls.length, 7);
+        data.quiet = true;
+        patcher_calls = _patch(templates, 'foo', data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['attribute', 'data-bind', 'foo']);
+        assert.deepEqual(patcher_calls[2], ['exitTag']);
+        assert.equal(patcher_calls.length, 3);
+    });
+    
+    test('data-each on caller with data-if on callee template', function () {
+        var templates = createTemplateNode(
+            '<li data-template="entry" data-if="public">{{ name }}</li>' +
+            '<ul data-template="foo">' +
+                '<entry data-each="item in items" public="{{ item.public }}" name="{{ item.name }}"></entry>' +
+            '</ul>'
+        );
+        var data = {items: [
+            {name: 'one', public: true},
+            {name: 'two', public: true},
+            {name: 'three', public: false}
+        ]};
+        var patcher_calls = _patch(templates, 'foo', data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'UL', null]);
+        assert.deepEqual(patcher_calls[1], ['attribute', 'data-bind', 'foo']);
+        assert.deepEqual(patcher_calls[2], ['enterTag', 'LI', null]);
+        assert.deepEqual(patcher_calls[3], ['attribute', 'data-bind', 'entry']);
+        assert.deepEqual(patcher_calls[4], ['text', 'one']);
+        assert.deepEqual(patcher_calls[5], ['exitTag']);
+        assert.deepEqual(patcher_calls[6], ['enterTag', 'LI', null]);
+        assert.deepEqual(patcher_calls[7], ['attribute', 'data-bind', 'entry']);
+        assert.deepEqual(patcher_calls[8], ['text', 'two']);
+        assert.deepEqual(patcher_calls[9], ['exitTag']);
+        assert.deepEqual(patcher_calls[10], ['exitTag']);
+        assert.equal(patcher_calls.length, 11);
     });
 
 });
