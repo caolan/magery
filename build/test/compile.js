@@ -267,7 +267,6 @@ var compile =
 	    write('({\n');
 	    while (queue.length) {
 	        node = queue.shift();
-	        console.log(node);
 	        write(JSON.stringify(node.dataset.template) + ': ');
 	        write('new Magery.Template(function (template, templates, p, data, inner) {\n');
 	        compileNode(node, queue, write, true);

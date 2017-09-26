@@ -281,41 +281,65 @@ benchsuite('Add 100 more complex elements to a list, one at a time', function ()
     });
 });
 
-function input(el, value) {
-    el.value = value;
-    el.dispatchEvent(new Event('input'));
-}
-
-var test_string = 'This is a test of how quickly input events update a managed textbox';
-
-benchsuite('Live update a managed text box', function () {
+benchsuite('handle 100 click events to update a counter', function () {
     bench({
-        name: 'React',
+        name: 'React (using setState)',
         setup: function () {
             this.App = React.createClass({
                 getInitialState: function () {
-                    return {name: ''};
+                    return {counter: 0};
                 },
-                updateInput: function (ev) {
-                    this.setState({name: ev.target.value});
+                incrementCounter: function (ev) {
+                    this.setState({counter: this.state.counter + 1});
                 },
                 render: function () {
                     return React.createElement('input', {
-                        type: 'text',
-                        value: this.state.name,
-                        onInput: this.updateInput.bind(this)
+                        type: 'button',
+                        value: this.state.counter,
+                        onClick: this.incrementCounter
                     });
                 }
             });
+            this.scratch = document.getElementById('scratch-area');
         },
         fn: function () {
-            var container = document.createElement('div');
-            ReactDOM.render(React.createElement(this.App, {}), container);
-            var el = container.querySelector('input');
+            this.scratch.innerHTML = '';
+            ReactDOM.render(React.createElement(this.App, {}), this.scratch);
+            var el = this.scratch.querySelector('input');
             for (var i = 0; i < 100; i++) {
-                var str = test_string.substring(0, i + 1);
-                el.value = str;
-                input(el, str);
+                el.click();
+            }
+        }
+    });
+    bench({
+        name: 'React (top-down rendering + props)',
+        setup: function () {
+            var self = this;
+            this.App = React.createClass({
+                incrementCounter: function (ev) {
+                    self.data.counter++;
+                    self.render();
+                },
+                render: function () {
+                    return React.createElement('input', {
+                        type: 'button',
+                        value: this.props.counter,
+                        onClick: this.incrementCounter
+                    });
+                }
+            });
+            this.scratch = document.getElementById('scratch-area');
+        },
+        fn: function () {
+            this.scratch.innerHTML = '';
+            this.data = {counter: 0};
+            this.render = function () {
+                ReactDOM.render(React.createElement(this.App, this.data), this.scratch);
+            };
+            this.render();
+            var el = this.scratch.querySelector('input');
+            for (var i = 0; i < 100; i++) {
+                el.click();
             }
         }
     });
@@ -323,23 +347,28 @@ benchsuite('Live update a managed text box', function () {
         name: 'Magery',
         setup: function () {
             this.templates = createTemplateNode(
-                '<input data-template="app" type="text" value="{{name}}" data-managed="true" oninput="updateInput(event)" />'
+                '<input data-template="app" type="button" value="{{counter}}" onclick="incrementCounter(event)" />'
             );
+            this.scratch = document.getElementById('scratch-area');
         },
         fn: function () {
+            this.scratch.innerHTML = '';
+            var templates = this.templates;
             var element = document.createElement('input');
-            var data = {name: ''};
+            var data = {counter: 0};
+            this.scratch.appendChild(element);
+            function render() {
+                Magery.patch(element, templates, 'app', data);
+            }
             this.templates['app'].bind({
-                updateInput: function (ev) {
-                    data.name = ev.target.value;
-                    Magery.patch(element, this.templates, 'app', data);
+                incrementCounter: function (ev) {
+                    data.counter++;
+                    render();
                 }
             });
-            Magery.patch(element, this.templates, 'app', data);
+            render();
             for (var i = 0; i < 100; i++) {
-                var str = test_string.substring(0, i + 1);
-                element.value = str;
-                input(element, str);
+                element.click();
             }
         }
     });
