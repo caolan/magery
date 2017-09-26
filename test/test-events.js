@@ -509,4 +509,62 @@ suite('events', function () {
         done();
     });
 
+    test('Inside handlers, \'this\' is bound to top-most rendered element of template', function (done) {
+        var element = document.createElement('div');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<button onclick="clicked(event)">click me</button>' +
+                '</div>');
+        var data = {};
+        templates['main'].bind({
+            clicked: function (event) {
+                assert.equal(event.target, child(element, 0));
+                assert.equal(this, element);
+                done();
+            }
+        });
+        Magery.patch(element, templates, 'main', data);
+        click(child(element, 0));
+    });
+
+    test('\'this\' in nested template calls', function (done) {
+        var element = document.createElement('div');
+        var templates = createTemplateNode(
+            '<button data-template="bar" onclick="clicked(event)">click me</button>' +
+            '<div data-template="foo">' +
+                '<bar></bar>' +
+            '</div>');
+        var data = {};
+        templates['bar'].bind({
+            clicked: function (event) {
+                assert.equal(event.target, child(element, 0));
+                assert.equal(this, child(element, 0));
+                done();
+            }
+        });
+        Magery.patch(element, templates, 'foo', data);
+        click(child(element, 0));
+    });
+
+    test('\'this\' in nested template definitions', function (done) {
+        var element = document.createElement('div');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<div data-template="asdf">' +
+                  '<button onclick="clicked(event)">click me</button>' +
+                '</div>' +
+            '</div>'
+        );
+        var data = {};
+        templates['asdf'].bind({
+            clicked: function (event) {
+                assert.equal(event.target, child(element, 0, 0));
+                assert.equal(this, child(element, 0));
+                done();
+            }
+        });
+        Magery.patch(element, templates, 'main', data);
+        click(child(element, 0, 0));
+    });
+
 });

@@ -534,9 +534,9 @@ var Magery =
 	};
 
 
-	function Patcher(root, custom_transforms) {
+	function Patcher(element, custom_transforms) {
 	    this.transforms = custom_transforms || transforms;
-	    this.root = root;
+	    this.root = element;
 	    this.reset();
 	};
 
@@ -586,6 +586,9 @@ var Magery =
 	    else if (node !== this.current) {
 	        this.transforms.replaceChild(this.parent, node, this.current);
 	    }
+	    if (!this.template_root) {
+	        this.template_root = node;
+	    }
 	    this.stepInto(node);
 	};
 
@@ -600,7 +603,7 @@ var Magery =
 	                }
 	                return utils.lookup(node.data, arg);
 	            });
-	            node.template.handlers[handler.name].apply(null, args);
+	            node.template.handlers[handler.name].apply(handler.template_root, args);
 	        }
 	        if (node.tagName === 'INPUT') {
 	            var nodeType = node.getAttribute('type');
@@ -652,6 +655,7 @@ var Magery =
 	        handler.args = parts.map(function (part) {
 	            return utils.propertyPath(utils.trim(part));
 	        });
+	        handler.template_root = this.template_root;
 	    }
 	    node.visited_events.add(type);
 	};
@@ -785,7 +789,10 @@ var Magery =
 
 	Patcher.prototype.render = function (templates, name, data, root_key, inner) {
 	    var template = templates[name];
+	    var tmp = this.template_root;
+	    this.template_root = null;
 	    template._render(template, templates, this, data, root_key, inner);
+	    this.template_root = tmp;
 	};
 
 	// Patcher.prototype.end = function (data) {
