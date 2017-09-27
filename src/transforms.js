@@ -48,6 +48,7 @@ exports.setAttribute = function (node, name, value) {
 };
 
 exports.removeAttribute = function (node, name) {
+    console.log('removeAttribute: ' + name);
     if (html.attributes[name] & html.USE_PROPERTY) {
         node[name] = false;
     }

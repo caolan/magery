@@ -57,6 +57,7 @@ var transforms =
 
 	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
 	var USE_PROPERTY = exports.USE_PROPERTY = 2;
+	var USE_STRING = exports.USE_PROPERTY = 4;
 
 	exports.attributes = {
 	    'allowfullscreen': BOOLEAN_ATTRIBUTE,
@@ -81,7 +82,7 @@ var transforms =
 	    'required': BOOLEAN_ATTRIBUTE,
 	    'reversed': BOOLEAN_ATTRIBUTE,
 	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'value': USE_PROPERTY
+	    'value': USE_PROPERTY | USE_STRING
 	};
 
 
@@ -142,6 +143,7 @@ var transforms =
 	};
 
 	exports.removeAttribute = function (node, name) {
+	    console.log('removeAttribute: ' + name);
 	    if (html.attributes[name] & html.USE_PROPERTY) {
 	        node[name] = false;
 	    }

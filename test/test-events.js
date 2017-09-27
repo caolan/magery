@@ -11,6 +11,7 @@ suite('events', function () {
             el.style = 'display: none;';
         }
         el.innerHTML = src;
+        console.log(compile.compileToString(el));
         return compile.eval(el);
     }
 

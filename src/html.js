@@ -1,5 +1,6 @@
 var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
 var USE_PROPERTY = exports.USE_PROPERTY = 2;
+var USE_STRING = exports.USE_PROPERTY = 4;
 
 exports.attributes = {
     'allowfullscreen': BOOLEAN_ATTRIBUTE,
@@ -24,6 +25,6 @@ exports.attributes = {
     'required': BOOLEAN_ATTRIBUTE,
     'reversed': BOOLEAN_ATTRIBUTE,
     'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-    'value': USE_PROPERTY
+    'value': USE_PROPERTY | USE_STRING
 };
 

@@ -116,10 +116,28 @@ function compileElement(node, queue, write, is_root) {
             var event = name.match(/^on(.*)/);
             if (event) {
                 var event_name = event[1];
+                var start = value.indexOf('(');
+                var end = value.lastIndexOf(')');
+                var handler_name = value.substring(0, start);
+                var parts = value.substring(start + 1, end).split(',');
+                var args = [];
+                for (var i = 0, len = parts.length; i < len; i++) {
+                    var part = utils.trim(parts[i]);
+                    if (!part) {
+                        continue;
+                    }
+                    if (part === 'event') {
+                        args.push('p.EVENT');
+                    }
+                    else {
+                        args.push(compileLookup(utils.propertyPath(part)));
+                    }
+                }
                 write('p.eventListener(' +
                       JSON.stringify(event[1]) + ', ' +
-                      JSON.stringify(value) + ', ' +
-                      'data, template);\n');
+                      JSON.stringify(handler_name) + ', ' +
+                      '[' + args.join(', ') + '], ' +
+                      'template);\n');
             }
             else if (html.attributes[name] & html.BOOLEAN_ATTRIBUTE) {
                 if (value === "") {

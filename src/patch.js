@@ -7,6 +7,7 @@
 
 var transforms = require('./transforms');
 var utils = require('./utils');
+var html = require('./html');
 var Set = require('./set-polyfill');
 
 var ELEMENT_NODE = 1;
@@ -125,16 +126,19 @@ Patcher.prototype.enterTag = function (tag, key) {
     this.stepInto(node);
 };
 
+// specific value for referncing an event inside handler arguments
+Patcher.prototype.EVENT = {};
+
 function makeHandler(type) {
     return function (event) {
         var node = event.target;
         var handler = node.handlers[type];
         if (handler.name) {
             var args = handler.args.map(function (arg) {
-                if (arg.length == 1 && arg[0] == 'event') {
+                if (arg === Patcher.prototype.EVENT) {
                     return event;
                 }
-                return utils.lookup(node.data, arg);
+                return arg;
             });
             node.template.handlers[handler.name].apply(handler.template_root, args);
         }
@@ -167,30 +171,19 @@ function setListener(node, type) {
         node.handlers[type] = {fn: fn};
         node.addEventListener(type, fn);
     }
+    node.visited_events.add(type);
 }
 
-Patcher.prototype.eventListener = function (type, value, data, template) {
+Patcher.prototype.eventListener = function (type, handler_name, args, template) {
     var node = this.parent;
-    if (node.data !== data) {
-        node.data = data;
-    }
     if (node.template !== template) {
         node.template = template;
     }
     setListener(node, type);
     var handler = node.handlers[type];
-    if (handler.value !== value) {
-        handler.value = value;
-        var start = value.indexOf('(');
-        var end = value.lastIndexOf(')');
-        handler.name = value.substring(0, start);
-        var parts = value.substring(start + 1, end).split(',');
-        handler.args = parts.map(function (part) {
-            return utils.propertyPath(utils.trim(part));
-        });
-        handler.template_root = this.template_root;
-    }
-    node.visited_events.add(type);
+    handler.name = handler_name;
+    handler.args = args;
+    handler.template_root = this.template_root;
 };
 
 // force checkbox node checked property to match last rendered attribute
@@ -247,6 +240,23 @@ function resetInput(event) {
     }
 }
 
+// Patcher.prototype.attribute = function (name, value) {
+//     var node = this.parent;
+//     console.log(['attribute', name, node.getAttribute(name), value, node.value]);
+//     if (html.attributes[name] & html.USE_PROPERTY) {
+//         if (node[name] !== value) {
+//             if (html.attributes[name] & html.USE_STRING) {
+//                 value = '' + value;
+//             }
+//             this.transforms.setAttribute(node, name, value);
+//         }
+//     }
+//     else if (node.getAttribute(name) !== '' + value) {
+//         this.transforms.setAttribute(node, name, value);
+//     }
+//     node.visited_attributes.add(name);
+// };
+// TODO: add unit tests to justify some of the above logic
 Patcher.prototype.attribute = function (name, value) {
     var node = this.parent;
     if (node.getAttribute(name) !== value) {
@@ -276,20 +286,20 @@ Patcher.prototype.exitTag = function () {
     var node = this.parent;
     this.parent = node.parentNode;
     this.current = node.nextSibling;
-    deleteUnvisitedAttributes(this.transforms, node);
-    deleteUnvisitedEvents(this.transforms, node);
     if (node.tagName === 'INPUT') {
         var type = node.getAttribute('type');
-        if ((type === 'checkbox' || type == 'radio') && !getListener(node, 'change')) {
+        if ((type === 'checkbox' || type == 'radio')) {
             setListener(node, 'change');
         }
-        else if (node.hasAttribute('value') && !getListener(node, 'input')) {
+        else if (node.hasAttribute('value')) {
             setListener(node, 'input');
         }
     }
     else if (node.tagName === 'SELECT') {
         setListener(node, 'change');
     }
+    deleteUnvisitedAttributes(this.transforms, node);
+    deleteUnvisitedEvents(this.transforms, node);
 };
 
 Patcher.prototype.skip = function (tag, key) {

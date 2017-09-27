@@ -171,10 +171,28 @@ var compile =
 	            var event = name.match(/^on(.*)/);
 	            if (event) {
 	                var event_name = event[1];
+	                var start = value.indexOf('(');
+	                var end = value.lastIndexOf(')');
+	                var handler_name = value.substring(0, start);
+	                var parts = value.substring(start + 1, end).split(',');
+	                var args = [];
+	                for (var i = 0, len = parts.length; i < len; i++) {
+	                    var part = utils.trim(parts[i]);
+	                    if (!part) {
+	                        continue;
+	                    }
+	                    if (part === 'event') {
+	                        args.push('p.EVENT');
+	                    }
+	                    else {
+	                        args.push(compileLookup(utils.propertyPath(part)));
+	                    }
+	                }
 	                write('p.eventListener(' +
 	                      JSON.stringify(event[1]) + ', ' +
-	                      JSON.stringify(value) + ', ' +
-	                      'data, template);\n');
+	                      JSON.stringify(handler_name) + ', ' +
+	                      '[' + args.join(', ') + '], ' +
+	                      'template);\n');
 	            }
 	            else if (html.attributes[name] & html.BOOLEAN_ATTRIBUTE) {
 	                if (value === "") {
@@ -271,11 +289,11 @@ var compile =
 	    }
 	}
 
-	function noop() {}
+	function ignore_output(str) {}
 
 	exports.compile = function (node, write) {
 	    var queue = [];
-	    compileNode(node, queue, noop, true);
+	    compileNode(node, queue, ignore_output, true);
 	    write('({\n');
 	    while (queue.length) {
 	        node = queue.shift();
@@ -390,6 +408,7 @@ var compile =
 
 	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
 	var USE_PROPERTY = exports.USE_PROPERTY = 2;
+	var USE_STRING = exports.USE_PROPERTY = 4;
 
 	exports.attributes = {
 	    'allowfullscreen': BOOLEAN_ATTRIBUTE,
@@ -414,7 +433,7 @@ var compile =
 	    'required': BOOLEAN_ATTRIBUTE,
 	    'reversed': BOOLEAN_ATTRIBUTE,
 	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'value': USE_PROPERTY
+	    'value': USE_PROPERTY | USE_STRING
 	};
 
 

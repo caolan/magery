@@ -57,7 +57,7 @@ benchsuite('Add 100 elements to a list, one at a time (no keys)', function () {
             container.appendChild(element);
             for (var i = 0; i < 100; i++) {
                 data.items.push({name: 'item' + i});
-                Magery.patch(element, this.templates, 'app', data);
+                Magery.patch(this.templates, 'app', data, element);
             }
         }
     });
@@ -104,7 +104,7 @@ benchsuite('Add 100 elements to a list, one at a time (keys)', function () {
             var data = {items: []};
             for (var i = 0; i < 100; i++) {
                 data.items.push({id: i, name: 'item' + i});
-                Magery.patch(element, this.templates, 'app', data);
+                Magery.patch(this.templates, 'app', data, element);
             }
         }
     });
@@ -159,7 +159,7 @@ benchsuite('Randomly remove elements from 100 length list, one at a time (no key
             container.appendChild(element);
             for (var i = 0; i < 100; i++) {
                 data.items.splice(random(data.items.length - 1), 1);
-                Magery.patch(element, this.templates, 'app', data);
+                Magery.patch(this.templates, 'app', data, element);
             }
         }
     });
@@ -214,7 +214,7 @@ benchsuite('Randomly remove elements from 100 length list, one at a time (keys)'
             var data = {items: this.items.slice()};
             for (var i = 0; i < 100; i++) {
                 data.items.splice(random(data.items.length - 1), 1);
-                Magery.patch(element, this.templates, 'app', data);
+                Magery.patch(this.templates, 'app', data, element);
             }
         }
     });
@@ -275,7 +275,7 @@ benchsuite('Add 100 more complex elements to a list, one at a time', function ()
             var data = {items: []};
             for (var i = 0; i < 100; i++) {
                 data.items.push({id: i, name: 'item' + i});
-                Magery.patch(element, this.templates, 'app', data);
+                Magery.patch(this.templates, 'app', data, element);
             }
         }
     });
@@ -358,7 +358,7 @@ benchsuite('handle 100 click events to update a counter', function () {
             var data = {counter: 0};
             this.scratch.appendChild(element);
             function render() {
-                Magery.patch(element, templates, 'app', data);
+                Magery.patch(templates, 'app', data, element);
             }
             this.templates['app'].bind({
                 incrementCounter: function (ev) {
