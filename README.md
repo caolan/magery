@@ -8,42 +8,42 @@ JavaScript. On the server, these templates are simple enough to be
 rendered without a JavaScript runtime. On the client, they can be used
 to dynamically update the page in response to JavaScript events.
 
--   [Aims](#aims)
--   [Download](#download)
--   [Example](#example)
--   [Template syntax](#template-syntax)
-    -   [Variables](#variables)
-    -   [Booleans](#booleans)
-    -   [Attributes](#attributes)
-        -   [data-template](#data-template)
-        -   [data-each](#data-each)
-        -   [data-key](#data-key)
-        -   [data-if](#data-if)
-        -   [data-unless](#data-unless)
-        -   [data-managed](#data-managed)
-        -   [data-embed](#data-embed)
-        -   [Processing order](#processing-order)
-    -   [Tags](#tags)
-        -   [template-children](#template-children)
-        -   [Components](#components)
-    -   [Events](#events)
--   [API](#api)
-    -   [Magery.compileTemplates](#magerycompiletemplatesselector)
-    -   [Template.bind](#templatebindhandlers)
-    -   [Template.patch](#templatepatchtarget-data-prev_data-compare)
--   [Immutable data](#immutable-data)
--   [State management](#state-management)
--   [Server-side rendering](#server-side-rendering)
--   [Tests](https://caolan.github.io/magery/test/)
--   [Benchmarks](https://caolan.github.io/magery/bench/)
--   [Live editor](https://caolan.github.io/magery/editor/)
+- [Aims](#aims)
+- [Download](#download)
+- [Example](#example)
+- [Template syntax](#template-syntax)
+  - [Variables](#variables)
+  - [Booleans](#booleans)
+  - [Attributes](#attributes)
+    - [data-template](#data-template)
+    - [data-each](#data-each)
+    - [data-key](#data-key)
+    - [data-if](#data-if)
+    - [data-unless](#data-unless)
+    - [data-managed](#data-managed)
+    - [data-embed](#data-embed)
+    - [Processing order](#processing-order)
+  - [Tags](#tags)
+    - [template-children](#template-children)
+    - [Components](#components)
+  - [Events](#events)
+- [API](#api)
+  - [Magery.compileTemplates](#magerycompiletemplatesselector)
+  - [Template.bind](#templatebindhandlers)
+  - [Template.patch](#templatepatchtarget-data-prev_data-compare)
+- [Immutable data](#immutable-data)
+- [State management](#state-management)
+- [Server-side rendering](#server-side-rendering)
+- [Tests](https://caolan.github.io/magery/test/)
+- [Benchmarks](https://caolan.github.io/magery/bench/)
+- [Live editor](https://caolan.github.io/magery/editor/)
 
 ## Aims
 
--   To make enhancing your *multi-page* website with JavaScript easier
--   To work with your choice of back end language
--   To be [relatively small](#file-size) so you can use it for little (or large)
-    enhancements
+- To make enhancing your *multi-page* website with JavaScript easier
+- To work with your choice of back end language
+- To be [relatively small](#file-size) so you can use it for little (or large)
+  enhancements
 
 I wrote this library to prove that you don't need a 'single page app'
 to build great dynamic websites. In many cases the best possible user
