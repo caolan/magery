@@ -11,7 +11,6 @@ suite('events', function () {
             el.style = 'display: none;';
         }
         el.innerHTML = src;
-        console.log(compile.compileToString(el));
         return compile.eval(el);
     }
 
@@ -58,7 +57,7 @@ suite('events', function () {
                 done();
             }
         });
-        Magery.patch(container, templates, 'main', data);
+        Magery.patch(templates, 'main', data, container);
         click(child(container, 0));
     });
 
@@ -75,7 +74,7 @@ suite('events', function () {
                 done();
             }
         });
-        Magery.patch(container, templates, 'main', data);
+        Magery.patch(templates, 'main', data, container);
         click(child(container, 0));
     });
     
@@ -93,7 +92,7 @@ suite('events', function () {
                 done();
             }
         });
-        Magery.patch(container, templates, 'main', data);
+        Magery.patch(templates, 'main', data, container);
         click(child(container, 0));
     });
     
@@ -110,7 +109,7 @@ suite('events', function () {
                 calls.push(item.name);
             }
         });
-        Magery.patch(container, templates, 'main', data);
+        Magery.patch(templates, 'main', data, container);
         click(child(container, 0));
         click(child(container, 1));
         click(child(container, 2));
@@ -128,10 +127,10 @@ suite('events', function () {
         templates['main'].bind({
             updateID: function (user, event) {
                 user.id = event.target.value.replace(/[^0-9]/g, '');
-                Magery.patch(container, templates, 'main', data);
+                Magery.patch(templates, 'main', data, container);
             }
         });
-        Magery.patch(container, templates, 'main', data);
+        Magery.patch(templates, 'main', data, container);
         input(child(container, 0), '123abc4');
         assert.equal(child(container, 0).value, '1234');
         input(child(container, 0), '12345');
@@ -152,10 +151,10 @@ suite('events', function () {
         templates['main'].bind({
             updateID: function (user, event) {
                 user.name = event.target.value;
-                Magery.patch(container, templates, 'main', data);
+                Magery.patch(templates, 'main', data, container);
             }
         });
-        Magery.patch(container, templates, 'main', data);
+        Magery.patch(templates, 'main', data, container);
         assert.equal(child(container, 0).value, 'test');
         input(child(container, 0), '<h1>test</h1>');
         assert.equal(child(container, 0).value, '<h1>test</h1>');
@@ -168,7 +167,7 @@ suite('events', function () {
                 '<input data-managed="true" type="text" value="{{name}}">' +
                 '</div>');
         var data = {name: 'testing'};
-        Magery.patch(container, templates, 'main', data);
+        Magery.patch(templates, 'main', data, container);
         var input = child(container, 0);
         input.value = 'foo';
         assert.equal(input.value, 'foo');
@@ -189,10 +188,10 @@ suite('events', function () {
         templates['main'].bind({
             updateInput: function () {
                 data.name = 'bar';
-                Magery.patch(container, templates, 'main', data);
+                Magery.patch(templates, 'main', data, container);
             }
         });
-        Magery.patch(container, templates, 'main', data);
+        Magery.patch(templates, 'main', data, container);
         var input = child(container, 0);
         input.value = 'foo';
         assert.equal(input.value, 'foo');
@@ -211,7 +210,7 @@ suite('events', function () {
                 '<input data-managed="true" data-unless="checked" type="checkbox">' +
                 '</div>');
         var data = {checked: true};
-        Magery.patch(container, templates, 'main', data);
+        Magery.patch(templates, 'main', data, container);
         var input = child(container, 0);
         document.body.appendChild(container);
         assert.ok(input.checked);
@@ -236,7 +235,7 @@ suite('events', function () {
                 data.checked = !data.checked;
             }
         });
-        Magery.patch(container, templates, 'main', data);
+        Magery.patch(templates, 'main', data, container);
         var input = child(container, 0);
         document.body.appendChild(container);
         assert.ok(input.checked);
@@ -268,7 +267,7 @@ suite('events', function () {
                 {value: 'three', checked: false}
             ]
         };
-        Magery.patch(container, templates, 'main', data);
+        Magery.patch(templates, 'main', data, container);
         var radioOne = child(container, 0, 0);
         var radioTwo = child(container, 1, 0);
         var radioThree = child(container, 2, 0);
@@ -307,10 +306,10 @@ suite('events', function () {
                 data.options.forEach(function (option) {
                     option.checked = (option.value === value);
                 });
-                Magery.patch(container, templates, 'main', data);
+                Magery.patch(templates, 'main', data, container);
             }
         });
-        Magery.patch(container, templates, 'main', data);
+        Magery.patch(templates, 'main', data, container);
         var radioOne = child(container, 0, 0);
         var radioTwo = child(container, 1, 0);
         var radioThree = child(container, 2, 0);
@@ -351,7 +350,7 @@ suite('events', function () {
                 {value: 3, label: 'three', selected: false}
             ]
         };
-        Magery.patch(container, templates, 'main', data);
+        Magery.patch(templates, 'main', data, container);
         var select = child(container, 0);
         var optionOne = child(select, 0);
         var optionTwo = child(select, 1);
@@ -403,7 +402,7 @@ suite('events', function () {
                 data.item_one.count++;
             }
         });
-        Magery.patch(container, templates, 'main', data);
+        Magery.patch(templates, 'main', data, container);
         var btn1 = child(container, 0, 1);
         var btn2 = child(container, 1);
         assert.equal(data.item_one.count, 0, 'item_one.count after patch');
@@ -449,7 +448,7 @@ suite('events', function () {
                 data.item_one.count++;
             }
         });
-        Magery.patch(container, templates, 'main', data);
+        Magery.patch(templates, 'main', data, container);
         var btn1 = child(container, 0, 1);
         var btn2 = child(container, 1);
         assert.equal(data.item_one.count, 0, 'item_one.count after patch');
@@ -497,7 +496,7 @@ suite('events', function () {
                 data.item_one.count++;
             }
         });
-        Magery.patch(container, templates, 'main', data);
+        Magery.patch(templates, 'main', data, container);
         var btn1 = child(container, 0, 1);
         var btn2 = child(container, 0, 2);
         assert.equal(data.item_one.count, 0, 'item_one.count after patch');
@@ -525,7 +524,7 @@ suite('events', function () {
                 done();
             }
         });
-        Magery.patch(element, templates, 'main', data);
+        Magery.patch(templates, 'main', data, element);
         click(child(element, 0));
     });
 
@@ -544,7 +543,7 @@ suite('events', function () {
                 done();
             }
         });
-        Magery.patch(element, templates, 'foo', data);
+        Magery.patch(templates, 'foo', data, element);
         click(child(element, 0));
     });
 
@@ -565,7 +564,7 @@ suite('events', function () {
                 done();
             }
         });
-        Magery.patch(element, templates, 'main', data);
+        Magery.patch(templates, 'main', data, element);
         click(child(element, 0, 0));
     });
 

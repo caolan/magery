@@ -216,11 +216,11 @@ function compileNode(node, queue, write, is_root) {
     }
 }
 
-function noop() {}
+function ignore_output(str) {}
 
 exports.compile = function (node, write) {
     var queue = [];
-    compileNode(node, queue, noop, true);
+    compileNode(node, queue, ignore_output, true);
     write('({\n');
     while (queue.length) {
         node = queue.shift();

@@ -18,19 +18,20 @@
     <script src="../build/magery.min.js"></script>
     <script>
 
-      var templates = Magery.compileTemplates('.magery-templates');
-      var element = document.getElementById('example');
-      var data = {name: 'testing'};
+     var templates = Magery.compileTemplates('.magery-templates');
+     console.log(templates);
+     var element = document.getElementById('example');
+     var data = {name: 'testing'};
 
-      // add event handlers
-      templates['hello'].bind({
-        sayHello: function (name) {
-          alert('Hello, ' + name + '!');
-        }
-      });
+     // add event handlers
+     templates['hello'].bind({
+         sayHello: function (name) {
+             alert('Hello, ' + name + '!');
+         }
+     });
 
-      // patch the page
-      templates['hello'].patch(element, data);
+     // patch the page
+     Magery.patch(templates, 'hello', data, element);
 
     </script>
   </body>

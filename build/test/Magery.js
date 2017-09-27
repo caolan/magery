@@ -53,7 +53,7 @@ var Magery =
 /***/ (function(module, exports, __webpack_require__) {
 
 	module.exports = {
-	    compile: __webpack_require__(2),
+	    compileTemplates: __webpack_require__(2).eval,
 	    Template: __webpack_require__(5),
 	    lookup: __webpack_require__(3).lookup,
 	    Patcher: __webpack_require__(6).Patcher,
@@ -435,11 +435,6 @@ var Magery =
 /* 5 */
 /***/ (function(module, exports) {
 
-	// var transforms = require('./transforms');
-	// var render = require('./render');
-	// var patch = require('./patch');
-
-
 	function Template(render) {
 	    this._render = render;
 	    this.handlers = {};
@@ -448,11 +443,6 @@ var Magery =
 	Template.prototype.bind = function (handlers) {
 	    this.handlers = handlers;
 	};
-
-	// Template.prototype.patch = function (element, data) {
-	//     var patcher = new patch.Patcher(element, transforms);
-	//     render(patcher, this.node, data, '');
-	// };
 
 	module.exports = Template;
 
@@ -546,10 +536,6 @@ var Magery =
 	    this.parent = this.root.parentNode;
 	    this.current = this.root;
 	};
-
-	// Patcher.prototype.start = function () {
-	//     // this.stepInto(this.container);
-	// };
 
 	Patcher.prototype.stepInto = function (node) {
 	    if (node.visited_attributes) {
@@ -795,12 +781,7 @@ var Magery =
 	    this.template_root = tmp;
 	};
 
-	// Patcher.prototype.end = function (data) {
-	//     // deleteChildren(this.transforms, this.parent, this.current);
-	//     // this.parent = null;
-	// };
-
-	exports.patch = function (element, templates, name, data) {
+	exports.patch = function (templates, name, data, element) {
 	    new Patcher(element).render(templates, name, data);
 	};
 

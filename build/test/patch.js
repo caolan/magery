@@ -260,10 +260,6 @@ var patch =
 	    this.current = this.root;
 	};
 
-	// Patcher.prototype.start = function () {
-	//     // this.stepInto(this.container);
-	// };
-
 	Patcher.prototype.stepInto = function (node) {
 	    if (node.visited_attributes) {
 	        node.visited_attributes.clear();
@@ -508,12 +504,7 @@ var patch =
 	    this.template_root = tmp;
 	};
 
-	// Patcher.prototype.end = function (data) {
-	//     // deleteChildren(this.transforms, this.parent, this.current);
-	//     // this.parent = null;
-	// };
-
-	exports.patch = function (element, templates, name, data) {
+	exports.patch = function (templates, name, data, element) {
 	    new Patcher(element).render(templates, name, data);
 	};
 

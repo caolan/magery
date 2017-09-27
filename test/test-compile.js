@@ -1,4 +1,4 @@
-suite('render', function () {
+suite('compile', function () {
 
     var assert = chai.assert;
 
@@ -38,7 +38,6 @@ suite('render', function () {
             el.style = 'display: none;';
         }
         el.innerHTML = src;
-        console.log(compile.compileToString(el));
         return compile.eval(el);
     }
 
@@ -50,7 +49,6 @@ suite('render', function () {
                 '<em>baz</em>' +
             '</div>'
         );
-        console.log(templates);
         var patcher_calls = _patch(templates, 'app', {});
         assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['attribute', 'data-bind', 'app']);
@@ -251,7 +249,6 @@ suite('render', function () {
                 '</div>');
         var data = {items: [{name: 'one'}, {name: 'two'}, {name: 'three'}]};
         var patcher_calls = _patch(templates, 'foo', data);
-        console.log(patcher_calls);
         assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['attribute', 'data-bind', 'foo']);
         assert.deepEqual(patcher_calls[2], ['enterTag', 'H1', null]);
@@ -281,7 +278,6 @@ suite('render', function () {
                 '</div>');
         var data = {published: true};
         var patcher_calls = _patch(templates, 'foo', data);
-        console.log(patcher_calls);
         assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
         assert.deepEqual(patcher_calls[1], ['attribute', 'data-bind', 'foo']);
         assert.deepEqual(patcher_calls[2], ['enterTag', 'H1', null]);

@@ -1,5 +1,5 @@
 module.exports = {
-    compile: require('./compile'),
+    compileTemplates: require('./compile').eval,
     Template: require('./template'),
     lookup: require('./utils').lookup,
     Patcher: require('./patch').Patcher,
