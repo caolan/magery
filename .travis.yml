@@ -1,0 +1,7 @@
+langauge: node_js
+node_js: node
+os: linux
+dist: trusty
+cache:
+  directories:
+    - "node_modules"
