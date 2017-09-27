@@ -39,8 +39,10 @@ suite('events', function () {
     }
 
     function input(el, value){
+        var ev = document.createEvent('Event');
+        ev.initEvent('input', true, false);
         el.value = value;
-        el.dispatchEvent(new Event('input'));
+        el.dispatchEvent(ev);
     }
 
     test('click event to dispatch', function (done) {
