@@ -6,7 +6,7 @@ function createTemplateNode(src) {
         el.id = 'test-templates';
     }
     el.innerHTML = src;
-    var code = Magery.compile.compileToString(el.content);
+    var code = Magery.compile(el);
     return eval(code);
 }
 
