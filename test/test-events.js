@@ -1,4 +1,4 @@
-suite('events', function () {
+suite('Events', function () {
 
     var assert = chai.assert;
 
@@ -11,7 +11,6 @@ suite('events', function () {
             el.style = 'display: none;';
         }
         el.innerHTML = src;
-        console.log(compile.compileToString(el));
         return compile.eval(el);
     }
 
@@ -287,14 +286,15 @@ suite('events', function () {
     });
 
     test('update radio via event handler', function (done) {
-        var container = document.createElement('div');
+        var container = document.createElement('form');
         var templates = createTemplateNode(
-            '<div data-template="main">' +
+            '<form data-template="main" method="GET" action="">' +
                 '<div data-each="option in options">' +
-                '<input data-if="option.checked" data-managed="true" type="radio" onclick="pick(option.value)" name="example" value="{{option.value}}" checked>' +
-                '<input data-unless="option.checked" data-managed="true" type="radio" onclick="pick(option.value)" name="example" value="{{option.value}}">' +
+                    '<input data-if="option.checked" data-managed="true" type="radio" onclick="pick(option.value)" name="example" value="{{option.value}}" checked>' +
+                    '<input data-unless="option.checked" data-managed="true" type="radio" onclick="pick(option.value)" name="example" value="{{option.value}}">' +
                 '</div>' +
-                '</div>');
+            '</form>'
+        );
         var data = {
             options: [
                 {value: 'one', checked: false},
@@ -302,6 +302,7 @@ suite('events', function () {
                 {value: 'three', checked: false}
             ]
         };
+        var radioOne, radioTwo, radioThree;
         templates['main'].bind({
             pick: function (value) {
                 data.options.forEach(function (option) {
@@ -311,9 +312,9 @@ suite('events', function () {
             }
         });
         Magery.patch(templates, 'main', data, container);
-        var radioOne = child(container, 0, 0);
-        var radioTwo = child(container, 1, 0);
-        var radioThree = child(container, 2, 0);
+        radioOne = child(container, 0, 0);
+        radioTwo = child(container, 1, 0);
+        radioThree = child(container, 2, 0);
         document.body.appendChild(container);
         assert.ok(!radioOne.checked, 'radioOne (0)');
         assert.ok(radioTwo.checked, 'radioTwo (0)');

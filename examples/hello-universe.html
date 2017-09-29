@@ -21,7 +21,7 @@
         <!-- patch the target using the template -->
         <script src="../build/magery.js"></script>
         <script>
-         var templates = Magery.compileTemplates('.magery-templates');
+         var templates = Magery.compile('.magery-templates');
          var container = document.getElementById('container');
          var data = {name: 'galaxy'};
 
@@ -29,12 +29,12 @@
              updateName: function (event) {
                  // update the data object, then patch the page
                  data.name = event.target.value;
-                 templates['app'].patch(container, data);
+                 Magery.patch(templates, 'app', data, container);
              }
          });
          
          // initial patch sets up event handlers
-         templates['app'].patch(container, data);
+         Magery.patch(templates, 'app', data, container);
         </script>
     </body>
 </html>

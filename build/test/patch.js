@@ -45,134 +45,12 @@ var patch =
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(6);
+	module.exports = __webpack_require__(2);
 
 
 /***/ }),
 /* 1 */,
-/* 2 */,
-/* 3 */
-/***/ (function(module, exports) {
-
-	var ELEMENT_NODE = 1;
-	var TEXT_NODE = 3;
-	var DOCUMENT_FRAGMENT = 11;
-
-	exports.isDocumentFragment = function (node) {
-	    return node.nodeType === DOCUMENT_FRAGMENT;
-	};
-
-	exports.isElementNode = function (node) {
-	    return node.nodeType === ELEMENT_NODE;
-	};
-
-	exports.isTextNode = function (node) {
-	    return node.nodeType === TEXT_NODE;
-	};
-
-	exports.eachNode = function (nodelist, f) {
-	    var i = 0;
-	    var node = nodelist[0];
-	    while (node) {
-	        var tmp = node;
-	        // need to call nextSibling before f() because f()
-	        // might remove the node from the DOM
-	        node = node.nextSibling;
-	        f(tmp, i++, nodelist);
-	    }
-	};
-
-	exports.mapNodes = function (nodelist, f) {
-	    var results = [];
-	    exports.eachNode(nodelist, function (node, i) {
-	        results[i] = f(node, i, nodelist);
-	    });
-	    return results;
-	};
-
-	exports.trim = function (str) {
-	    return str.replace(/^\s+|\s+$/g, '');
-	};
-
-	exports.propertyPath = function (str) {
-	    return str.split('.').filter(function (x) {
-	        return x;
-	    });
-	};
-
-	// finds property path array (e.g. ['foo', 'bar']) in data object
-	exports.lookup = function (data, props) {
-	    var value = data;
-	    for(var i = 0, len = props.length; i < len; i++) {
-	        if (value === undefined || value === null) {
-	            return '';
-	        }
-	        value = value[props[i]];
-	    }
-	    return (value === undefined || value === null) ? '' : value;
-	};
-
-	exports.templateTagName = function (node) {
-	    var m = /^TEMPLATE-([^\s/>]+)/.exec(node.tagName);
-	    return m && m[1].toLowerCase();
-	};
-
-	exports.shallowClone = function (obj) {
-	    var result = {};
-	    for (var k in obj) {
-	        result[k] = obj[k];
-	    }
-	    return result;
-	    // return Object.assign({}, obj);
-	};
-
-	exports.eachAttribute = function (node, f) {
-	    var attrs = node.attributes;
-	    for (var i = 0, len = node.attributes.length; i < len; i++) {
-	        f(node.attributes[i].name, node.attributes[i].value);
-	    }
-	};
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports) {
-
-	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
-	var USE_PROPERTY = exports.USE_PROPERTY = 2;
-	var USE_STRING = exports.USE_PROPERTY = 4;
-
-	exports.attributes = {
-	    'allowfullscreen': BOOLEAN_ATTRIBUTE,
-	    'async': BOOLEAN_ATTRIBUTE,
-	    'autofocus': BOOLEAN_ATTRIBUTE,
-	    'autoplay': BOOLEAN_ATTRIBUTE,
-	    'capture': BOOLEAN_ATTRIBUTE,
-	    'checked': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'controls': BOOLEAN_ATTRIBUTE,
-	    'default': BOOLEAN_ATTRIBUTE,
-	    'defer': BOOLEAN_ATTRIBUTE,
-	    'disabled': BOOLEAN_ATTRIBUTE,
-	    'formnovalidate': BOOLEAN_ATTRIBUTE,
-	    'hidden': BOOLEAN_ATTRIBUTE,
-	    'itemscope': BOOLEAN_ATTRIBUTE,
-	    'loop': BOOLEAN_ATTRIBUTE,
-	    'multiple': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'muted': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'novalidate': BOOLEAN_ATTRIBUTE,
-	    'open': BOOLEAN_ATTRIBUTE,
-	    'readonly': BOOLEAN_ATTRIBUTE,
-	    'required': BOOLEAN_ATTRIBUTE,
-	    'reversed': BOOLEAN_ATTRIBUTE,
-	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'value': USE_PROPERTY | USE_STRING
-	};
-
-
-
-/***/ }),
-/* 5 */,
-/* 6 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -182,10 +60,10 @@ var patch =
 	 * DOM, performing DOM mutation only through transform calls.
 	 */
 
-	var transforms = __webpack_require__(7);
-	var utils = __webpack_require__(3);
+	var transforms = __webpack_require__(3);
+	var utils = __webpack_require__(5);
 	var html = __webpack_require__(4);
-	var Set = __webpack_require__(8);
+	var Set = __webpack_require__(6);
 
 	var ELEMENT_NODE = 1;
 	var TEXT_NODE = 3;
@@ -508,6 +386,9 @@ var patch =
 	};
 
 	Patcher.prototype.render = function (templates, name, data, root_key, inner) {
+	    if (!templates[name]) {
+	        throw new Error('Template does not exist: <' + name + '>');
+	    }
 	    var template = templates[name];
 	    var tmp = this.template_root;
 	    this.template_root = null;
@@ -515,13 +396,9 @@ var patch =
 	    this.template_root = tmp;
 	};
 
-	exports.patch = function (templates, name, data, element) {
-	    new Patcher(element).render(templates, name, data);
-	};
-
 
 /***/ }),
-/* 7 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -574,7 +451,6 @@ var patch =
 	};
 
 	exports.removeAttribute = function (node, name) {
-	    console.log('removeAttribute: ' + name);
 	    if (html.attributes[name] & html.USE_PROPERTY) {
 	        node[name] = false;
 	    }
@@ -594,7 +470,127 @@ var patch =
 
 
 /***/ }),
-/* 8 */
+/* 4 */
+/***/ (function(module, exports) {
+
+	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
+	var USE_PROPERTY = exports.USE_PROPERTY = 2;
+	var USE_STRING = exports.USE_STRING = 4;
+
+	exports.attributes = {
+	    'allowfullscreen': BOOLEAN_ATTRIBUTE,
+	    'async': BOOLEAN_ATTRIBUTE,
+	    'autofocus': BOOLEAN_ATTRIBUTE,
+	    'autoplay': BOOLEAN_ATTRIBUTE,
+	    'capture': BOOLEAN_ATTRIBUTE,
+	    'checked': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'controls': BOOLEAN_ATTRIBUTE,
+	    'default': BOOLEAN_ATTRIBUTE,
+	    'defer': BOOLEAN_ATTRIBUTE,
+	    'disabled': BOOLEAN_ATTRIBUTE,
+	    'formnovalidate': BOOLEAN_ATTRIBUTE,
+	    'hidden': BOOLEAN_ATTRIBUTE,
+	    'itemscope': BOOLEAN_ATTRIBUTE,
+	    'loop': BOOLEAN_ATTRIBUTE,
+	    'multiple': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'muted': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'novalidate': BOOLEAN_ATTRIBUTE,
+	    'open': BOOLEAN_ATTRIBUTE,
+	    'readonly': BOOLEAN_ATTRIBUTE,
+	    'required': BOOLEAN_ATTRIBUTE,
+	    'reversed': BOOLEAN_ATTRIBUTE,
+	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'value': USE_PROPERTY | USE_STRING
+	};
+
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports) {
+
+	var ELEMENT_NODE = 1;
+	var TEXT_NODE = 3;
+	var DOCUMENT_FRAGMENT = 11;
+
+	exports.isDocumentFragment = function (node) {
+	    return node.nodeType === DOCUMENT_FRAGMENT;
+	};
+
+	exports.isElementNode = function (node) {
+	    return node.nodeType === ELEMENT_NODE;
+	};
+
+	exports.isTextNode = function (node) {
+	    return node.nodeType === TEXT_NODE;
+	};
+
+	exports.eachNode = function (nodelist, f) {
+	    var i = 0;
+	    var node = nodelist[0];
+	    while (node) {
+	        var tmp = node;
+	        // need to call nextSibling before f() because f()
+	        // might remove the node from the DOM
+	        node = node.nextSibling;
+	        f(tmp, i++, nodelist);
+	    }
+	};
+
+	exports.mapNodes = function (nodelist, f) {
+	    var results = [];
+	    exports.eachNode(nodelist, function (node, i) {
+	        results[i] = f(node, i, nodelist);
+	    });
+	    return results;
+	};
+
+	exports.trim = function (str) {
+	    return str.replace(/^\s+|\s+$/g, '');
+	};
+
+	exports.propertyPath = function (str) {
+	    return str.split('.').filter(function (x) {
+	        return x;
+	    });
+	};
+
+	// finds property path array (e.g. ['foo', 'bar']) in data object
+	exports.lookup = function (data, props) {
+	    var value = data;
+	    for(var i = 0, len = props.length; i < len; i++) {
+	        if (value === undefined || value === null) {
+	            return '';
+	        }
+	        value = value[props[i]];
+	    }
+	    return (value === undefined || value === null) ? '' : value;
+	};
+
+	exports.templateTagName = function (node) {
+	    var m = /^TEMPLATE-([^\s/>]+)/.exec(node.tagName);
+	    return m && m[1].toLowerCase();
+	};
+
+	exports.shallowClone = function (obj) {
+	    var result = {};
+	    for (var k in obj) {
+	        result[k] = obj[k];
+	    }
+	    return result;
+	    // return Object.assign({}, obj);
+	};
+
+	exports.eachAttribute = function (node, f) {
+	    var attrs = node.attributes;
+	    for (var i = 0, len = node.attributes.length; i < len; i++) {
+	        f(node.attributes[i].name, node.attributes[i].value);
+	    }
+	};
+
+
+/***/ }),
+/* 6 */
 /***/ (function(module, exports) {
 
 	// use built in Set() if available

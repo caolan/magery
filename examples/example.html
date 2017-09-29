@@ -20,11 +20,11 @@
     <!-- javascript -->
     <script src="../build/magery.min.js"></script>
     <script>
-      var templates = Magery.compileTemplates('#myTemplates');
+      var templates = Magery.compile('#myTemplates');
       var target = document.getElementById('hello');
       var data = {"name": "world"};
 
-      templates['greeting'].patch(target, data);
+      Magery.patch(templates, 'greeting', data, target);
     </script>
   </body>
 </html>

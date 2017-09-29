@@ -22,12 +22,12 @@
         
         <script src="../build/magery.js"></script>
         <script>
-         var templates = Magery.compileTemplates('.magery-templates');
+         var templates = Magery.compile('.magery-templates');
          var element = document.getElementById('container');
          var data = {app: {items: []}};
 
          function patch() {
-             templates['main'].patch(element, data);
+             Magery.patch(templates, 'main', data, element);
          }
 
          templates['main'].bind({

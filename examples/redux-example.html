@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Redux example</title>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <!-- target element -->
+        <div id="counter"></div>
+        
+        <!-- our templates -->
+        <template class="magery-templates">
+            <div data-template="counter">
+                <p>
+                    Clicked: <span id="value">{{ count }}</span> times
+                    <button onclick="increment()">+</button>
+                    <button onclick="decrement()">-</button>
+                </p>
+            </div>
+        </template>
+
+        <!-- dependencies -->
+        <script src="./redux.min.js"></script>
+        <script src="../build/magery.js"></script>
+        
+        <!-- application code -->
+        <script>
+         var templates = Magery.compile('.magery-templates');
+         
+         // create a store
+         var store = Redux.createStore(function (state, action) {
+             if (typeof state === 'undefined') {
+                 return {count: 0};
+             }
+             switch (action.type) {
+                 case 'INCREMENT':
+                     return {count: state.count + 1};
+                 case 'DECREMENT':
+                     return {count: state.count - 1};
+                 default:
+                     return state;
+             }
+         });
+         
+         var target = document.getElementById('counter');
+         
+         function render() {
+             Magery.patch(templates, 'counter', store.getState(), target);
+         }
+         
+         // add event handlers using Magery
+         templates['counter'].bind({
+             increment: function () {
+                 store.dispatch({type: 'INCREMENT'});
+             },
+             decrement: function () {
+                 store.dispatch({type: 'DECREMENT'});
+             }
+         });
+         
+         // update the page when the store changes
+         store.subscribe(render);
+         
+         // initial render
+         render();
+        </script>
+    </body>
+</html>

@@ -18,9 +18,9 @@
         
         <!-- patch the target using the template -->
         <script>
-         var templates = Magery.compileTemplates('.magery-templates');
+         var templates = Magery.compile('.magery-templates');
          var element = document.getElementById('hello');
-         templates['greeting'].patch(element);
+         Magery.patch(templates, 'greeting', {}, element);
         </script>
     </body>
 </html>

@@ -18,10 +18,10 @@
         <!-- patch the target using the template -->
         <script src="../build/magery.min.js"></script>
         <script>
-         var templates = Magery.compileTemplates('.magery-templates');
+         var templates = Magery.compile('.magery-templates');
          var element = document.getElementById('hello');
          
-         templates['greeting'].patch(element, {name: 'galaxy'});
+         Magery.patch(templates, 'greeting', {name: 'galaxy'}, element);
         </script>
     </body>
 </html>

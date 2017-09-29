@@ -1,4 +1,4 @@
-suite('compile', function () {
+suite('Compile', function () {
 
     var assert = chai.assert;
 
@@ -1812,5 +1812,27 @@ suite('compile', function () {
         assert.deepEqual(patcher_calls[10], ['exitTag']);
         assert.equal(patcher_calls.length, 11);
     });
+
+    test('ignore template-embed tags', function () {
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<h1>{{ title }}</h1>' +
+                '<template-embed name="bar"></template-embed>' +
+            '</div>' +
+            '<div data-template="bar">Test</div>'
+        );
+        var data = {
+            title: 'test'
+        };
+        var patcher_calls = _patch(templates, 'foo', data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['attribute', 'data-bind', 'foo']);
+        assert.deepEqual(patcher_calls[2], ['enterTag', 'H1', null]);
+        assert.deepEqual(patcher_calls[3], ['text', 'test']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['exitTag']);
+        assert.equal(patcher_calls.length, 6);
+    });
+
 
 });

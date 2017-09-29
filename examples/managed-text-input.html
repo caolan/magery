@@ -28,7 +28,7 @@
         
         <script src="../build/magery.js"></script>
         <script>
-         var templates = Magery.compileTemplates('.magery-templates');
+         var templates = Magery.compile('.magery-templates');
          var container = document.getElementById('container');
          var data = {number_str: ''};
 
@@ -36,12 +36,12 @@
              updateNumber: function (event) {
                  if (/^[0-9]*$/.test(event.target.value)) {
                      data.number_str = event.target.value;
-                     templates['main'].patch(container, data);
+                     Magery.patch(templates, 'main', data, container);
                  }
              }
          });
 
-         templates['main'].patch(container, data);
+         Magery.patch(templates, 'main', data, container);
         </script>
     </body>
 </html>

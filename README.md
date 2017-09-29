@@ -1,5 +1,7 @@
 # Magery
 
+[![Build Status](https://travis-ci.org/caolan/magery.svg?branch=master)](https://travis-ci.org/caolan/magery)
+
 Easy-to-use JavaScript templates that can work with server-side
 rendering in any language.
 
@@ -28,9 +30,9 @@ to dynamically update the page in response to JavaScript events.
     - [Components](#components)
   - [Events](#events)
 - [API](#api)
-  - [Magery.compileTemplates](#magerycompiletemplatesselector)
+  - [Magery.compile](#magerycompiletarget)
+  - [Magery.patch](#magerypatch)
   - [Template.bind](#templatebindhandlers)
-  - [Template.patch](#templatepatchtarget-data-prev_data-compare)
 - [Immutable data](#immutable-data)
 - [State management](#state-management)
 - [Server-side rendering](#server-side-rendering)
@@ -42,8 +44,8 @@ to dynamically update the page in response to JavaScript events.
 
 - To make enhancing your *multi-page* website with JavaScript easier
 - To work with your choice of back end language
-- To be [relatively small](#file-size) so you can use it for little (or large)
-  enhancements
+- To be [relatively small](#file-size) so you can use it for little
+  (and large) enhancements
 
 I wrote this library to prove that you don't need a 'single page app'
 to build great dynamic websites. In many cases the best possible user
@@ -103,11 +105,13 @@ and patching the DOM:
     <!-- javascript -->
     <script src="../build/magery.min.js"></script>
     <script>
-      var templates = Magery.compileTemplates('#myTemplates');
+    
+      var templates = Magery.compile('#myTemplates');
       var target = document.getElementById('hello');
       var data = {"name": "world"};
 
-      templates['greeting'].patch(target, data);
+      Magery.patch(templates, 'greeting', data, target);
+      
     </script>
   </body>
 </html>
@@ -381,11 +385,12 @@ browser](https://caolan.github.io/magery/examples/managed-text-input.html)).
 
 #### data-embed
 
-This is only used for server-side rendering. Adding a `data-embed`
-property to an element will include the current context data in the
-final output. A `data-context` attribute will be added to the rendered
-element which contains the current JSON context data. For more information
-see [Server-side rendering](#server-side-rendering).
+This is only used during server-side rendering. Adding a `data-embed`
+property to an element will include data from the current context in
+the output. A `data-context` attribute is added to the element
+containing JSON encoded context data.
+
+See [server-side rendering](#server-side-rendering).
 
 #### Processing order
 
@@ -471,6 +476,49 @@ Result:
 </div>
 ```
 
+#### template-embed
+
+Only used during server-side rendering, ignored during
+`Magery.patch()`. Embeds a template definition in the output. By
+default it wraps the definition in a `<template>` tag.
+
+##### Example use
+
+Template:
+
+``` html
+<ul data-template="tags">
+  <li data-each="tag in tags">{{ tag }}</li>
+</ul>
+
+<div data-template="page">
+  <h1>{{ title }}</h1>
+  <template-embed name="tags"></template-embed>
+</div>
+```
+
+Data:
+
+``` javascript
+{
+  "title": "Example, 
+  "tags": ["foo", "bar"]
+}
+```
+
+Result:
+
+``` html
+<div data-bind="page">
+  <h1>Example</h1>
+  <template class="magery-templates">
+    <ul data-template="tags">
+      <li data-each="tag in tags">{{ tag }}</li>
+    </ul>
+  </template>
+</div>
+```
+
 #### Components
 
 Templates can be rendered by other templates as components. To do
@@ -553,7 +601,7 @@ to a template using [Template.bind()](#templatebindhandlers).
     <script src="../build/magery.min.js"></script>
     <script>
 
-      var templates = Magery.compileTemplates('.magery-templates');
+      var templates = Magery.compile('.magery-templates');
       var element = document.getElementById('example');
 
       var data = {
@@ -568,7 +616,7 @@ to a template using [Template.bind()](#templatebindhandlers).
       });
 
       // events are bound on first patch
-      templates['hello'].patch(element, data);
+      Magery.patch(templates, 'hello', data, element);
 
     </script>
   </body>
@@ -581,14 +629,14 @@ events.
 
 ## API
 
-### Magery.compileTemplates(selector)
+### Magery.compile(target)
 
 Find and compile Magery templates in the current HTML document.
 
 #### Arguments
 
-- **selector** - the CSS selector for a parent element which contains
-  zero or more templates
+- **target** - a DOM element, or the CSS selector for elements,
+  containing zero or more templates
 
 #### Return value
 
@@ -598,17 +646,47 @@ name (taken from their `data-template` attributes).
 #### Example
 
 ``` javascript
-var templates = Magery.compileTemplates('.magery-templates');
-var templates = Magery.compileTemplates('#myTemplates');
-var templates = Magery.compileTemplates('template');
+var templates = Magery.compile('.magery-templates');
+var templates = Magery.compile('#myTemplates');
+var templates = Magery.compile('template');
+
+var node = document.getElementById('#myTemplates'));
+var templates = Magery.compile(node);
         
 // access the returned Template() objects using template[name]
+```
+
+### Magery.patch(templates, name, data, target)
+
+Updates a `target` element to match the output of running the template
+with `name` from `templates` using `data` as it's context data.
+
+#### Arguments
+
+- **templates** - An object containing Magery.Template() objects keyed
+  by template name
+- **name** - The name of the template in `templates` to render
+- **data** - The data to pass to the template
+- **target** - The DOM element to update
+
+#### Return value
+
+Undefined.
+
+#### Example
+
+``` javascript
+var element = document.querySelector('#target');
+var data = {name: 'test'};
+        
+Magery.patch(templates, 'example', data, element);
 ```
 
 ### Template.bind(handlers)
 
 Attach event handlers to a template. The event handlers will not be
-bound to existing DOM elements until `Template.patch()` is called.
+bound to existing DOM elements until [Magery.patch()](#magerypatch) is
+called.
 
 #### Arguments
 
@@ -640,40 +718,87 @@ The arguments passed to event handler functions are dictated by the
 `on*` attribute which triggers it. See the [Events](#events) section
 for more details.
 
-### Template.patch(target, data, [prev\_data, compare])
-
-Updates `element` to match the output of running the template with
-`next_data` as it's context.
-
-#### Arguments
-
-- **element** - The DOM element to be patched
-- **next\_data** - The data to render the template with
-- **prev\_data** - *(optional)* - The data used for the last render,
-  which can be used to optimise the patching process by skipping
-  unchanged properties. Useful in conjunction with immutable data
-  structures.
-- **compare** - *(optional)* - The function to use for comparing
-  properties from `next_data` and `prev_data`. Must take two
-  arguments and return `true` if they are considered identical and
-  `false` otherwise.
-
-#### Return value
-
-Undefined.
-
-#### Example
-
-``` javascript
-var element = document.querySelector('#target');
-var data = {name: 'test'};
-        
-templates['example'].patch(element, data);
-```
-
 ## State management
 
-TODO example with Redux.
+Magery only handles updating the DOM and binding event handlers.
+Deciding when to update the page and managing your application's state
+is up to you. Thankfully, Magery works well with many popular state
+management libraries available from the React ecosystem.
+
+Here's an example using [Redux.js](http://redux.js.org/):
+
+``` html
+<!DOCTYPE html>
+<html>
+  <head>
+      <title>Redux example</title>
+      <meta charset="utf-8">
+  </head>
+  <body>
+      <!-- target element -->
+      <div id="counter"></div>
+      
+      <!-- our templates -->
+      <template class="magery-templates">
+          <div data-template="counter">
+              <p>
+                  Clicked: <span id="value">{{ count }}</span> times
+                  <button onclick="increment()">+</button>
+                  <button onclick="decrement()">-</button>
+              </p>
+          </div>
+      </template>
+
+      <!-- dependencies -->
+      <script src="./redux.min.js"></script>
+      <script src="../build/magery.js"></script>
+      
+      <!-- application code -->
+      <script>
+       var templates = Magery.compile('.magery-templates');
+       
+       // create a store
+       var store = Redux.createStore(function (state, action) {
+           if (typeof state === 'undefined') {
+               return {count: 0};
+           }
+           switch (action.type) {
+               case 'INCREMENT':
+                   return {count: state.count + 1};
+               case 'DECREMENT':
+                   return {count: state.count - 1};
+               default:
+                   return state;
+           }
+       });
+       
+       var target = document.getElementById('counter');
+       
+       function render() {
+           Magery.patch(templates, 'counter', store.getState(), target);
+       }
+       
+       // add event handlers using Magery
+       templates['counter'].bind({
+           increment: function () {
+               store.dispatch({type: 'INCREMENT'});
+           },
+           decrement: function () {
+               store.dispatch({type: 'DECREMENT'});
+           }
+       });
+       
+       // update the page when the store changes
+       store.subscribe(render);
+       
+       // initial render
+       render();
+      </script>
+  </body>
+</html>
+```
+
+Now, you can benefit from the extensive [ecosystem](http://redux.js.org/docs/introduction/Ecosystem.html) and [dev tools](https://github.com/zalmoxisus/redux-devtools-extension) built around Redux.
 
 ## Server-side rendering
 

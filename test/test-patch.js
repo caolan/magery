@@ -1,4 +1,4 @@
-suite('patch', function () {
+suite('Patch', function () {
 
     var assert = chai.assert;
     

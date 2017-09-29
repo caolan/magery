@@ -46,6 +46,10 @@ function compileTemplateContext(node) {
 
 // TODO: split out into compileTemplateCall, compileInner, compileHTMLElement etc. ?
 function compileElement(node, queue, write, is_root) {
+    if (node.tagName === 'TEMPLATE-EMBED') {
+        // ignored client-side
+        return;
+    }
     if (node.tagName === 'TEMPLATE-CHILDREN') {
         write('inner();\n');
         return;
@@ -238,12 +242,20 @@ function ignore_output(str) {}
 
 exports.compile = function (node, write) {
     var queue = [];
-    compileNode(node, queue, ignore_output, true);
+    compileNode(
+        node,
+        queue,
+        ignore_output,
+        // if current node is not a data-template, ignore output until
+        // data-template nodes are found
+        !(node.dataset && node.dataset.hasOwnProperty('template'))
+    );
     write('({\n');
     while (queue.length) {
         node = queue.shift();
         write(JSON.stringify(node.dataset.template) + ': ');
-        write('new Magery.Template(function (template, templates, p, data, root_key, inner) {\n');
+        write('new Magery.Template(' +
+              'function (template, templates, p, data, root_key, inner) {\n');
         compileNode(node, queue, write, true);
         write('})' + (queue.length ? ',' : '') + '\n');
     }

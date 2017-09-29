@@ -20,18 +20,18 @@
 
         <script src="../build/magery.js"></script>
         <script>
-         var templates = Magery.compileTemplates('.magery-templates');
+         var templates = Magery.compile('.magery-templates');
          var container = document.getElementById('container');
          var data = {name: 'world'};
          
          templates['main'].bind({
              updateName: function (event) {
                  data.name = event.target.value;
-                 templates['main'].patch(container, data);
+                 Magery.patch(templates, 'main', data, container);
              }
          });
          
-         templates['main'].patch(container, data);
-        </script>
+         Magery.patch(templates, 'main', data, container);
+        </script> 
     </body>
 </html>

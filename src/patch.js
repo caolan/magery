@@ -331,13 +331,12 @@ Patcher.prototype.each = function (data, name, iterable, f) {
 };
 
 Patcher.prototype.render = function (templates, name, data, root_key, inner) {
+    if (!templates[name]) {
+        throw new Error('Template does not exist: <' + name + '>');
+    }
     var template = templates[name];
     var tmp = this.template_root;
     this.template_root = null;
     template._render(template, templates, this, data, root_key, inner);
     this.template_root = tmp;
-};
-
-exports.patch = function (templates, name, data, element) {
-    new Patcher(element).render(templates, name, data);
 };

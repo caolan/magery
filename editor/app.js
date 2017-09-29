@@ -45,7 +45,7 @@ var templates = {};
 function loadTemplates() {
     var active = document.getElementById('active-templates');
     active.innerHTML = templates_editor.getValue();
-    Object.assign(templates, Magery.compileTemplates(active));
+    Magery.compile(active, templates);
 }
 
 var data;
@@ -63,7 +63,7 @@ var element = document.getElementById('result');
     
 function patch() {
     try {
-        templates['main'].patch(element, data);
+        Magery.patch(templates, 'main', data, element);
     }
     catch (e) {
         // user might still be editing

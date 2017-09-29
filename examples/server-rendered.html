@@ -23,7 +23,7 @@
         <script src="../build/magery.min.js"></script>
         <script>
          // load templates from all .magery-templates elements on page
-         var templates = Magery.compileTemplates('.magery-templates');
+         var templates = Magery.compile('.magery-templates');
 
          // find output rendered by server
          var element = document.querySelector('[data-bind=greeting]');
@@ -35,12 +35,12 @@
          templates['greeting'].bind({
              updateName: function (event) {
                  data.name = event.target.value;
-                 templates['greeting'].patch(element, data);
+                 Magery.patch(templates, 'greeting', data, element);
              }
          });
 
          // set up initial event handlers
-         templates['greeting'].patch(element, data);
+         Magery.patch(templates, 'greeting', data, element);
         </script>
     </body>
 </html>

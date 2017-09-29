@@ -45,52 +45,13 @@ var transforms =
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(7);
+	module.exports = __webpack_require__(3);
 
 
 /***/ }),
 /* 1 */,
 /* 2 */,
-/* 3 */,
-/* 4 */
-/***/ (function(module, exports) {
-
-	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
-	var USE_PROPERTY = exports.USE_PROPERTY = 2;
-	var USE_STRING = exports.USE_PROPERTY = 4;
-
-	exports.attributes = {
-	    'allowfullscreen': BOOLEAN_ATTRIBUTE,
-	    'async': BOOLEAN_ATTRIBUTE,
-	    'autofocus': BOOLEAN_ATTRIBUTE,
-	    'autoplay': BOOLEAN_ATTRIBUTE,
-	    'capture': BOOLEAN_ATTRIBUTE,
-	    'checked': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'controls': BOOLEAN_ATTRIBUTE,
-	    'default': BOOLEAN_ATTRIBUTE,
-	    'defer': BOOLEAN_ATTRIBUTE,
-	    'disabled': BOOLEAN_ATTRIBUTE,
-	    'formnovalidate': BOOLEAN_ATTRIBUTE,
-	    'hidden': BOOLEAN_ATTRIBUTE,
-	    'itemscope': BOOLEAN_ATTRIBUTE,
-	    'loop': BOOLEAN_ATTRIBUTE,
-	    'multiple': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'muted': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'novalidate': BOOLEAN_ATTRIBUTE,
-	    'open': BOOLEAN_ATTRIBUTE,
-	    'readonly': BOOLEAN_ATTRIBUTE,
-	    'required': BOOLEAN_ATTRIBUTE,
-	    'reversed': BOOLEAN_ATTRIBUTE,
-	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
-	    'value': USE_PROPERTY | USE_STRING
-	};
-
-
-
-/***/ }),
-/* 5 */,
-/* 6 */,
-/* 7 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -143,7 +104,6 @@ var transforms =
 	};
 
 	exports.removeAttribute = function (node, name) {
-	    console.log('removeAttribute: ' + name);
 	    if (html.attributes[name] & html.USE_PROPERTY) {
 	        node[name] = false;
 	    }
@@ -160,6 +120,42 @@ var transforms =
 	    node.removeEventListener(name, handler);
 	    return node;
 	};
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports) {
+
+	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
+	var USE_PROPERTY = exports.USE_PROPERTY = 2;
+	var USE_STRING = exports.USE_STRING = 4;
+
+	exports.attributes = {
+	    'allowfullscreen': BOOLEAN_ATTRIBUTE,
+	    'async': BOOLEAN_ATTRIBUTE,
+	    'autofocus': BOOLEAN_ATTRIBUTE,
+	    'autoplay': BOOLEAN_ATTRIBUTE,
+	    'capture': BOOLEAN_ATTRIBUTE,
+	    'checked': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'controls': BOOLEAN_ATTRIBUTE,
+	    'default': BOOLEAN_ATTRIBUTE,
+	    'defer': BOOLEAN_ATTRIBUTE,
+	    'disabled': BOOLEAN_ATTRIBUTE,
+	    'formnovalidate': BOOLEAN_ATTRIBUTE,
+	    'hidden': BOOLEAN_ATTRIBUTE,
+	    'itemscope': BOOLEAN_ATTRIBUTE,
+	    'loop': BOOLEAN_ATTRIBUTE,
+	    'multiple': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'muted': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'novalidate': BOOLEAN_ATTRIBUTE,
+	    'open': BOOLEAN_ATTRIBUTE,
+	    'readonly': BOOLEAN_ATTRIBUTE,
+	    'required': BOOLEAN_ATTRIBUTE,
+	    'reversed': BOOLEAN_ATTRIBUTE,
+	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
+	    'value': USE_PROPERTY | USE_STRING
+	};
+
 
 
 /***/ })
