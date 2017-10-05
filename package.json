@@ -1,6 +1,6 @@
 {
   "name": "magery",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Templates for progressive enhancement",
   "devDependencies": {
     "mocha-phantomjs": "^4.1.0",
