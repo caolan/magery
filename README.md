@@ -5,11 +5,7 @@
 Easy-to-use JavaScript templates that can work with server-side
 rendering in any language.
 
-Magery uses HTML5 templates and JSON data to patch the DOM using
-JavaScript. On the server, these templates are simple enough to be
-rendered without a JavaScript runtime. On the client, they can be used
-to dynamically update the page in response to JavaScript events.
-
+- [Why use Magery?](#why-use-magery)
 - [Aims](#aims)
 - [Download](#download)
 - [Example](#example)
@@ -33,12 +29,25 @@ to dynamically update the page in response to JavaScript events.
   - [Magery.compile](#magerycompiletarget)
   - [Magery.patch](#magerypatch)
   - [Template.bind](#templatebindhandlers)
-- [Immutable data](#immutable-data)
 - [State management](#state-management)
 - [Server-side rendering](#server-side-rendering)
 - [Tests](https://caolan.github.io/magery/test/)
 - [Benchmarks](https://caolan.github.io/magery/bench/)
 - [Live editor](https://caolan.github.io/magery/editor/)
+
+## Why use Magery?
+
+- Because you need traditional web pages:
+  - For reliability
+  - For accessibility
+  - For compatibility with as many clients as possible
+- But you also want fancy JavaScript enhancements:
+  - For responsiveness
+  - For ease-of-use
+  - For engagement
+
+If the above points are important to your project, Magery is worth
+considering.
 
 ## Aims
 
@@ -48,14 +57,11 @@ to dynamically update the page in response to JavaScript events.
   (and large) enhancements
 
 I wrote this library to prove that you don't need a 'single page app'
-to build great dynamic websites. In many cases the best possible user
-experience is a multi-page website with thoughtful JavaScript
-enhancements. The only downside is the almost-inevitable tangle of
-jQuery that goes with it. Magery is an attempt to fix that.
-
-If you're interested in the motivations behind this library,
-you might like to read the [blog post](https://caolan.org/posts/progressive_enhancement_and_modern_javascript.html) 
-that started it (Magery's syntax has since been updated).
+to build great dynamic websites. Often the best user experience is a
+multi-page website with thoughtful JavaScript enhancements. Today,
+these enhancements come with a cost: the almost-inevitable tangle of
+jQuery that accompanies them. Magery is an attempt to fix this using
+shared templates to dynamically update the page.
 
 ## Download
 
@@ -124,9 +130,10 @@ examples](examples).
 
 ### Variables
 
-You can pass JSON data to [Template.patch()](#templatepatchtarget-data-prev_data-compare) as a context for your
-templates. Properties of the context object can be inserted into the
-page using `{{` double curly braces `}}`:
+You can pass JSON data
+to [Magery.patch()](#magerypatchtemplates-name-data-target) as a
+context for your templates. Properties of the context object can be
+inserted into the page using `{{` double curly braces `}}`:
 
 ``` html
 <h1 data-template="greeting">
@@ -478,9 +485,10 @@ Result:
 
 #### template-embed
 
-Only used during server-side rendering, ignored during
-`Magery.patch()`. Embeds a template definition in the output. By
-default it wraps the definition in a `<template>` tag.
+Only used during server-side rendering, ignored
+during [Magery.patch()](#magerypatchtemplates-name-data-target).
+Embeds a template definition in the output. By default it wraps the
+definition in a `<template>` tag.
 
 ##### Example use
 
@@ -578,7 +586,7 @@ The handler name (e.g. `updateField` above) is matched against the
 current template's bound event handlers. These functions can be bound
 to a template using [Template.bind()](#templatebindhandlers).
 
-##### Example
+#### Example
 
 ``` html
 <!DOCTYPE html>
@@ -685,7 +693,8 @@ Magery.patch(templates, 'example', data, element);
 ### Template.bind(handlers)
 
 Attach event handlers to a template. The event handlers will not be
-bound to existing DOM elements until [Magery.patch()](#magerypatch) is
+bound to existing DOM elements
+until [Magery.patch()](#magerypatchtemplates-name-data-target) is
 called.
 
 #### Arguments
