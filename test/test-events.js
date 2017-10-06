@@ -570,4 +570,23 @@ suite('Events', function () {
         click(child(element, 0, 0));
     });
 
+    test('bind event on template call', function (done) {
+        var container = document.createElement('div');
+        var templates = createTemplateNode(
+            '<button class="btn" data-template="my-btn">Test</button>' +
+            '<div data-template="main">' +
+                '<my-btn onclick="clicked(event)"></my-btn>' +
+            '</div>');
+        var data = {};
+        // event should trigger caller not callee handlers
+        templates['main'].bind({
+            clicked: function (event) {
+                assert.equal(event.target, child(container, 0));
+                done();
+            }
+        });
+        Magery.patch(templates, 'main', data, container);
+        click(child(container, 0));
+    });
+
 });

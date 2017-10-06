@@ -419,14 +419,14 @@ var Magery =
 	    }
 	};
 
-	Patcher.prototype.render = function (templates, name, data, root_key, inner) {
+	Patcher.prototype.render = function (templates, name, data, root_key, root_attrs, inner) {
 	    if (!templates[name]) {
 	        throw new Error('Template does not exist: <' + name + '>');
 	    }
 	    var template = templates[name];
 	    var tmp = this.template_root;
 	    this.template_root = null;
-	    template._render(template, templates, this, data, root_key, inner);
+	    template._render(template, templates, this, data, root_key, root_attrs, inner);
 	    this.template_root = tmp;
 	};
 
@@ -703,6 +703,31 @@ var Magery =
 	    return '{' + result.join(', ') + '}';
 	}
 
+	function compileListener(event_name, value) {
+	    var start = value.indexOf('(');
+	    var end = value.lastIndexOf(')');
+	    var handler_name = value.substring(0, start);
+	    var parts = value.substring(start + 1, end).split(',');
+	    var args = [];
+	    for (var i = 0, len = parts.length; i < len; i++) {
+	        var part = utils.trim(parts[i]);
+	        if (!part) {
+	            continue;
+	        }
+	        if (part === 'event') {
+	            args.push('p.EVENT');
+	        }
+	        else {
+	            args.push(compileLookup(utils.propertyPath(part)));
+	        }
+	    }
+	    return 'p.eventListener(' +
+	        JSON.stringify(event_name) + ', ' +
+	        JSON.stringify(handler_name) + ', ' +
+	        '[' + args.join(', ') + '], ' +
+	        'template);\n';
+	}
+
 	// TODO: split out into compileTemplateCall, compileInner, compileHTMLElement etc. ?
 	function compileElement(node, queue, write, is_root) {
 	    if (node.tagName === 'TEMPLATE-EMBED') {
@@ -740,12 +765,21 @@ var Magery =
 	    }
 	    var is_html = true;
 	    if (HTML_TAGS.indexOf(node.tagName) === -1) {
+	        // pass event handlers on to next template call
+	        var extra_attrs = '';
+	        utils.eachAttribute(node, function (name, value) {
+	            var event = name.match(/^on(.*)/);
+	            if (event) {
+	                extra_attrs += compileListener(event[1], value);
+	            }
+	        });
 	        // not a known HTML tag, assume template reference
 	        write('p.render(' +
 	              'templates' +
 	              ', ' + JSON.stringify(node.tagName.toLowerCase()) +
 	              ', ' + compileTemplateContext(node) +
 	              ', ' + (node.dataset.key ? compileExpandVariables(node.dataset.key) : 'null') +
+	              ', function () {' + extra_attrs + '}' +
 	              (node.childNodes.length ? ', function () {' : ');') + '\n');
 	        is_html = false;
 	    }
@@ -778,29 +812,7 @@ var Magery =
 	            }
 	            var event = name.match(/^on(.*)/);
 	            if (event) {
-	                var event_name = event[1];
-	                var start = value.indexOf('(');
-	                var end = value.lastIndexOf(')');
-	                var handler_name = value.substring(0, start);
-	                var parts = value.substring(start + 1, end).split(',');
-	                var args = [];
-	                for (var i = 0, len = parts.length; i < len; i++) {
-	                    var part = utils.trim(parts[i]);
-	                    if (!part) {
-	                        continue;
-	                    }
-	                    if (part === 'event') {
-	                        args.push('p.EVENT');
-	                    }
-	                    else {
-	                        args.push(compileLookup(utils.propertyPath(part)));
-	                    }
-	                }
-	                write('p.eventListener(' +
-	                      JSON.stringify(event[1]) + ', ' +
-	                      JSON.stringify(handler_name) + ', ' +
-	                      '[' + args.join(', ') + '], ' +
-	                      'template);\n');
+	                write(compileListener(event[1], value));
 	            }
 	            else if (html.attributes[name] & html.BOOLEAN_ATTRIBUTE) {
 	                if (value === "") {
@@ -818,8 +830,12 @@ var Magery =
 	                      JSON.stringify(name) + ', ' +
 	                      compileExpandVariables(value) + ');\n');
 	            }
-	            
 	        });
+	        if (is_root) {
+	            // expand any extra attributes passed into template call
+	            // from calling tag (e.g. onchange)
+	            write('if (extra_attrs) { extra_attrs(); }\n');
+	        }
 	    }
 	    utils.eachNode(node.childNodes, function (node) {
 	        compileNode(node, queue, write, false);
@@ -914,7 +930,7 @@ var Magery =
 	        node = queue.shift();
 	        write(JSON.stringify(node.dataset.template) + ': ');
 	        write('new Magery.Template(' +
-	              'function (template, templates, p, data, root_key, inner) {\n');
+	              'function (template, templates, p, data, root_key, extra_attrs, inner) {\n');
 	        compileNode(node, queue, write, true);
 	        write('})' + (queue.length ? ',' : '') + '\n');
 	    }

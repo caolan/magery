@@ -385,14 +385,14 @@ var patch =
 	    }
 	};
 
-	Patcher.prototype.render = function (templates, name, data, root_key, inner) {
+	Patcher.prototype.render = function (templates, name, data, root_key, root_attrs, inner) {
 	    if (!templates[name]) {
 	        throw new Error('Template does not exist: <' + name + '>');
 	    }
 	    var template = templates[name];
 	    var tmp = this.template_root;
 	    this.template_root = null;
-	    template._render(template, templates, this, data, root_key, inner);
+	    template._render(template, templates, this, data, root_key, root_attrs, inner);
 	    this.template_root = tmp;
 	};
 
