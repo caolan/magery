@@ -570,7 +570,7 @@ suite('Events', function () {
         click(child(element, 0, 0));
     });
 
-    test('bind event on template call', function (done) {
+    test('bind event on static template call', function (done) {
         var container = document.createElement('div');
         var templates = createTemplateNode(
             '<button class="btn" data-template="my-btn">Test</button>' +
@@ -578,6 +578,26 @@ suite('Events', function () {
                 '<my-btn onclick="clicked(event)"></my-btn>' +
             '</div>');
         var data = {};
+        // event should trigger caller not callee handlers
+        templates['main'].bind({
+            clicked: function (event) {
+                assert.equal(event.target, child(container, 0));
+                done();
+            }
+        });
+        Magery.patch(templates, 'main', data, container);
+        click(child(container, 0));
+    });
+
+    test('bind event on dynamic template call', function (done) {
+        var container = document.createElement('div');
+        var templates = createTemplateNode(
+            '<button class="btn" data-template="my-btn">Test</button>' +
+            '<div data-template="main">' +
+                '<template-call template="my-{{ type }}" onclick="clicked(event)">' +
+                '</tepmlate-call>' +
+            '</div>');
+        var data = {type: 'btn'};
         // event should trigger caller not callee handlers
         templates['main'].bind({
             clicked: function (event) {

@@ -567,6 +567,36 @@ suite('Compile', function () {
         assert.equal(patcher_calls.length, 10);
     });
 
+    test('call another template block dynamically via template-call', function () {
+        var templates = createTemplateNode(
+            '<b data-template="bar">{{meta.year}}</b>' +
+            '<div data-template="foo">' +
+                '<h1>title</h1>' +
+                '<template-call template="{{ tmpl }}" meta="{{ article.meta }}">' +
+                '</template-call>' +
+            '</div>');
+        var data = {
+            tmpl: 'bar',
+            article: {
+                meta: {
+                    year: 2015
+                }
+            }
+        };
+        var patcher_calls = _patch(templates, 'foo', data);
+        assert.deepEqual(patcher_calls[0], ['enterTag', 'DIV', null]);
+        assert.deepEqual(patcher_calls[1], ['attribute', 'data-bind', 'foo']);
+        assert.deepEqual(patcher_calls[2], ['enterTag', 'H1', null]);
+        assert.deepEqual(patcher_calls[3], ['text', 'title']);
+        assert.deepEqual(patcher_calls[4], ['exitTag']);
+        assert.deepEqual(patcher_calls[5], ['enterTag', 'B', null]);
+        assert.deepEqual(patcher_calls[6], ['attribute', 'data-bind', 'bar']);
+        assert.deepEqual(patcher_calls[7], ['text', '2015']);
+        assert.deepEqual(patcher_calls[8], ['exitTag']);
+        assert.deepEqual(patcher_calls[9], ['exitTag']);
+        assert.equal(patcher_calls.length, 10);
+    });
+
     test('call another template block with multiple args', function () {
         var templates = createTemplateNode(
             '<b data-template="bar">{{ author }} ({{ year }})</b>' +

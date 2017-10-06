@@ -247,6 +247,17 @@ var compile =
 	        'template);\n';
 	}
 
+	function compileExtraAttrs(node) {
+	    var extra_attrs = '';
+	    utils.eachAttribute(node, function (name, value) {
+	        var event = name.match(/^on(.*)/);
+	        if (event) {
+	            extra_attrs += compileListener(event[1], value);
+	        }
+	    });
+	    return extra_attrs;
+	}
+
 	// TODO: split out into compileTemplateCall, compileInner, compileHTMLElement etc. ?
 	function compileElement(node, queue, write, is_root) {
 	    if (node.tagName === 'TEMPLATE-EMBED') {
@@ -283,22 +294,25 @@ var compile =
 	        write('if (!p.isTruthy(' + compileLookup(predicate2_path) + ')) {\n');
 	    }
 	    var is_html = true;
-	    if (HTML_TAGS.indexOf(node.tagName) === -1) {
-	        // pass event handlers on to next template call
-	        var extra_attrs = '';
-	        utils.eachAttribute(node, function (name, value) {
-	            var event = name.match(/^on(.*)/);
-	            if (event) {
-	                extra_attrs += compileListener(event[1], value);
-	            }
-	        });
+	    if (node.tagName == 'TEMPLATE-CALL') {
+	        // not a known HTML tag, assume template reference
+	        write('p.render(' +
+	              'templates' +
+	              ', ' + compileExpandVariables(node.getAttribute('template')) +
+	              ', ' + compileTemplateContext(node) +
+	              ', ' + (node.dataset.key ? compileExpandVariables(node.dataset.key) : 'null') +
+	              ', function () {' + compileExtraAttrs(node) + '}' +
+	              (node.childNodes.length ? ', function () {' : ');') + '\n');
+	        is_html = false;
+	    }
+	    else if (HTML_TAGS.indexOf(node.tagName) === -1) {
 	        // not a known HTML tag, assume template reference
 	        write('p.render(' +
 	              'templates' +
 	              ', ' + JSON.stringify(node.tagName.toLowerCase()) +
 	              ', ' + compileTemplateContext(node) +
 	              ', ' + (node.dataset.key ? compileExpandVariables(node.dataset.key) : 'null') +
-	              ', function () {' + extra_attrs + '}' +
+	              ', function () {' + compileExtraAttrs(node) + '}' +
 	              (node.childNodes.length ? ', function () {' : ');') + '\n');
 	        is_html = false;
 	    }
