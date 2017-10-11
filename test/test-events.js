@@ -609,4 +609,30 @@ suite('Events', function () {
         click(child(container, 0));
     });
 
+    test('bind event inside nested template calls', function (done) {
+        var container = document.createElement('div');
+        var templates = createTemplateNode(
+            '<select data-template="foo">' +
+                '<option value="1">one</option>' +
+                '<option value="2">two</option>' +
+            '</select>' +
+            '<div data-template="example-wrapper">' +
+                '<template-call template="{{ tmpl }}"></template-call>' +
+            '</div>' +
+            '<div data-template="main">' +
+                '<example-wrapper onclick="clicked(event)" tmpl="{{ tmpl }}"></example-wrapper>' +
+            '</div>'
+        );
+        var data = {tmpl: 'foo'};
+        // event should trigger caller not callee handlers
+        templates['main'].bind({
+            clicked: function (event) {
+                assert.equal(event.target, child(container, 0));
+                done();
+            }
+        });
+        Magery.patch(templates, 'main', data, container);
+        click(child(container, 0));
+    });
+
 });

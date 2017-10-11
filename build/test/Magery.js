@@ -218,9 +218,8 @@ var Magery =
 	// specific value for referncing an event inside handler arguments
 	Patcher.prototype.EVENT = {};
 
-	function makeHandler(type) {
+	function makeHandler(node, type) {
 	    return function (event) {
-	        var node = event.target;
 	        var handler = node.handlers[type];
 	        if (handler.name) {
 	            var args = handler.args.map(function (arg) {
@@ -256,7 +255,7 @@ var Magery =
 	        node.handlers = {};
 	    }
 	    if (!node.handlers.hasOwnProperty(type)) {
-	        var fn = makeHandler(type);
+	        var fn = makeHandler(node, type);
 	        node.handlers[type] = {fn: fn};
 	        node.addEventListener(type, fn);
 	    }
