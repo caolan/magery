@@ -659,6 +659,8 @@ var Magery =
 
 	var utils = __webpack_require__(5);
 	var html = __webpack_require__(4);
+	var Template = __webpack_require__(8);
+
 
 	// these tags are assumed to be normal HTML, all other tags are
 	// assumed to be template references
@@ -943,7 +945,7 @@ var Magery =
 	    while (queue.length) {
 	        node = queue.shift();
 	        write(JSON.stringify(node.dataset.template) + ': ');
-	        write('new Magery.Template(' +
+	        write('new Template(' +
 	              'function (template, templates, p, data, root_key, extra_attrs, inner) {\n');
 	        compileNode(node, queue, write, true);
 	        write('})' + (queue.length ? ',' : '') + '\n');
@@ -952,15 +954,15 @@ var Magery =
 	};
 
 	exports.compileToString = function (node) {
-	    var result = '';
+	    var result = '(function (Template) { return ';
 	    exports.compile(node, function (str) {
 	        result += str;
 	    });
-	    return result;
+	    return result + '})';
 	};
 
 	exports.eval = function (node) {
-	    return eval(exports.compileToString(node));
+	    return eval(exports.compileToString(node))(Template);
 	};
 
 

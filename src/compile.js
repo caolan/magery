@@ -1,5 +1,7 @@
 var utils = require('./utils');
 var html = require('./html');
+var Template = require('./template');
+
 
 // these tags are assumed to be normal HTML, all other tags are
 // assumed to be template references
@@ -284,7 +286,7 @@ exports.compile = function (node, write) {
     while (queue.length) {
         node = queue.shift();
         write(JSON.stringify(node.dataset.template) + ': ');
-        write('new Magery.Template(' +
+        write('new Template(' +
               'function (template, templates, p, data, root_key, extra_attrs, inner) {\n');
         compileNode(node, queue, write, true);
         write('})' + (queue.length ? ',' : '') + '\n');
@@ -293,13 +295,13 @@ exports.compile = function (node, write) {
 };
 
 exports.compileToString = function (node) {
-    var result = '';
+    var result = '(function (Template) { return ';
     exports.compile(node, function (str) {
         result += str;
     });
-    return result;
+    return result + '})';
 };
 
 exports.eval = function (node) {
-    return eval(exports.compileToString(node));
+    return eval(exports.compileToString(node))(Template);
 };
