@@ -17,5 +17,6 @@
     "build-min": "uglifyjs build/magery.js -m -o build/magery.min.js",
     "build": "npm run build-dev && npm run build-min && npm run build-test",
     "test": "mocha-phantomjs test/index.html"
-  }
+  },
+  "main": "./src/magery.js"
 }
