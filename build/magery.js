@@ -147,7 +147,7 @@ var Magery =
 	    }
 	    for (var type in node.handlers) {
 	        if (!node.visited_events.has(type)) {
-	            transforms.removeEventListener(node, type, node.handlers[type]);
+	            transforms.removeEventListener(node, type, node.handlers[type].fn);
 	            delete node.handlers[type];
 	        }
 	    }
@@ -250,7 +250,7 @@ var Magery =
 	    if (!node.handlers.hasOwnProperty(type)) {
 	        var fn = makeHandler(node, type);
 	        node.handlers[type] = {fn: fn};
-	        node.addEventListener(type, fn);
+	        transforms.addEventListener(node, type, fn);
 	    }
 	    node.visited_events.add(type);
 	}

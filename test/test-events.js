@@ -43,6 +43,13 @@ suite('Events', function () {
         el.value = value;
         el.dispatchEvent(ev);
     }
+    
+    function change(el, value){
+        var ev = document.createEvent('Event');
+        ev.initEvent('change', true, false);
+        el.value = value;
+        el.dispatchEvent(ev);
+    }
 
     test('click event to dispatch', function (done) {
         var container = document.createElement('div');
@@ -633,6 +640,53 @@ suite('Events', function () {
         });
         Magery.patch(templates, 'main', data, container);
         click(child(container, 0));
+    });
+
+    test('remove old event handlers on replaced element', function () {
+        var container = document.createElement('div');
+        var templates = createTemplateNode(
+            '<div data-template="bar">test</div>' +
+            '<div data-template="foo">' +
+                '<select>' +
+                    '<option value="1">one</option>' +
+                    '<option value="2">two</option>' +
+                '</select>' +
+            '</div>' +
+            '<div data-template="example-wrapper" class="{{ tmpl }}">' +
+                '<template-call template="{{ tmpl }}"></template-call>' +
+            '</div>' +
+            '<div data-template="main">' +
+                '<example-wrapper data-if="show" oninput="input(event)" tmpl="{{ tmpl1 }}"></example-wrapper>' +
+                '<example-wrapper onchange="change(event)" tmpl="{{ tmpl2 }}"></example-wrapper>' +
+             '</div>'
+        );
+        var data = {
+            show: true,
+            tmpl1: 'bar',
+            tmpl2: 'foo'
+        };
+        var changes = 0;
+        var inputs = 0;
+        // event should trigger caller not callee handlers
+        templates['main'].bind({
+            input: function (event) {
+                inputs++;
+            },
+            change: function (event) {
+                changes++;
+            }
+        });
+        Magery.patch(templates, 'main', data, container);
+        input(child(container, 1, 0, 0), '1');
+        change(child(container, 1, 0, 0), '1');
+        assert.equal(changes, 1);
+        assert.equal(inputs, 0);
+        data.show = false;
+        Magery.patch(templates, 'main', data, container);
+        input(child(container, 0, 0, 0), '2');
+        change(child(container, 0, 0, 0), '2');
+        assert.equal(changes, 2);
+        assert.equal(inputs, 0);
     });
 
 });
