@@ -5,3 +5,5 @@ dist: trusty
 cache:
   directories:
     - "node_modules"
+addons:
+  firefox: "latest-esr"
