@@ -31,9 +31,9 @@ rendering in any language.
   - [Template.bind](#templatebindhandlers)
 - [State management](#state-management)
 - [Server-side rendering](#server-side-rendering)
-- [Tests](https://caolan.github.io/magery/test/)
-- [Benchmarks](https://caolan.github.io/magery/bench/)
-- [Live editor](https://caolan.github.io/magery/editor/)
+- [Tests](#tests)
+- [Benchmarks](#benchmarks)
+- [Live editor](#live-editor)
 
 ## Why use Magery?
 
@@ -819,3 +819,34 @@ it here.
 
 - [python-magery](https://github.com/caolan/python-magery)
 
+## Tests
+
+You can [run the current test suite](https://caolan.github.io/magery/test/) 
+in your browser. Please report any failures as GitHub issues and be sure
+to state the browser version and operating system you're running on.
+
+If you're working on the Magery source code, you can run these tests
+by executing `npm run build-test` and then visiting `test/index.html`
+in your browser. Or, you can run `npm test` to use a headless browser
+([slimerjs](http://slimerjs.org)) and see test results in your
+console. For this to work you'll need to install xvfb:
+
+    sudo apt-get install xvfb
+    
+If you're not on Linux then you may need to run slimerjs directly
+without xvfb (just remove `xvfb-run` from the test script line in
+`package.json`). Running without xvfb means you'll see a small
+slimerjs window temporarily pop up.
+
+## Benchmarks
+
+You can [run the current benchmarks](https://caolan.github.io/magery/bench/)
+in your browser. They're very simple tests of performance so don't read 
+too much into them.
+
+## Live editor
+
+This allows you to play around with Magery syntax without installing
+it, and immediately see the results in your browser.
+
+[Open the editor](https://caolan.github.io/magery/editor/)

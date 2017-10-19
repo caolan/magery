@@ -3,7 +3,7 @@
   "version": "0.0.10",
   "description": "Templates for progressive enhancement",
   "devDependencies": {
-    "mocha-phantomjs": "^4.1.0",
+    "slimerjs": "^0.10.3",
     "uglify-js": "^3.1.0",
     "webpack": "^1.15.0"
   },
@@ -16,7 +16,7 @@
     "build-dev": "mkdir -p build && node node_modules/.bin/webpack",
     "build-min": "uglifyjs build/magery.js -m -o build/magery.min.js",
     "build": "npm run build-dev && npm run build-min && npm run build-test",
-    "test": "mocha-phantomjs test/index.html"
+    "test": "npm run build-test && xvfb-run slimerjs test/slimer-run.js"
   },
   "main": "./src/magery.js"
 }
