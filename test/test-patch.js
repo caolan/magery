@@ -966,5 +966,22 @@ suite('Patch', function () {
     //     assert.ok(div.isEqualNode(div2));
     // });
 
+    test('textarea text nodes set as value', function () {
+        var div = document.createElement('div');
+        var templates = createTemplateNode(
+            '<div data-template="foo">' +
+                '<textarea><b>Hello, {{name}}!</b></textarea>' +
+                '</div>');
+        var patcher = new patch.Patcher(div, test_transforms);
+        patcher.render(templates, 'foo', {
+            name: 'world'
+        });
+        assert.strictEqual(child(div, 0).value, "<b>Hello, world!</b>");
+        patcher = new patch.Patcher(div, test_transforms);
+        patcher.render(templates, 'foo', {
+            name: 'testing'
+        });
+        assert.strictEqual(child(div, 0).value, "<b>Hello, testing!</b>");
+    });
     
 });

@@ -237,6 +237,9 @@ var Magery =
 	                resetInput(event);
 	            }
 	        }
+	        else if (node.tagName === 'TEXTAREA') {
+	            resetTextarea(event);
+	        }
 	        else if (node.tagName === 'SELECT') {
 	            resetSelected(event);
 	        }
@@ -321,6 +324,17 @@ var Magery =
 	    }
 	}
 
+	// force input to match last render of value attribute
+	function resetTextarea(event) {
+	    var node = event.target;
+	    if (node.dataset['managed'] === 'true') {
+	        var expected = node.textContent;
+	        if (node.value !== expected) {
+	            node.value = expected;
+	        }
+	    }
+	}
+
 	// Patcher.prototype.attribute = function (name, value) {
 	//     var node = this.parent;
 	//     console.log(['attribute', name, node.getAttribute(name), value, node.value]);
@@ -375,6 +389,9 @@ var Magery =
 	        else if (node.hasAttribute('value')) {
 	            setListener(node, 'input');
 	        }
+	    }
+	    else if (node.tagName === 'TEXTAREA') {
+	        setListener(node, 'input');
 	    }
 	    else if (node.tagName === 'SELECT') {
 	        setListener(node, 'change');

@@ -184,6 +184,24 @@ suite('Events', function () {
         input.dispatchEvent(event);
         assert.equal(input.value, 'testing');
     });
+    
+    test('textarea reset to match template data on input', function () {
+        var container = document.createElement('div');
+        var templates = createTemplateNode(
+            '<div data-template="main">' +
+                '<textarea data-managed="true">{{name}}</textarea>">' +
+                '</div>');
+        var data = {name: 'testing'};
+        Magery.patch(templates, 'main', data, container);
+        var input = child(container, 0);
+        input.value = 'foo';
+        assert.equal(input.value, 'foo');
+        // input event fires synchronously
+        var event = document.createEvent('Event');
+        event.initEvent('input', true, true);
+        input.dispatchEvent(event);
+        assert.equal(input.value, 'testing');
+    });
 
     test('update input value via dispatch + patch', function () {
         var container = document.createElement('div');
