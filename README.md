@@ -18,7 +18,6 @@ rendering in any language.
     - [data-key](#data-key)
     - [data-if](#data-if)
     - [data-unless](#data-unless)
-    - [data-managed](#data-managed)
     - [data-embed](#data-embed)
     - [Processing order](#processing-order)
   - [Tags](#tags)
@@ -344,51 +343,6 @@ Result:
 ``` html
 <span>Draft</span>
 ```
-
-#### data-managed
-
-This attribute is for use with HTML form elements, and will force the
-state of the element to match the template data.
-    
-By default, the value of text inputs, checkboxes, and other form
-elements can be modified and stored by the browser (and so may not
-match the rendered `value` attribute on the HTML element). By setting
-`data-managed="true"` you can ensure the state of the form element
-always matches your template data.
-    
-This is particularly useful for 'live' validation of inputs, or
-clearing text boxes by setting the `value` attribute to empty.
-    
-**NOTE:** If you use `data-managed` and want the user's input to be
-displayed, you *must* update the associated `value` attribute on an
-input using the `oninput` event handler.
-    
-##### Example
-    
-This input will only allow the user to enter digits (0-9).
-        
-Template:
-
-``` html
-<form data-template="number-form">
-  <input type="text" value="{{number}}" oninput="updateNumber(event)">
-</form>
-```
-        
-JavaScript:
-
-``` javascript
-templates['number-form'].bindAll({
-  updateNumber: function (event) {
-    if (/^[0-9]*$/.test(event.target.value) {
-      this.data.number = event.target.value;
-    }
-  }
-});
-```
-
-For a complete example, see [examples/managed-text-input.html](examples/managed-text-input.html) ([view in
-browser](https://caolan.github.io/magery/examples/managed-text-input.html)).
 
 #### data-embed
 

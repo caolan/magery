@@ -107,9 +107,6 @@ var patch =
 	    }
 	    for (i = 0, len = remove.length; i < len; i++) {
 	        transforms.removeAttribute(node, remove[i]);
-	        if (remove[i] === 'value') {
-	            transforms.removeEventListener(node, 'input', resetInput);
-	        }
 	    }
 	};
 
@@ -196,26 +193,6 @@ var patch =
 	            });
 	            node.template.handlers[handler.name].apply(handler.template_root, args);
 	        }
-	        if (node.tagName === 'INPUT') {
-	            var nodeType = node.getAttribute('type');
-	            if (type == 'change') {
-	                if (nodeType === 'checkbox') {
-	                    resetCheckbox(event);
-	                }
-	                else if (nodeType === 'radio') {
-	                    resetRadio(event);
-	                }
-	            }
-	            else if (type == 'input' && node.hasAttribute('value')) {
-	                resetInput(event);
-	            }
-	        }
-	        else if (node.tagName === 'TEXTAREA') {
-	            resetTextarea(event);
-	        }
-	        else if (node.tagName === 'SELECT') {
-	            resetSelected(event);
-	        }
 	    };
 	}
 
@@ -242,71 +219,6 @@ var patch =
 	    handler.args = args;
 	    handler.template_root = this.template_root;
 	};
-
-	// force checkbox node checked property to match last rendered attribute
-	function resetCheckbox(event) {
-	    var node = event.target;
-	    if (node.dataset['managed'] === 'true') {
-	        node.checked = node.hasAttribute('checked');
-	    }
-	}
-
-	function resetRadio(event) {
-	    var node = event.target;
-	    if (node.dataset['managed'] === 'true') {
-	        var expected = node.hasAttribute('checked');
-	        if (node.checked != expected) {
-	            if (node.name) {
-	                // TODO: are radio buttons with the same name in different forms
-	                // considered part of the same group?
-	                var els = document.getElementsByName(node.name);
-	                for (var i = 0, len = els.length; i < len; i++) {
-	                    var el = els[i];
-	                    el.checked = el.hasAttribute('checked');
-	                }
-	            }
-	            else {
-	                // not part of a group
-	                node.checked = expected;
-	            }
-	        }
-	        //event.target.checked = event.target.hasAttribute('checked');
-	    }
-	}
-
-	// force option node selected property to match last rendered attribute
-	function resetSelected(event) {
-	    var node = event.target;
-	    if (node.dataset['managed'] === 'true') {
-	        var options = node.getElementsByTagName('option');
-	        for (var i = 0, len = options.length; i < len; i++) {
-	            var option = options[i];
-	            option.selected = option.hasAttribute('selected');
-	        }
-	    }
-	}
-
-	// force input to match last render of value attribute
-	function resetInput(event) {
-	    var node = event.target;
-	    if (node.dataset['managed'] === 'true') {
-	        var expected = node.getAttribute('value');
-	        if (node.value !== expected) {
-	            node.value = expected;
-	        }
-	    }
-	}
-
-	// force input to match last render of value attribute
-	function resetTextarea(event) {
-	    var node = event.target;
-	    if (node.dataset['managed'] === 'true') {
-	        var expected = node.textContent;
-	        if (node.value !== expected) {
-	            node.value = expected;
-	        }
-	    }
-	}
 
 	// Patcher.prototype.attribute = function (name, value) {
 	//     var node = this.parent;
@@ -354,21 +266,6 @@ var patch =
 	    var node = this.parent;
 	    this.parent = node.parentNode;
 	    this.current = node.nextSibling;
-	    if (node.tagName === 'INPUT') {
-	        var type = node.getAttribute('type');
-	        if ((type === 'checkbox' || type == 'radio')) {
-	            setListener(node, 'change');
-	        }
-	        else if (node.hasAttribute('value')) {
-	            setListener(node, 'input');
-	        }
-	    }
-	    else if (node.tagName === 'TEXTAREA') {
-	        setListener(node, 'input');
-	    }
-	    else if (node.tagName === 'SELECT') {
-	        setListener(node, 'change');
-	    }
 	    deleteUnvisitedAttributes(this.transforms, node);
 	    deleteUnvisitedEvents(this.transforms, node);
 	};

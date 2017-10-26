@@ -123,36 +123,11 @@ suite('Events', function () {
         assert.deepEqual(calls, ['one', 'two', 'three']);
     });
 
-    test('oninput for managed text input does not interfere with resetInput', function () {
+    test('render html tags back into input', function () {
         var container = document.createElement('div');
         var templates = createTemplateNode(
             '<div data-template="main">' +
-                '<input type="text" value="{{user.id}}" data-managed="true" oninput="updateID(user, event)">' +
-                '</div>');
-        var data = {user: {id: '123'}};
-        var calls = [];
-        templates['main'].bind({
-            updateID: function (user, event) {
-                user.id = event.target.value.replace(/[^0-9]/g, '');
-                Magery.patch(templates, 'main', data, container);
-            }
-        });
-        Magery.patch(templates, 'main', data, container);
-        input(child(container, 0), '123abc4');
-        assert.equal(child(container, 0).value, '1234');
-        input(child(container, 0), '12345');
-        assert.equal(child(container, 0).value, '12345');
-        input(child(container, 0), '5');
-        assert.equal(child(container, 0).value, '5');
-        input(child(container, 0), '5a');
-        assert.equal(child(container, 0).value, '5');
-    });
-
-    test('render html tags back into managed input', function () {
-        var container = document.createElement('div');
-        var templates = createTemplateNode(
-            '<div data-template="main">' +
-                '<input type="text" value="{{user.name}}" data-managed="true" oninput="updateID(user, event)">' +
+                '<input type="text" value="{{user.name}}" oninput="updateID(user, event)">' +
                 '</div>');
         var data = {user: {name: 'test'}};
         templates['main'].bind({
@@ -166,48 +141,12 @@ suite('Events', function () {
         input(child(container, 0), '<h1>test</h1>');
         assert.equal(child(container, 0).value, '<h1>test</h1>');
     });
-
-    test('text input value reset to match template data on input', function () {
-        var container = document.createElement('div');
-        var templates = createTemplateNode(
-            '<div data-template="main">' +
-                '<input data-managed="true" type="text" value="{{name}}">' +
-                '</div>');
-        var data = {name: 'testing'};
-        Magery.patch(templates, 'main', data, container);
-        var input = child(container, 0);
-        input.value = 'foo';
-        assert.equal(input.value, 'foo');
-        // input event fires synchronously
-        var event = document.createEvent('Event');
-        event.initEvent('input', true, true);
-        input.dispatchEvent(event);
-        assert.equal(input.value, 'testing');
-    });
     
-    test('textarea reset to match template data on input', function () {
-        var container = document.createElement('div');
-        var templates = createTemplateNode(
-            '<div data-template="main">' +
-                '<textarea data-managed="true">{{name}}</textarea>">' +
-                '</div>');
-        var data = {name: 'testing'};
-        Magery.patch(templates, 'main', data, container);
-        var input = child(container, 0);
-        input.value = 'foo';
-        assert.equal(input.value, 'foo');
-        // input event fires synchronously
-        var event = document.createEvent('Event');
-        event.initEvent('input', true, true);
-        input.dispatchEvent(event);
-        assert.equal(input.value, 'testing');
-    });
-
     test('update input value via dispatch + patch', function () {
         var container = document.createElement('div');
         var templates = createTemplateNode(
             '<div data-template="main">' +
-                '<input data-managed="true" type="text" value="{{name}}" oninput="updateInput()">' +
+                '<input type="text" value="{{name}}" oninput="updateInput()">' +
                 '</div>');
         var data = {name: 'testing'};
         templates['main'].bind({
@@ -227,22 +166,47 @@ suite('Events', function () {
         assert.equal(input.value, 'bar');
     });
 
-    test('reset checkbox to match template data', function (done) {
+    test('update select box value onchange', function (done) {
         var container = document.createElement('div');
         var templates = createTemplateNode(
             '<div data-template="main">' +
-                '<input data-managed="true" data-if="checked" type="checkbox" checked>' +
-                '<input data-managed="true" data-unless="checked" type="checkbox">' +
+                '<select onchange="update(event)">' +
+                '<option data-each="option in options" value="{{option.value}}" selected="{{option.selected}}">' +
+                '{{option.label}}' +
+                '</option>' +
+                '</select>' +
                 '</div>');
-        var data = {checked: true};
+        var data = {
+            options: [
+                {value: 1, label: 'one', selected: false},
+                {value: 2, label: 'two', selected: true},
+                {value: 3, label: 'three', selected: false}
+            ]
+        };
+        templates['main'].bind({
+            update: function (event) {
+                data.options.forEach(function (opt) {
+                    opt.selected = opt.value == event.target.value;
+                });
+                Magery.patch(templates, 'main', data, container);
+            }
+        });
         Magery.patch(templates, 'main', data, container);
-        var input = child(container, 0);
+        var select = child(container, 0);
+        var optionOne = child(select, 0);
+        var optionTwo = child(select, 1);
+        var optionThree = child(select, 2);
         document.body.appendChild(container);
-        assert.ok(input.checked);
-        click(input);
+        assert.ok(!optionOne.selected, 'option one (pre)');
+        assert.ok(optionTwo.selected, 'option two (pre)');
+        assert.ok(!optionThree.selected, 'option three (pre)');
+        assert.equal(select.value, 2);
+        change(child(container, 0), '3');
         setTimeout(function () {
-            assert.ok(input.checked);
-            document.body.removeChild(container);
+            assert.ok(!optionOne.selected, 'option one (pre)');
+            assert.ok(!optionTwo.selected, 'option two (pre)');
+            assert.ok(optionThree.selected, 'option three (pre)');
+            assert.equal(select.value, 3);
             done();
         }, 0);
     });
@@ -276,47 +240,13 @@ suite('Events', function () {
         }, 0);
     });
     
-    test('reset radio to match template data', function (done) {
-        var container = document.createElement('div');
-        var templates = createTemplateNode(
-            '<div data-template="main">' +
-                '<div data-each="option in options">' +
-                '<input data-if="option.checked" data-managed="true" type="radio" name="example" value="{{option.value}}" checked>' +
-                '<input data-unless="option.checked" data-managed="true" type="radio" name="example" value="{{option.value}}">' +
-                '</div>' +
-                '</div>');
-        var data = {
-            options: [
-                {value: 'one', checked: false},
-                {value: 'two', checked: true},
-                {value: 'three', checked: false}
-            ]
-        };
-        Magery.patch(templates, 'main', data, container);
-        var radioOne = child(container, 0, 0);
-        var radioTwo = child(container, 1, 0);
-        var radioThree = child(container, 2, 0);
-        document.body.appendChild(container);
-        assert.ok(!radioOne.checked, 'radio one (pre)');
-        assert.ok(radioTwo.checked, 'radio two (pre)');
-        assert.ok(!radioThree.checked, 'radio three (pre)');
-        click(radioThree);
-        setTimeout(function () {
-            assert.ok(!radioOne.checked, 'radio one (post)');
-            assert.ok(radioTwo.checked, 'radio two (post)');
-            assert.ok(!radioThree.checked, 'radio three (post)');
-            document.body.removeChild(container);
-            done();
-        }, 0);
-    });
-
     test('update radio via event handler', function (done) {
         var container = document.createElement('form');
         var templates = createTemplateNode(
             '<form data-template="main" method="GET" action="">' +
                 '<div data-each="option in options">' +
-                    '<input data-if="option.checked" data-managed="true" type="radio" onclick="pick(option.value)" name="example" value="{{option.value}}" checked>' +
-                    '<input data-unless="option.checked" data-managed="true" type="radio" onclick="pick(option.value)" name="example" value="{{option.value}}">' +
+                    '<input data-if="option.checked" type="radio" onclick="pick(option.value)" name="example" value="{{option.value}}" checked>' +
+                    '<input data-unless="option.checked" type="radio" onclick="pick(option.value)" name="example" value="{{option.value}}">' +
                 '</div>' +
             '</form>'
         );
@@ -357,44 +287,6 @@ suite('Events', function () {
                 document.body.removeChild(container);
                 done();
             }, 0);
-        }, 0);
-    });
-
-    test('reset select to match template data', function (done) {
-        var container = document.createElement('div');
-        var templates = createTemplateNode(
-            '<div data-template="main">' +
-                '<select>' +
-                '<option data-each="option in options" value="{{option.value}}" selected="{{option.selected}}">' +
-                '{{option.label}}' +
-                '</option>' +
-                '</select>' +
-                '</div>');
-        var data = {
-            options: [
-                {value: 1, label: 'one', selected: false},
-                {value: 2, label: 'two', selected: true},
-                {value: 3, label: 'three', selected: false}
-            ]
-        };
-        Magery.patch(templates, 'main', data, container);
-        var select = child(container, 0);
-        var optionOne = child(select, 0);
-        var optionTwo = child(select, 1);
-        var optionThree = child(select, 2);
-        document.body.appendChild(container);
-        assert.ok(!optionOne.selected, 'option one (pre)');
-        assert.ok(optionTwo.selected, 'option two (pre)');
-        assert.ok(!optionThree.selected, 'option three (pre)');
-        assert.equal(select.value, 2);
-        click(optionThree);
-        setTimeout(function () {
-            assert.ok(!optionOne.selected, 'option one (pre)');
-            assert.ok(optionTwo.selected, 'option two (pre)');
-            assert.ok(!optionThree.selected, 'option three (pre)');
-            assert.equal(select.value, 2);
-            document.body.removeChild(container);
-            done();
         }, 0);
     });
 
