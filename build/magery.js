@@ -218,7 +218,13 @@ var Magery =
 	                }
 	                return arg;
 	            });
-	            node.template.handlers[handler.name].apply(handler.template_root, args);
+	            var fn = node.template.handlers[handler.name];
+	            if (!fn) {
+	                throw new Error(
+	                    "on" + type + ": no '" + handler.name + "' handler defined"
+	                );
+	            }
+	            fn.apply(handler.template_root, args);
 	        }
 	    };
 	}
