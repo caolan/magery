@@ -6,26 +6,25 @@
     </head>
     <body>
         <!-- target element -->
-        <div id="counter"></div>
+        <my-counter></my-counter>
         
         <!-- our templates -->
-        <template class="magery-templates">
-            <div data-template="counter">
-                <p>
-                    Clicked: <span id="value">{{ count }}</span> times
-                    <button onclick="increment()">+</button>
-                    <button onclick="decrement()">-</button>
-                </p>
-            </div>
+        <template data-tagname="my-counter">
+            <p>
+                Clicked: <span id="value">{{ count }}</span> times
+                <button onclick="increment()">+</button>
+                <button onclick="decrement()">-</button>
+            </p>
         </template>
 
         <!-- dependencies -->
         <script src="./redux.min.js"></script>
-        <script src="../build/magery.js"></script>
+        <script src="../build/magery-runtime.js"></script>
+        <script src="../build/magery-compiler.js"></script>
         
         <!-- application code -->
         <script>
-         var templates = Magery.compile('.magery-templates');
+         var components = MageryCompiler.compile('template');
          
          // create a store
          var store = Redux.createStore(function (state, action) {
@@ -42,21 +41,20 @@
              }
          });
          
-         var target = document.getElementById('counter');
+         var target = document.getElementsByTagName('my-counter')[0];
+         var handlers = {};
          
          function render() {
-             Magery.patch(templates, 'counter', store.getState(), target);
+             components['my-counter'](target, store.getState(), handlers);
          }
          
          // add event handlers using Magery
-         templates['counter'].bind({
-             increment: function () {
-                 store.dispatch({type: 'INCREMENT'});
-             },
-             decrement: function () {
-                 store.dispatch({type: 'DECREMENT'});
-             }
-         });
+         handlers.increment = function () {
+             store.dispatch({type: 'INCREMENT'});
+         };
+         handlers.decrement = function () {
+             store.dispatch({type: 'DECREMENT'});
+         };
          
          // update the page when the store changes
          store.subscribe(render);

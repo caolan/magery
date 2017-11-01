@@ -14,11 +14,11 @@
         </template>
         
         <!-- javascript -->
-        <script src="../build/magery.min.js"></script>
+        <script src="../build/magery-compiler.min.js"></script>
+        <script src="../build/magery-runtime.min.js"></script>
         <script>
          
-         var components = Magery.compile('template');
-         console.log(components);
+         var components = MageryCompiler.compile('template');
          var target = document.getElementsByTagName('my-greeting')[0];
          var data = {"name": "world"};
          

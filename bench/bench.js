@@ -1,12 +1,12 @@
 function createTemplateNode(src) {
     var el = document.getElementById('test-templates');
     if (!el) {
-        el = document.createElement('template');
+        el = document.createElement('div');
         document.body.appendChild(el);
         el.id = 'test-templates';
     }
     el.innerHTML = src;
-    var code = Magery.compile(el);
+    var code = MageryCompiler.compile(el);
     return eval(code);
 }
 
@@ -42,22 +42,24 @@ benchsuite('Add 100 elements to a list, one at a time (no keys)', function () {
     bench({
         name: 'Magery',
         setup: function () {
-            this.templates = createTemplateNode(
-                '<ul data-template="app">' +
-                    '<li data-each="item in items">' +
-                        '{{item.name}}' +
-                    '</li>' +
-                '</ul>'
+            this.components = createTemplateNode(
+                '<template data-tagname="my-app">' +
+                    '<ul>' +
+                        '<li data-each="item in items">' +
+                            '{{item.name}}' +
+                        '</li>' +
+                    '</ul>' +
+                '</template>'
             );
         },
         fn: function () {
             var data = {items: []};
             var container = document.createElement('div');
-            var element = document.createElement('ul');
+            var element = document.createElement('my-app');
             container.appendChild(element);
             for (var i = 0; i < 100; i++) {
                 data.items.push({name: 'item' + i});
-                Magery.patch(this.templates, 'app', data, element);
+                this.components['my-app'](element, data);
             }
         }
     });
@@ -89,22 +91,24 @@ benchsuite('Add 100 elements to a list, one at a time (keys)', function () {
     bench({
         name: 'Magery',
         setup: function () {
-            this.templates = createTemplateNode(
-                '<ul data-template="app">' +
-                    '<li data-each="item in items" data-key="{{item.id}}">' +
-                    '{{item.name}}' +
-                    '</li>' +
-                    '</ul>'
+            this.components = createTemplateNode(
+                '<template data-tagname="my-app">' +
+                    '<ul>' +
+                        '<li data-each="item in items" data-key="{{item.id}}">' +
+                            '{{item.name}}' +
+                        '</li>' +
+                    '</ul>' +
+                '</template>'
             );
         },
         fn: function () {
             var container = document.createElement('div');
-            var element = document.createElement('ul');
+            var element = document.createElement('my-app');
             container.appendChild(element);
             var data = {items: []};
             for (var i = 0; i < 100; i++) {
                 data.items.push({id: i, name: 'item' + i});
-                Magery.patch(this.templates, 'app', data, element);
+                this.components['my-app'](element, data);
             }
         }
     });
@@ -140,12 +144,14 @@ benchsuite('Randomly remove elements from 100 length list, one at a time (no key
     bench({
         name: 'Magery',
         setup: function () {
-            this.templates = createTemplateNode(
-                '<ul data-template="app">' +
-                    '<li data-each="item in items">' +
-                    '{{item.name}}' +
-                    '</li>' +
-                    '</ul>'
+            this.components = createTemplateNode(
+                '<template data-tagname="my-app">' +
+                    '<ul>' +
+                        '<li data-each="item in items">' +
+                            '{{item.name}}' +
+                        '</li>' +
+                    '</ul>' +
+                '</template>'
             );
             this.items = [];
             for (var i = 0; i < 100; i++) {
@@ -155,11 +161,11 @@ benchsuite('Randomly remove elements from 100 length list, one at a time (no key
         fn: function () {
             var data = {items: this.items.slice()};
             var container = document.createElement('div');
-            var element = document.createElement('ul');
+            var element = document.createElement('my-app');
             container.appendChild(element);
             for (var i = 0; i < 100; i++) {
                 data.items.splice(random(data.items.length - 1), 1);
-                Magery.patch(this.templates, 'app', data, element);
+                this.components['my-app'](element, data);
             }
         }
     });
@@ -195,13 +201,15 @@ benchsuite('Randomly remove elements from 100 length list, one at a time (keys)'
     bench({
         name: 'Magery',
         setup: function () {
-            this.templates = createTemplateNode(
-                               '<ul data-template="app">' +
-                               '<li data-each="item in items" data-key="{{item.id}}">' +
-                               '{{item.name}}' +
-                               '</li>' +
-                               '</ul>'
-                              );
+            this.components = createTemplateNode(
+                '<template data-tagname="my-app">' +
+                    '<ul>' +
+                        '<li data-each="item in items" data-key="{{item.id}}">' +
+                            '{{item.name}}' +
+                        '</li>' +
+                    '</ul>' +
+                '</template>'
+            );
             this.items = [];
             for (var i = 0; i < 100; i++) {
                 this.items.push({id: i, name: 'item' + i});
@@ -209,12 +217,12 @@ benchsuite('Randomly remove elements from 100 length list, one at a time (keys)'
         },
         fn: function () {
             var container = document.createElement('div');
-            var element = document.createElement('ul');
+            var element = document.createElement('my-app');
             container.appendChild(element);
             var data = {items: this.items.slice()};
             for (var i = 0; i < 100; i++) {
                 data.items.splice(random(data.items.length - 1), 1);
-                Magery.patch(this.templates, 'app', data, element);
+                this.components['my-app'](element, data);
             }
         }
     });
@@ -257,25 +265,27 @@ benchsuite('Add 100 more complex elements to a list, one at a time', function ()
     bench({
         name: 'Magery',
         setup: function () {
-            this.templates = createTemplateNode(
-                '<div id="container" data-template="app">' +
-                    '<ul>' +
-                    '<li data-each="item in items" data-key="{{item.id}}">' +
-                    '<span data-if="item.published">Published</span>' +
-                    '<strong>{{item.name}}</strong>' +
-                    '</li>' +
-                    '</ul>' +
-                    '</div>'
+            this.components = createTemplateNode(
+                '<template data-tagname="my-app">' +
+                    '<div id="container">' +
+                        '<ul>' +
+                            '<li data-each="item in items" data-key="{{item.id}}">' +
+                                '<span data-if="item.published">Published</span>' +
+                                '<strong>{{item.name}}</strong>' +
+                            '</li>' +
+                        '</ul>' +
+                    '</div>' +
+                '<template>'
             );
         },
         fn: function () {
             var container = document.createElement('div');
-            var element = document.createElement('div');
+            var element = document.createElement('my-app');
             container.appendChild(element);
             var data = {items: []};
             for (var i = 0; i < 100; i++) {
                 data.items.push({id: i, name: 'item' + i});
-                Magery.patch(this.templates, 'app', data, element);
+                this.components['my-app'](element, data);
             }
         }
     });
@@ -346,27 +356,26 @@ benchsuite('handle 100 click events to update a counter', function () {
     bench({
         name: 'Magery',
         setup: function () {
-            this.templates = createTemplateNode(
-                '<input data-template="app" type="button" value="{{counter}}" onclick="incrementCounter(event)" />'
+            this.components = createTemplateNode(
+                '<template data-tagname="my-app">' +
+                    '<input type="button" value="{{counter}}" onclick="incrementCounter(event)" />' +
+                '</template>'
             );
             this.scratch = document.getElementById('scratch-area');
         },
         fn: function () {
             this.scratch.innerHTML = '';
-            var templates = this.templates;
-            var element = document.createElement('input');
+            var element = document.createElement('my-app');
             var data = {counter: 0};
+            var self = this;
             this.scratch.appendChild(element);
-            function render() {
-                Magery.patch(templates, 'app', data, element);
-            }
-            this.templates['app'].bind({
+            var handlers = {
                 incrementCounter: function (ev) {
                     data.counter++;
-                    render();
+                    self.components['my-app'](this, data, handlers);
                 }
-            });
-            render();
+            };
+            this.components['my-app'](element, data, handlers);
             for (var i = 0; i < 100; i++) {
                 element.click();
             }

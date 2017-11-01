@@ -8,9 +8,9 @@
         <div class="editor-container">
             <div class="editor open">
                 <h2 onclick="toggleEditor">Templates (<a href="https://github.com/caolan/magery#template-syntax">syntax</a>)</h2>
-                <div id="templates">&lt;div data-template=&quot;main&quot;&gt;
+                <div id="templates">&lt;template data-tagname=&quot;my-app&quot;&gt;
     &lt;h1&gt;Hello, {{name}}!&lt;/h1&gt;
-&lt;/div&gt;</div>
+&lt;/template&gt;</div>
             </div>
             <div class="editor open">
                 <h2 onclick="toggleEditor">Data</h2>
@@ -20,10 +20,11 @@
             </div>
         </div>
         <div class="result-container">
-            <div id="result"></div>
+            <my-app></my-app>
         </div>
         <div style="display:none" id="active-templates"></div>
-        <script src="../build/magery.js"></script>
+        <script src="../build/magery-compiler.min.js"></script>
+        <script src="../build/magery-runtime.min.js"></script>
         <script src="ace/ace.js"></script>
         <script src="app.js"></script>
     </body>

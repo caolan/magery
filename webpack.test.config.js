@@ -4,7 +4,8 @@ module.exports = {
         'patch': ['./src/patch.js'],
         'transforms': ['./src/transforms.js'],
         'utils': ['./src/utils.js'],
-        'Magery': ['./src/magery.js']
+        'Magery': ['./src/magery-runtime.js'],
+        'MageryCompiler': ['./src/magery-compiler.js']
     },
     output: {
         path: 'build/test',

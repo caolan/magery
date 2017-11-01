@@ -1,6 +1,5 @@
 var utils = require('./utils');
 var html = require('./html');
-var make_template = require('./template').make_template;
 
 
 var IGNORED_ATTRS = [
@@ -74,7 +73,6 @@ function compileElement(node, queue, write, is_root) {
     if (!is_root && node.tagName === 'TEMPLATE' && node.dataset.tagname) {
         // compile this template later
         queue.push(node);
-        // TODO validate node.dataset.tagname includes hyphen
         return;
     }
     if (node.dataset.each) {
@@ -260,18 +258,24 @@ function compileNode(node, queue, write, is_root) {
 
 function ignore_output(str) {}
 
-exports.compile = function (node, write) {
+exports.compile = function (nodes, write) {
     var queue = [];
-    compileNode(
-        node,
-        queue,
-        ignore_output,
-        // if current node is not a template, ignore output until
-        // a template node is found
-        !(node.tagName == 'TEMPLATE' &&
-          node.dataset &&
-          node.dataset.hasOwnProperty('tagname'))
-    );
+    if (!(nodes instanceof NodeList)) {
+        nodes = [nodes];
+    }
+    for (var i = 0, len = nodes.length; i < len; i++) {
+        var node = nodes[i];
+        compileNode(
+            node,
+            queue,
+            ignore_output,
+            // if current node is not a template, ignore output until
+            // a template node is found
+            !(node.tagName == 'TEMPLATE' &&
+              node.dataset &&
+              node.dataset.hasOwnProperty('tagname'))
+        );
+    }
     write('({\n');
     while (queue.length) {
         node = queue.shift();
@@ -281,9 +285,8 @@ exports.compile = function (node, write) {
                     "': data-tagname must include a hyphen"
             );
         }
-        // TODO validate node.dataset.tagname includes hyphen
         write(JSON.stringify(node.dataset.tagname) + ': ');
-        write('make_template(' +
+        write('Magery._template(' +
               'function (p, data, handlers, root_key, extra_attrs, inner) {\n');
         write('var templates = this;\n');
         compileNode(node, queue, write, true);
@@ -293,14 +296,9 @@ exports.compile = function (node, write) {
 };
 
 exports.compileToString = function (node) {
-    var result = '(function (make_template) { return ';
+    var result = '(function (Magery) { return ';
     exports.compile(node, function (str) {
         result += str;
     });
     return result + '})';
-};
-
-exports.eval = function (node) {
-    // console.log(exports.compileToString(node));
-    return eval(exports.compileToString(node))(make_template);
 };

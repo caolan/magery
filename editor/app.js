@@ -45,7 +45,7 @@ var templates = {};
 function loadTemplates() {
     var active = document.getElementById('active-templates');
     active.innerHTML = templates_editor.getValue();
-    Magery.compile(active, templates);
+    MageryCompiler.compile(active, templates);
 }
 
 var data;
@@ -59,11 +59,11 @@ catch (e) {
 
 loadTemplates();
 
-var element = document.getElementById('result');
+var element = document.getElementsByTagName('my-app')[0];
     
 function patch() {
     try {
-        Magery.patch(templates, 'main', data, element);
+        templates['my-app'](element, data);
     }
     catch (e) {
         // user might still be editing

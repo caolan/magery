@@ -1,36 +1,36 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Counter</title>
+    <title>Events</title>
     <meta charset="utf-8">
   </head>
   <body>
-    <template class="magery-templates">
-
-      <div data-template="hello">
-        <button onclick="sayHello(name)">click me</button>
-      </div>
-
+    <template data-tagname="say-hello">
+      <button onclick="sayHello(name)">click me</button>
     </template>
+        
+    <say-hello></say-hello>
 
-    <div id="example"></div>
-
-    <script src="../build/magery.min.js"></script>
+    <script src="../build/magery-compiler.min.js"></script>
+    <script src="../build/magery-runtime.min.js"></script>
     <script>
 
-     var templates = Magery.compile('.magery-templates');
-     var element = document.getElementById('example');
-     var data = {name: 'testing'};
+     var components = MageryCompiler.compile('template');
+     var target = document.getElementsByTagName('say-hello')[0];
 
-     // add event handlers
-     templates['hello'].bind({
+     var data = {
+         name: 'testing'
+     };
+
+     // handlers for template
+     var handlers = {
          sayHello: function (name) {
              alert('Hello, ' + name + '!');
          }
-     });
+     };
 
-     // patch the page
-     Magery.patch(templates, 'hello', data, element);
+     // events are bound on first patch
+     components['say-hello'](target, data, handlers);
 
     </script>
   </body>

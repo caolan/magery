@@ -45,14 +45,7 @@ var Magery =
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(1);
-
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	var Patcher = __webpack_require__(2).Patcher;
+	var Patcher = __webpack_require__(1).Patcher;
 
 	exports._template = function (render) {
 	    var f = function (node, data, handlers) {
@@ -65,7 +58,7 @@ var Magery =
 
 
 /***/ }),
-/* 2 */
+/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -75,10 +68,10 @@ var Magery =
 	 * DOM, performing DOM mutation only through transform calls.
 	 */
 
-	var transforms = __webpack_require__(3);
-	var utils = __webpack_require__(5);
-	var html = __webpack_require__(4);
-	var Set = __webpack_require__(6);
+	var transforms = __webpack_require__(2);
+	var utils = __webpack_require__(4);
+	var html = __webpack_require__(3);
+	var Set = __webpack_require__(5);
 
 	var ELEMENT_NODE = 1;
 	var TEXT_NODE = 3;
@@ -359,7 +352,7 @@ var Magery =
 
 
 /***/ }),
-/* 3 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -368,7 +361,7 @@ var Magery =
 	 * monitor mutations during testing.
 	 */
 
-	var html = __webpack_require__(4);
+	var html = __webpack_require__(3);
 
 
 	exports.insertTextNode = function (parent, before, str) {
@@ -431,7 +424,7 @@ var Magery =
 
 
 /***/ }),
-/* 4 */
+/* 3 */
 /***/ (function(module, exports) {
 
 	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
@@ -467,7 +460,7 @@ var Magery =
 
 
 /***/ }),
-/* 5 */
+/* 4 */
 /***/ (function(module, exports) {
 
 	var ELEMENT_NODE = 1;
@@ -551,7 +544,7 @@ var Magery =
 
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ (function(module, exports) {
 
 	// use built in Set() if available

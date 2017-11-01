@@ -50,8 +50,8 @@ shared templates to dynamically update the page.
 
 ## Download
 
-- [magery.js](https://raw.githubusercontent.com/caolan/magery/master/build/magery.js) (development)
-- [magery.min.js](https://raw.githubusercontent.com/caolan/magery/master/build/magery.min.js) (production)
+- [magery-compiler.js](https://raw.githubusercontent.com/caolan/magery/master/build/magery-compiler.js) ([minified](https://raw.githubusercontent.com/caolan/magery/master/build/magery-compiler.min.js))
+- [magery-runtime.js](https://raw.githubusercontent.com/caolan/magery/master/build/magery-runtime.js) ([minified](https://raw.githubusercontent.com/caolan/magery/master/build/magery-runtime.min.js))
 
 ### File size
 
@@ -66,7 +66,8 @@ A comparison with some popular minified production builds:
     React + React DOM v15.6.1:   #####################################     150 kb
     jQuery v3.2.1:               #####################                      85 kb
     jQuery (slim build) v3.2.1:  #################                          68 kb
-    Magery (2017-08-28):         ###                                        12 kb
+    Magery (compiler + runtime): ###                                        12 kb
+    Magery (runtime):            ##                                          6 kb
 
 ## Example
 
@@ -78,14 +79,12 @@ Components in Magery use custom HTML5 tags defined by templates:
 </template>
 ```
 
-These templates can be rendered by your server, or compiled with JavaScript and used to dynamically update the page:
+These templates can be rendered by your server, or compiled with
+JavaScript and used to dynamically update the page:
 
 ``` javascript
-var components = Magery.compile('template');
-
-components['my-greeting](target, {
-    name: 'world'
-});
+var components = MageryCompiler.compile('template');
+components['my-greeting'](target, {name: 'world'});
 ```
 
 Here's a full example:
@@ -105,18 +104,18 @@ Here's a full example:
     <template data-tagname="my-greeting">
       Hello, {{ name }}!
     </template>
-
+        
     <!-- javascript -->
-    <script src="../build/magery.min.js"></script>
+    <script src="../build/magery-compiler.min.js"></script>
+    <script src="../build/magery-runtime.min.js"></script>
     <script>
-    
-      var components = Magery.compile('template');
-      console.log(components);
+         
+      var components = MageryCompiler.compile('template');
       var target = document.getElementsByTagName('my-greeting')[0];
       var data = {"name": "world"};
-
+         
       components['my-greeting'](target, data);
-      
+         
     </script>
   </body>
 </html>
@@ -129,16 +128,15 @@ examples](examples).
 
 ### Variables
 
-You can pass JSON data
-to [Magery.patch()](#magerypatchtemplates-name-data-target) as a
-context for your templates. Properties of the context object can be
-inserted into the page using `{{` double curly braces `}}`:
+You can pass JSON data to components as a context for your templates.
+Properties of the context object can be inserted into the page using
+`{{` double curly braces `}}`:
 
 ``` html
-<h1 data-template="greeting">
+<template data-tagname="my-greeting">
   Hello, {{ name }}!
   <img src="{{ avatar_url }}" alt="{{ name }}'s avatar">
-</h1>
+</template>
 ```
 
 Variables can be expanded in both attributes and text. The inserted
@@ -163,37 +161,6 @@ insert the attribute if the variable is *truthy* (i.e. not `0`,
 ```
 
 ### Attributes
-
-#### data-template
-
-This is how you define a template. A template name must consist only
-of the lower-case letters `a-z` and `-`, so they can be used as
-[component tags](#components).
-    
-Once rendered, the name provided in the `data-template` attribute will
-be added to the rendered element's `data-bind` attribute (this is
-useful when trying to match components rendered on the server).
-    
-##### Example use
-    
-Template:
-``` html
-<h1 data-template="hello">
-  Hello, {{name}}!
-</h1>
-```
-        
-Data:
-``` javascript
-{name: "world"}
-```
-
- Result:
- ``` html
-<h1 data-bind="hello">
-  Hello, world!
-</h1>
-```
 
 #### data-each
 
@@ -375,14 +342,6 @@ You can also use these attributes when calling another template:
 </div>
 ```
 
-And you can use these attributes on the template definition itself:
-
-``` html
-<div data-template="my-article" data-if="article.published">
-  <h1>{{ article.title }}</h1>
-</div>
-```
-
 ### Tags
 
 #### template-children
@@ -395,21 +354,17 @@ Note: any child nodes or attributes on this tag will be ignored.
 Template:
 
 ``` html
-<template class="magery-templates">
-            
-  <div data-template="article">
-    <h1>{{ title }}</h1>
-    <div class="main-content">
-      <template-children />
-    </div>
+<template data-tagname="my-article">
+  <h1>{{ title }}</h1>
+  <div class="main-content">
+    <template-children />
   </div>
+</template>
             
-  <div data-template="page">
-    <article title="article.title">
-      <p>{{ article.text }}</p>
-    </article>
-  </div>
-            
+<template data-tagname="my-page">
+  <my-article title="article.title">
+    <p>{{ article.text }}</p>
+  </my-article>
 </template>
 ```
 
@@ -427,36 +382,36 @@ Data:
 Result:
 
 ``` html
-<div data-bind="page">
-  <div data-bind="article">
+<my-page>
+  <my-article>
     <h1>Guinea Pig Names</h1>
     <div class="main-content">
       <p>Popchop, Fuzzable, Deathmop</p>
     </div>
-  </div>
-</div>
+  </my-article>
+</my-page>
 ```
 
 #### template-embed
 
-Only used during server-side rendering, ignored
-during [Magery.patch()](#magerypatchtemplates-name-data-target).
-Embeds a template definition in the output. By default it wraps the
-definition in a `<template>` tag.
+Only used during server-side rendering, ignored during client-side DOM
+patching. Embeds a template definition in the output.
 
 ##### Example use
 
 Template:
 
 ``` html
-<ul data-template="tags">
-  <li data-each="tag in tags">{{ tag }}</li>
-</ul>
+<template data-tagname="my-tags">
+  <ul>
+    <li data-each="tag in tags">{{ tag }}</li>
+  </ul>
+</template>
 
-<div data-template="page">
+<template data-tagname="my-page">
   <h1>{{ title }}</h1>
-  <template-embed name="tags"></template-embed>
-</div>
+  <template-embed name="my-tags"></template-embed>
+</template>
 ```
 
 Data:
@@ -471,14 +426,14 @@ Data:
 Result:
 
 ``` html
-<div data-bind="page">
+<my-page>
   <h1>Example</h1>
-  <template class="magery-templates">
-    <ul data-template="tags">
+  <template data-tagname="my-tags">
+    <ul>
       <li data-each="tag in tags">{{ tag }}</li>
     </ul>
   </template>
-</div>
+</my-page>
 ```
 
 #### Components
@@ -488,15 +443,15 @@ this, simply use the template name as a custom tag. For example, the
 following template:
 
 ``` html
-<h1 data-template="hello">
-  Hello, {{name}}!
-</h1>
+<template data-tagname="my-greeting">
+  <h1>Hello, {{name}}!</h1>
+</template>
 ```
 
-Could be rendered elsewhere using the tag \`<hello>\`:
+Could be rendered elsewhere using the tag \`<my-greeting>\`:
 
 ``` html
-<hello name="{{ user.name }}"></hello>
+<my-greeting name="{{ user.name }}"></my-greeting>
 ```
 
 By adding attributes to your custom tag, you can pass data to the
@@ -506,7 +461,7 @@ bound to `name` inside the `hello` template.
 It is also possible to provide literal string values as context data:
 
 ``` html
-<hello name="world"></hello>
+<my-greeting name="world"></my-greeting>
 ```
 
     
@@ -520,12 +475,12 @@ Listeners can be attached to elements using the `on*` attributes (e.g.
 handlers will in reality be attached using `addEventListener()`:
 
 ``` html
-<div data-template="example">
+<template data-tagname="example">
   <p>{{ counter.name }}: {{ counter.value }}</p>
   <button onclick="incrementCounter(counter)">
     Increment
   </button>
-</div>
+</template>
 ```
 
 You can pass values in the current template context to the event
@@ -537,8 +492,8 @@ using the special `event` argument:
 ```
 
 The handler name (e.g. `updateField` above) is matched against the
-current template's bound event handlers. These functions can be bound
-to a template using [Template.bind()](#templatebindhandlers).
+provided event handlers object which can be passed into templates when
+patching the page.
 
 #### Example
 
@@ -550,35 +505,32 @@ to a template using [Template.bind()](#templatebindhandlers).
     <meta charset="utf-8">
   </head>
   <body>
-    <template class="magery-templates">
-
-      <div data-template="hello">
-        <button onclick="sayHello(name)">click me</button>
-      </div>
-        
+    <template data-tagname="say-hello">
+      <button onclick="sayHello(name)">click me</button>
     </template>
         
-    <div id="example"></div>
+    <say-hello></say-hello>
 
-    <script src="../build/magery.min.js"></script>
+    <script src="../build/magery-compiler.min.js"></script>
+    <script src="../build/magery-runtime.min.js"></script>
     <script>
 
-      var templates = Magery.compile('.magery-templates');
-      var element = document.getElementById('example');
+      var components = MageryCompiler.compile('template');
+      var target = document.getElementsByTagName('say-hello')[0];
 
       var data = {
         name: 'testing'
       };
 
-      // add handlers to template
-      templates['hello'].bind({
+      // handlers for template
+      var handlers = {
         sayHello: function (name) {
           alert('Hello, ' + name + '!');
         }
-      });
+      };
 
       // events are bound on first patch
-      Magery.patch(templates, 'hello', data, element);
+      components['say-hello'](target, data, handlers);
 
     </script>
   </body>
@@ -591,7 +543,7 @@ events.
 
 ## API
 
-### Magery.compile(target)
+### MageryCompiler.compile(target)
 
 Find and compile Magery templates in the current HTML document.
 
@@ -618,69 +570,6 @@ var templates = Magery.compile(node);
 // access the returned Template() objects using template[name]
 ```
 
-### Magery.patch(templates, name, data, target)
-
-Updates a `target` element to match the output of running the template
-with `name` from `templates` using `data` as it's context data.
-
-#### Arguments
-
-- **templates** - An object containing Magery.Template() objects keyed
-  by template name
-- **name** - The name of the template in `templates` to render
-- **data** - The data to pass to the template
-- **target** - The DOM element to update
-
-#### Return value
-
-Undefined.
-
-#### Example
-
-``` javascript
-var element = document.querySelector('#target');
-var data = {name: 'test'};
-        
-Magery.patch(templates, 'example', data, element);
-```
-
-### Template.bind(handlers)
-
-Attach event handlers to a template. The event handlers will not be
-bound to existing DOM elements
-until [Magery.patch()](#magerypatchtemplates-name-data-target) is
-called.
-
-#### Arguments
-
-- **handlers** - an object containing event handler functions keyed by
-  name
-
-#### Return value
-
-Undefined.
-
-#### Example
-
-``` javascript
-    var data = {items: []};
-        
-    templates[name].bind({
-      updateCounter: function () {
-        data.counter++;
-      },
-      removeItem: function (event, id) {
-        data.items = items.filter(function (item) {
-          return item.id !== id;
-        });
-      }
-    });
-```
-
-The arguments passed to event handler functions are dictated by the
-`on*` attribute which triggers it. See the [Events](#events) section
-for more details.
-
 ## State management
 
 Magery only handles updating the DOM and binding event handlers.
@@ -699,26 +588,25 @@ Here's an example using [Redux.js](http://redux.js.org/):
   </head>
   <body>
       <!-- target element -->
-      <div id="counter"></div>
+      <my-counter></my-counter>
       
       <!-- our templates -->
-      <template class="magery-templates">
-          <div data-template="counter">
-              <p>
-                  Clicked: <span id="value">{{ count }}</span> times
-                  <button onclick="increment()">+</button>
-                  <button onclick="decrement()">-</button>
-              </p>
-          </div>
+      <template data-tagname="my-counter">
+        <p>
+          Clicked: <span id="value">{{ count }}</span> times
+          <button onclick="increment()">+</button>
+          <button onclick="decrement()">-</button>
+        </p>
       </template>
 
       <!-- dependencies -->
       <script src="./redux.min.js"></script>
-      <script src="../build/magery.js"></script>
+      <script src="../build/magery-runtime.js"></script>
+      <script src="../build/magery-compiler.js"></script>
       
       <!-- application code -->
       <script>
-       var templates = Magery.compile('.magery-templates');
+       var components = MageryCompiler.compile('template');
        
        // create a store
        var store = Redux.createStore(function (state, action) {
@@ -735,21 +623,20 @@ Here's an example using [Redux.js](http://redux.js.org/):
            }
        });
        
-       var target = document.getElementById('counter');
+       var target = document.getElementsByTagName('my-counter')[0];
+       var handlers = {};
        
        function render() {
-           Magery.patch(templates, 'counter', store.getState(), target);
+           components['my-counter'](target, store.getState(), handlers);
        }
        
        // add event handlers using Magery
-       templates['counter'].bind({
-           increment: function () {
-               store.dispatch({type: 'INCREMENT'});
-           },
-           decrement: function () {
-               store.dispatch({type: 'DECREMENT'});
-           }
-       });
+       handlers.increment = function () {
+           store.dispatch({type: 'INCREMENT'});
+       };
+       handlers.decrement = function () {
+           store.dispatch({type: 'DECREMENT'});
+       };
        
        // update the page when the store changes
        store.subscribe(render);

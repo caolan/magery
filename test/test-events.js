@@ -11,7 +11,7 @@ suite('Events', function () {
             el.style = 'display: none;';
         }
         el.innerHTML = src;
-        return compile.eval(el);
+        return eval(compile.compileToString(el))(Magery);
     }
 
     function child(node /*...*/) {

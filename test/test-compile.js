@@ -38,7 +38,7 @@ suite('Compile', function () {
             el.style = 'display: none;';
         }
         el.innerHTML = src;
-        return compile.eval(el);
+        return eval(compile.compileToString(el))(Magery);
     }
  
     test('flat children', function () {
