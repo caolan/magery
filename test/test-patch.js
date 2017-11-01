@@ -1024,5 +1024,30 @@ suite('Patch', function () {
         });
         assert.strictEqual(child(target, 0).value, "<b>Hello, testing!</b>");
     });
+
+    test('call custom tag function during render', function () {
+        var target = makeElement(
+            '<test-foo>' +
+                '<i>asdf</i>' +
+                '<em>baz</em>' +
+            '</test-foo>'
+        );
+        var templates = createTemplateNode(
+            '<template data-tag="test-foo">' +
+                '<h1>hello</h1>' +
+                '<my-custom-tag message="{{ msg }}"></my-custom-tag>' +
+            '</template>'
+        );
+        templates['my-custom-tag'] = function (node, data, handlers) {
+            node.innerHTML = '<p>' + data.message + '</p>';
+        };
+        var data = {msg: 'Testing'};
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(
+            target.innerHTML,
+            '<h1>hello</h1><my-custom-tag><p>Testing</p></my-custom-tag>'
+        );
+    });
     
 });

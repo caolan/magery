@@ -347,10 +347,17 @@ var Magery =
 	        return;
 	    }
 	    var template = templates[name];
-	    var tmp = this.template_root;
-	    this.template_root = null;
-	    template._render.call(templates, this, data, handlers, root_key, root_attrs, inner);
-	    this.template_root = tmp;
+	    if (template._render) {
+	        var tmp = this.template_root;
+	        this.template_root = null;
+	        template._render.call(templates, this, data, handlers, root_key, root_attrs, inner);
+	        this.template_root = tmp;
+	    }
+	    else {
+	        this.enterTag(name.toUpperCase(), null);
+	        template(this.parent, data, handlers);
+	        this.exitTag();
+	    }
 	};
 
 
