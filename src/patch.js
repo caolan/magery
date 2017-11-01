@@ -57,13 +57,13 @@ function deleteUnvisitedAttributes(transforms, node) {
 
 // deletes children not marked as visited during patch
 function deleteUnvisitedEvents(transforms, node) {
-    if (!node.handlers) {
+    if (!node.bound_events) {
         return;
     }
-    for (var type in node.handlers) {
+    for (var type in node.bound_events) {
         if (!node.visited_events.has(type)) {
-            transforms.removeEventListener(node, type, node.handlers[type].fn);
-            delete node.handlers[type];
+            transforms.removeEventListener(node, type, node.bound_events[type].fn);
+            delete node.bound_events[type];
         }
     }
 };
@@ -128,18 +128,18 @@ Patcher.prototype.EVENT = {};
 
 function makeHandler(node, type) {
     return function (event) {
-        var handler = node.handlers[type];
-        if (handler.name) {
+        var handler = node.bound_events[type];
+        if (handler.path) {
             var args = handler.args.map(function (arg) {
                 if (arg === Patcher.prototype.EVENT) {
                     return event;
                 }
                 return arg;
             });
-            var fn = node.template.handlers[handler.name];
+            var fn = utils.lookup(node.handlers, handler.path);
             if (!fn) {
                 throw new Error(
-                    "on" + type + ": no '" + handler.name + "' handler defined"
+                    "on" + type + ": no '" + handler.path.join('.') + "' handler defined"
                 );
             }
             fn.apply(handler.template_root, args);
@@ -148,27 +148,27 @@ function makeHandler(node, type) {
 }
 
 function setListener(node, type) {
-    if (!node.handlers) {
-        node.handlers = {};
+    if (!node.bound_events) {
+        node.bound_events = {};
     }
-    if (!node.handlers.hasOwnProperty(type)) {
+    if (!node.bound_events.hasOwnProperty(type)) {
         var fn = makeHandler(node, type);
-        node.handlers[type] = {fn: fn};
+        node.bound_events[type] = {fn: fn};
         transforms.addEventListener(node, type, fn);
     }
     node.visited_events.add(type);
 }
 
-Patcher.prototype.eventListener = function (type, handler_name, args, template) {
+Patcher.prototype.eventListener = function (type, handler_path, args, handlers) {
     var node = this.parent;
-    if (node.template !== template) {
-        node.template = template;
+    if (node.handlers !== handlers) {
+        node.handlers = handlers;
     }
     setListener(node, type);
-    var handler = node.handlers[type];
-    handler.name = handler_name;
-    handler.args = args;
-    handler.template_root = this.template_root;
+    var event = node.bound_events[type];
+    event.path = handler_path;
+    event.args = args;
+    event.template_root = this.template_root;
 };
 
 // Patcher.prototype.attribute = function (name, value) {
@@ -208,7 +208,9 @@ Patcher.prototype.text = function (text) {
 };
 
 function getListener(node, type) {
-    return node.handlers && node.handlers[type] && node.handlers[type].fn;
+    return node.bound_events &&
+        node.bound_events[type] &&
+        node.bound_events[type].fn;
 }
 
 Patcher.prototype.exitTag = function () {
@@ -249,13 +251,15 @@ Patcher.prototype.each = function (data, name, iterable, f) {
     }
 };
 
-Patcher.prototype.render = function (templates, name, data, root_key, root_attrs, inner) {
+Patcher.prototype.render = function (templates, name, data, handlers, root_key, root_attrs, inner) {
     if (!templates[name]) {
-        throw new Error('Template does not exist: <' + name + '>');
+        this.enterTag(name.toUpperCase(), null);
+        this.exitTag();
+        return;
     }
     var template = templates[name];
     var tmp = this.template_root;
     this.template_root = null;
-    template._render(template, templates, this, data, root_key, root_attrs, inner);
+    template._render.call(templates, this, data, handlers, root_key, root_attrs, inner);
     this.template_root = tmp;
 };

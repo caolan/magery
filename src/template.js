@@ -1,10 +1,10 @@
-function Template(render) {
-    this._render = render;
-    this.handlers = {};
-}
+var Patcher = require('./patch').Patcher;
 
-Template.prototype.bind = function (handlers) {
-    this.handlers = handlers;
+exports.make_template = function (render) {
+    var f = function (node, data, handlers) {
+        var patcher = new Patcher(node);
+        return render.call(this, patcher, data, handlers);
+    };
+    f._render = render;
+    return f;
 };
-
-module.exports = Template;

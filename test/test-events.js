@@ -52,111 +52,117 @@ suite('Events', function () {
     }
 
     test('click event to dispatch', function (done) {
-        var container = document.createElement('div');
+        var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<div data-template="main">' +
+            '<template data-tag="test-main">' +
                 '<button onclick="clicked(event)">click me</button>' +
-                '</div>');
+            '</template>'
+        );
         var data = {};
-        templates['main'].bind({
+        var handlers = {
             clicked: function (event) {
-                assert.equal(event.target, child(container, 0));
+                assert.equal(event.target, child(target, 0));
                 done();
             }
-        });
-        Magery.patch(templates, 'main', data, container);
-        click(child(container, 0));
+        };
+        templates['test-main'](target, data, handlers);
+        click(child(target, 0));
     });
 
     test('click event with context data', function (done) {
-        var container = document.createElement('div');
+        var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<div data-template="main">' +
+            '<template data-tag="test-main">' +
                 '<button onclick="clicked(user)">click me</button>' +
-                '</div>');
+            '</template>'
+        );
         var data = {user: {name: 'test'}};
-        templates['main'].bind({
+        var handlers = {
             clicked: function (user) {
                 assert.deepEqual(user, {name: 'test'});
                 done();
             }
-        });
-        Magery.patch(templates, 'main', data, container);
-        click(child(container, 0));
+        };
+        templates['test-main'](target, data, handlers);
+        click(child(target, 0));
     });
     
     test('click event with event and context data', function (done) {
-        var container = document.createElement('div');
+        var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<div data-template="main">' +
+            '<template data-tag="test-main">' +
                 '<button onclick="clicked(event, user)">click me</button>' +
-                '</div>');
+            '</template>'
+        );
         var data = {user: {name: 'test'}};
-        templates['main'].bind({
+        var handlers = {
             clicked: function (event, user) {
-                assert.equal(event.target, child(container, 0));
+                assert.equal(event.target, child(target, 0));
                 assert.deepEqual(user, {name: 'test'});
                 done();
             }
-        });
-        Magery.patch(templates, 'main', data, container);
-        click(child(container, 0));
+        };
+        templates['test-main'](target, data, handlers);
+        click(child(target, 0));
     });
     
     test('reference named item in loop', function () {
-        var container = document.createElement('div');
+        var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<div data-template="main">' +
+            '<template data-tag="test-main">' +
                 '<button data-each="item in items" onclick="test(item)">test</button>' +
-                '</div>');
+            '</template>'
+        );
         var data = {items: [{name: 'one'}, {name: 'two'}, {name: 'three'}]};
         var calls = [];
-        templates['main'].bind({
+        var handlers = {
             test: function (item) {
                 calls.push(item.name);
             }
-        });
-        Magery.patch(templates, 'main', data, container);
-        click(child(container, 0));
-        click(child(container, 1));
-        click(child(container, 2));
+        };
+        templates['test-main'](target, data, handlers);
+        click(child(target, 0));
+        click(child(target, 1));
+        click(child(target, 2));
         assert.deepEqual(calls, ['one', 'two', 'three']);
     });
 
     test('render html tags back into input', function () {
-        var container = document.createElement('div');
+        var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<div data-template="main">' +
+            '<template data-tag="test-main">' +
                 '<input type="text" value="{{user.name}}" oninput="updateID(user, event)">' +
-                '</div>');
+            '</template>'
+        );
         var data = {user: {name: 'test'}};
-        templates['main'].bind({
+        var handlers = {
             updateID: function (user, event) {
                 user.name = event.target.value;
-                Magery.patch(templates, 'main', data, container);
+                templates['test-main'](target, data, handlers);
             }
-        });
-        Magery.patch(templates, 'main', data, container);
-        assert.equal(child(container, 0).value, 'test');
-        input(child(container, 0), '<h1>test</h1>');
-        assert.equal(child(container, 0).value, '<h1>test</h1>');
+        };
+        templates['test-main'](target, data, handlers);
+        assert.equal(child(target, 0).value, 'test');
+        input(child(target, 0), '<h1>test</h1>');
+        assert.equal(child(target, 0).value, '<h1>test</h1>');
     });
     
     test('update input value via dispatch + patch', function () {
-        var container = document.createElement('div');
+        var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<div data-template="main">' +
+            '<template data-tag="test-main">' +
                 '<input type="text" value="{{name}}" oninput="updateInput()">' +
-                '</div>');
+            '</template>'
+        );
         var data = {name: 'testing'};
-        templates['main'].bind({
+        var handlers = {
             updateInput: function () {
                 data.name = 'bar';
-                Magery.patch(templates, 'main', data, container);
+                templates['test-main'](target, data, handlers);
             }
-        });
-        Magery.patch(templates, 'main', data, container);
-        var input = child(container, 0);
+        };
+        templates['test-main'](target, data, handlers);
+        var input = child(target, 0);
         input.value = 'foo';
         assert.equal(input.value, 'foo');
         // input event fires synchronously
@@ -167,15 +173,16 @@ suite('Events', function () {
     });
 
     test('update select box value onchange', function (done) {
-        var container = document.createElement('div');
+        var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<div data-template="main">' +
-                '<select onchange="update(event)">' +
+            '<template data-tag="test-main">' +
+              '<select onchange="update(event)">' +
                 '<option data-each="option in options" value="{{option.value}}" selected="{{option.selected}}">' +
-                '{{option.label}}' +
+                  '{{option.label}}' +
                 '</option>' +
-                '</select>' +
-                '</div>');
+              '</select>' +
+            '</template>'
+        );
         var data = {
             options: [
                 {value: 1, label: 'one', selected: false},
@@ -183,25 +190,25 @@ suite('Events', function () {
                 {value: 3, label: 'three', selected: false}
             ]
         };
-        templates['main'].bind({
+        var handlers = {
             update: function (event) {
                 data.options.forEach(function (opt) {
                     opt.selected = opt.value == event.target.value;
                 });
-                Magery.patch(templates, 'main', data, container);
+                templates['test-main'](target, data, handlers);
             }
-        });
-        Magery.patch(templates, 'main', data, container);
-        var select = child(container, 0);
+        };
+        templates['test-main'](target, data, handlers);
+        var select = child(target, 0);
         var optionOne = child(select, 0);
         var optionTwo = child(select, 1);
         var optionThree = child(select, 2);
-        document.body.appendChild(container);
+        document.body.appendChild(target);
         assert.ok(!optionOne.selected, 'option one (pre)');
         assert.ok(optionTwo.selected, 'option two (pre)');
         assert.ok(!optionThree.selected, 'option three (pre)');
         assert.equal(select.value, 2);
-        change(child(container, 0), '3');
+        change(child(target, 0), '3');
         setTimeout(function () {
             assert.ok(!optionOne.selected, 'option one (pre)');
             assert.ok(!optionTwo.selected, 'option two (pre)');
@@ -212,21 +219,22 @@ suite('Events', function () {
     });
 
     test('update checkbox via dispatch', function (done) {
-        var container = document.createElement('div');
+        var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<div data-template="main">' +
+            '<template data-tag="test-main">' +
                 '<input data-if="checked" type="checkbox" onclick="toggle()" checked>' +
                 '<input data-unless="checked" type="checkbox" onclick="toggle()">' +
-                '</div>');
+            '</template>'
+        );
         var data = {checked: true};
-        templates['main'].bind({
+        var handlers = {
             toggle: function () {
                 data.checked = !data.checked;
             }
-        });
-        Magery.patch(templates, 'main', data, container);
-        var input = child(container, 0);
-        document.body.appendChild(container);
+        };
+        templates['test-main'](target, data, handlers);
+        var input = child(target, 0);
+        document.body.appendChild(target);
         assert.ok(input.checked);
         click(input);
         setTimeout(function () {
@@ -234,21 +242,23 @@ suite('Events', function () {
             click(input);
             setTimeout(function () {
                 assert.ok(input.checked);
-                document.body.removeChild(container);
+                document.body.removeChild(target);
                 done();
             }, 0);
         }, 0);
     });
     
     test('update radio via event handler', function (done) {
-        var container = document.createElement('form');
+        var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<form data-template="main" method="GET" action="">' +
+            '<template data-tag="test-main">' +
+              '<form method="GET" action="">' +
                 '<div data-each="option in options">' +
                     '<input data-if="option.checked" type="radio" onclick="pick(option.value)" name="example" value="{{option.value}}" checked>' +
                     '<input data-unless="option.checked" type="radio" onclick="pick(option.value)" name="example" value="{{option.value}}">' +
                 '</div>' +
-            '</form>'
+              '</form>' +
+            '</template>'
         );
         var data = {
             options: [
@@ -258,19 +268,19 @@ suite('Events', function () {
             ]
         };
         var radioOne, radioTwo, radioThree;
-        templates['main'].bind({
+        var handlers = {
             pick: function (value) {
                 data.options.forEach(function (option) {
                     option.checked = (option.value === value);
                 });
-                Magery.patch(templates, 'main', data, container);
+                templates['test-main'](target, data, handlers);
             }
-        });
-        Magery.patch(templates, 'main', data, container);
-        radioOne = child(container, 0, 0);
-        radioTwo = child(container, 1, 0);
-        radioThree = child(container, 2, 0);
-        document.body.appendChild(container);
+        };
+        templates['test-main'](target, data, handlers);
+        radioOne = child(target, 0, 0, 0);
+        radioTwo = child(target, 0, 1, 0);
+        radioThree = child(target, 0, 2, 0);
+        document.body.appendChild(target);
         assert.ok(!radioOne.checked, 'radioOne (0)');
         assert.ok(radioTwo.checked, 'radioTwo (0)');
         assert.ok(!radioThree.checked, 'radioThree (0)');
@@ -284,22 +294,22 @@ suite('Events', function () {
                 assert.ok(radioOne.checked, 'radioOne (2)');
                 assert.ok(!radioTwo.checked, 'radioTwo (2)');
                 assert.ok(!radioThree.checked, 'radioThree (2)');
-                document.body.removeChild(container);
+                document.body.removeChild(target);
                 done();
             }, 0);
         }, 0);
     });
 
     test('bind handlers on nested template definition', function (done) {
-        var container = document.createElement('div');
+        var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<div data-template="main">' +
+            '<template data-tag="test-main">' +
                 '<div data-template="entry">' +
                     '<p>{{ item_one.name }}: {{ item_one.count }}</p>' +
-                    '<button onclick="incrementCount()">Add one</button>' +
+                    '<button onclick="entry.incrementCount()">Add one</button>' +
                 '</div>' +
-                '<button onclick="incrementCount()">Add one</button>' +
-            '</div>'
+                '<button onclick="main.incrementCount()">Add one</button>' +
+            '</template>'
         );
         var data = {
             item_one: {
@@ -311,19 +321,21 @@ suite('Events', function () {
                 count: 0
             }
         };
-        templates['main'].bind({
-            incrementCount: function () {
-                data.item_two.count++;
+        var handlers = {
+            main: {
+                incrementCount: function () {
+                    data.item_two.count++;
+                }
+            },
+            entry: {
+                incrementCount: function () {
+                    data.item_one.count++;
+                }
             }
-        });
-        templates['entry'].bind({
-            incrementCount: function () {
-                data.item_one.count++;
-            }
-        });
-        Magery.patch(templates, 'main', data, container);
-        var btn1 = child(container, 0, 1);
-        var btn2 = child(container, 1);
+        };
+        templates['test-main'](target, data, handlers);
+        var btn1 = child(target, 0, 1);
+        var btn2 = child(target, 1);
         assert.equal(data.item_one.count, 0, 'item_one.count after patch');
         assert.equal(data.item_two.count, 0, 'item_two.count after patch');
         click(btn1);
@@ -336,16 +348,16 @@ suite('Events', function () {
     });
 
     test('bind handlers on components', function (done) {
-        var container = document.createElement('div');
+        var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<div data-template="entry">' +
+            '<template data-tag="test-entry">' +
                 '<p>{{ item.name }}: {{ item.count }}</p>' +
-                '<button onclick="incrementCount()">Add one</button>' +
-            '</div>' +
-            '<div data-template="main">' +
-                '<entry item="item_one"></entry>' +
-                '<button onclick="incrementCount()">Add one</button>' +
-            '</div>'
+                '<button onclick="testEntry.incrementCount()">Add one</button>' +
+            '</template>' +
+            '<template data-tag="test-main">' +
+                '<test-entry item="item_one"></test-entry>' +
+                '<button onclick="testMain.incrementCount()">Add one</button>' +
+            '</template>'
         );
         var data = {
             item_one: {
@@ -357,19 +369,21 @@ suite('Events', function () {
                 count: 0
             }
         };
-        templates['main'].bind({
-            incrementCount: function () {
-                data.item_two.count++;
+        var handlers = {
+            testMain: {
+                incrementCount: function () {
+                    data.item_two.count++;
+                }
+            },
+            testEntry: {
+                incrementCount: function () {
+                    data.item_one.count++;
+                }
             }
-        });
-        templates['entry'].bind({
-            incrementCount: function () {
-                data.item_one.count++;
-            }
-        });
-        Magery.patch(templates, 'main', data, container);
-        var btn1 = child(container, 0, 1);
-        var btn2 = child(container, 1);
+        };
+        templates['test-main'](target, data, handlers);
+        var btn1 = child(target, 0, 1);
+        var btn2 = child(target, 1);
         assert.equal(data.item_one.count, 0, 'item_one.count after patch');
         assert.equal(data.item_two.count, 0, 'item_two.count after patch');
         click(btn1);
@@ -382,18 +396,18 @@ suite('Events', function () {
     });
 
     test('bind handlers inside template-children', function (done) {
-        var container = document.createElement('div');
+        var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<div data-template="entry">' +
+            '<template data-tag="test-entry">' +
                 '<p>{{ item.name }}: {{ item.count }}</p>' +
-                '<button onclick="incrementCount()">Add one</button>' +
+                '<button onclick="entry.incrementCount()">Add one</button>' +
                 '<template-children></template-children>' +
-            '</div>' +
-            '<div data-template="main">' +
-                '<entry item="item_one">' +
-                    '<button onclick="incrementCount()">Add one</button>' +
-                '</entry>' +
-            '</div>'
+            '</template>' +
+            '<template data-tag="test-main">' +
+                '<test-entry item="item_one">' +
+                    '<button onclick="main.incrementCount()">Add one</button>' +
+                '</test-entry>' +
+            '</template>'
         );
         var data = {
             item_one: {
@@ -405,19 +419,21 @@ suite('Events', function () {
                 count: 0
             }
         };
-        templates['main'].bind({
-            incrementCount: function () {
-                data.item_two.count++;
+        var handlers = {
+            main: {
+                incrementCount: function () {
+                    data.item_two.count++;
+                }
+            },
+            entry: {
+                incrementCount: function () {
+                    data.item_one.count++;
+                }
             }
-        });
-        templates['entry'].bind({
-            incrementCount: function () {
-                data.item_one.count++;
-            }
-        });
-        Magery.patch(templates, 'main', data, container);
-        var btn1 = child(container, 0, 1);
-        var btn2 = child(container, 0, 2);
+        };
+        templates['test-main'](target, data, handlers);
+        var btn1 = child(target, 0, 1);
+        var btn2 = child(target, 0, 2);
         assert.equal(data.item_one.count, 0, 'item_one.count after patch');
         assert.equal(data.item_two.count, 0, 'item_two.count after patch');
         click(btn1);
@@ -429,174 +445,174 @@ suite('Events', function () {
         done();
     });
 
-    test('Inside handlers, \'this\' is bound to top-most rendered element of template', function (done) {
-        var element = document.createElement('div');
-        var templates = createTemplateNode(
-            '<div data-template="main">' +
-                '<button onclick="clicked(event)">click me</button>' +
-                '</div>');
-        var data = {};
-        templates['main'].bind({
-            clicked: function (event) {
-                assert.equal(event.target, child(element, 0));
-                assert.equal(this, element);
-                done();
-            }
-        });
-        Magery.patch(templates, 'main', data, element);
-        click(child(element, 0));
-    });
+    // test('Inside handlers, \'this\' is bound to top-most rendered element of template', function (done) {
+    //     var element = document.createElement('div');
+    //     var templates = createTemplateNode(
+    //         '<div data-template="main">' +
+    //             '<button onclick="clicked(event)">click me</button>' +
+    //             '</div>');
+    //     var data = {};
+    //     templates['main'].bind({
+    //         clicked: function (event) {
+    //             assert.equal(event.target, child(element, 0));
+    //             assert.equal(this, element);
+    //             done();
+    //         }
+    //     });
+    //     Magery.patch(templates, 'main', data, element);
+    //     click(child(element, 0));
+    // });
 
-    test('\'this\' in nested template calls', function (done) {
-        var element = document.createElement('div');
-        var templates = createTemplateNode(
-            '<button data-template="bar" onclick="clicked(event)">click me</button>' +
-            '<div data-template="foo">' +
-                '<bar></bar>' +
-            '</div>');
-        var data = {};
-        templates['bar'].bind({
-            clicked: function (event) {
-                assert.equal(event.target, child(element, 0));
-                assert.equal(this, child(element, 0));
-                done();
-            }
-        });
-        Magery.patch(templates, 'foo', data, element);
-        click(child(element, 0));
-    });
+    // test('\'this\' in nested template calls', function (done) {
+    //     var element = document.createElement('div');
+    //     var templates = createTemplateNode(
+    //         '<button data-template="bar" onclick="clicked(event)">click me</button>' +
+    //         '<div data-template="foo">' +
+    //             '<bar></bar>' +
+    //         '</div>');
+    //     var data = {};
+    //     templates['bar'].bind({
+    //         clicked: function (event) {
+    //             assert.equal(event.target, child(element, 0));
+    //             assert.equal(this, child(element, 0));
+    //             done();
+    //         }
+    //     });
+    //     Magery.patch(templates, 'foo', data, element);
+    //     click(child(element, 0));
+    // });
 
-    test('\'this\' in nested template definitions', function (done) {
-        var element = document.createElement('div');
-        var templates = createTemplateNode(
-            '<div data-template="main">' +
-                '<div data-template="asdf">' +
-                  '<button onclick="clicked(event)">click me</button>' +
-                '</div>' +
-            '</div>'
-        );
-        var data = {};
-        templates['asdf'].bind({
-            clicked: function (event) {
-                assert.equal(event.target, child(element, 0, 0));
-                assert.equal(this, child(element, 0));
-                done();
-            }
-        });
-        Magery.patch(templates, 'main', data, element);
-        click(child(element, 0, 0));
-    });
+    // test('\'this\' in nested template definitions', function (done) {
+    //     var element = document.createElement('div');
+    //     var templates = createTemplateNode(
+    //         '<div data-template="main">' +
+    //             '<div data-template="asdf">' +
+    //               '<button onclick="clicked(event)">click me</button>' +
+    //             '</div>' +
+    //         '</div>'
+    //     );
+    //     var data = {};
+    //     templates['asdf'].bind({
+    //         clicked: function (event) {
+    //             assert.equal(event.target, child(element, 0, 0));
+    //             assert.equal(this, child(element, 0));
+    //             done();
+    //         }
+    //     });
+    //     Magery.patch(templates, 'main', data, element);
+    //     click(child(element, 0, 0));
+    // });
 
-    test('bind event on static template call', function (done) {
-        var container = document.createElement('div');
-        var templates = createTemplateNode(
-            '<button class="btn" data-template="my-btn">Test</button>' +
-            '<div data-template="main">' +
-                '<my-btn onclick="clicked(event)"></my-btn>' +
-            '</div>');
-        var data = {};
-        // event should trigger caller not callee handlers
-        templates['main'].bind({
-            clicked: function (event) {
-                assert.equal(event.target, child(container, 0));
-                done();
-            }
-        });
-        Magery.patch(templates, 'main', data, container);
-        click(child(container, 0));
-    });
+    // test('bind event on static template call', function (done) {
+    //     var container = document.createElement('div');
+    //     var templates = createTemplateNode(
+    //         '<button class="btn" data-template="my-btn">Test</button>' +
+    //         '<div data-template="main">' +
+    //             '<my-btn onclick="clicked(event)"></my-btn>' +
+    //         '</div>');
+    //     var data = {};
+    //     // event should trigger caller not callee handlers
+    //     templates['main'].bind({
+    //         clicked: function (event) {
+    //             assert.equal(event.target, child(container, 0));
+    //             done();
+    //         }
+    //     });
+    //     Magery.patch(templates, 'main', data, container);
+    //     click(child(container, 0));
+    // });
 
-    test('bind event on dynamic template call', function (done) {
-        var container = document.createElement('div');
-        var templates = createTemplateNode(
-            '<button class="btn" data-template="my-btn">Test</button>' +
-            '<div data-template="main">' +
-                '<template-call template="my-{{ type }}" onclick="clicked(event)">' +
-                '</tepmlate-call>' +
-            '</div>');
-        var data = {type: 'btn'};
-        // event should trigger caller not callee handlers
-        templates['main'].bind({
-            clicked: function (event) {
-                assert.equal(event.target, child(container, 0));
-                done();
-            }
-        });
-        Magery.patch(templates, 'main', data, container);
-        click(child(container, 0));
-    });
+    // test('bind event on dynamic template call', function (done) {
+    //     var container = document.createElement('div');
+    //     var templates = createTemplateNode(
+    //         '<button class="btn" data-template="my-btn">Test</button>' +
+    //         '<div data-template="main">' +
+    //             '<template-call template="my-{{ type }}" onclick="clicked(event)">' +
+    //             '</tepmlate-call>' +
+    //         '</div>');
+    //     var data = {type: 'btn'};
+    //     // event should trigger caller not callee handlers
+    //     templates['main'].bind({
+    //         clicked: function (event) {
+    //             assert.equal(event.target, child(container, 0));
+    //             done();
+    //         }
+    //     });
+    //     Magery.patch(templates, 'main', data, container);
+    //     click(child(container, 0));
+    // });
 
-    test('bind event inside nested template calls', function (done) {
-        var container = document.createElement('div');
-        var templates = createTemplateNode(
-            '<select data-template="foo">' +
-                '<option value="1">one</option>' +
-                '<option value="2">two</option>' +
-            '</select>' +
-            '<div data-template="example-wrapper">' +
-                '<template-call template="{{ tmpl }}"></template-call>' +
-            '</div>' +
-            '<div data-template="main">' +
-                '<example-wrapper onclick="clicked(event)" tmpl="{{ tmpl }}"></example-wrapper>' +
-            '</div>'
-        );
-        var data = {tmpl: 'foo'};
-        // event should trigger caller not callee handlers
-        templates['main'].bind({
-            clicked: function (event) {
-                assert.equal(event.target, child(container, 0));
-                done();
-            }
-        });
-        Magery.patch(templates, 'main', data, container);
-        click(child(container, 0));
-    });
+    // test('bind event inside nested template calls', function (done) {
+    //     var container = document.createElement('div');
+    //     var templates = createTemplateNode(
+    //         '<select data-template="foo">' +
+    //             '<option value="1">one</option>' +
+    //             '<option value="2">two</option>' +
+    //         '</select>' +
+    //         '<div data-template="example-wrapper">' +
+    //             '<template-call template="{{ tmpl }}"></template-call>' +
+    //         '</div>' +
+    //         '<div data-template="main">' +
+    //             '<example-wrapper onclick="clicked(event)" tmpl="{{ tmpl }}"></example-wrapper>' +
+    //         '</div>'
+    //     );
+    //     var data = {tmpl: 'foo'};
+    //     // event should trigger caller not callee handlers
+    //     templates['main'].bind({
+    //         clicked: function (event) {
+    //             assert.equal(event.target, child(container, 0));
+    //             done();
+    //         }
+    //     });
+    //     Magery.patch(templates, 'main', data, container);
+    //     click(child(container, 0));
+    // });
 
-    test('remove old event handlers on replaced element', function () {
-        var container = document.createElement('div');
-        var templates = createTemplateNode(
-            '<div data-template="bar">test</div>' +
-            '<div data-template="foo">' +
-                '<select>' +
-                    '<option value="1">one</option>' +
-                    '<option value="2">two</option>' +
-                '</select>' +
-            '</div>' +
-            '<div data-template="example-wrapper" class="{{ tmpl }}">' +
-                '<template-call template="{{ tmpl }}"></template-call>' +
-            '</div>' +
-            '<div data-template="main">' +
-                '<example-wrapper data-if="show" oninput="input(event)" tmpl="{{ tmpl1 }}"></example-wrapper>' +
-                '<example-wrapper onchange="change(event)" tmpl="{{ tmpl2 }}"></example-wrapper>' +
-             '</div>'
-        );
-        var data = {
-            show: true,
-            tmpl1: 'bar',
-            tmpl2: 'foo'
-        };
-        var changes = 0;
-        var inputs = 0;
-        // event should trigger caller not callee handlers
-        templates['main'].bind({
-            input: function (event) {
-                inputs++;
-            },
-            change: function (event) {
-                changes++;
-            }
-        });
-        Magery.patch(templates, 'main', data, container);
-        input(child(container, 1, 0, 0), '1');
-        change(child(container, 1, 0, 0), '1');
-        assert.equal(changes, 1);
-        assert.equal(inputs, 0);
-        data.show = false;
-        Magery.patch(templates, 'main', data, container);
-        input(child(container, 0, 0, 0), '2');
-        change(child(container, 0, 0, 0), '2');
-        assert.equal(changes, 2);
-        assert.equal(inputs, 0);
-    });
+    // test('remove old event handlers on replaced element', function () {
+    //     var container = document.createElement('div');
+    //     var templates = createTemplateNode(
+    //         '<div data-template="bar">test</div>' +
+    //         '<div data-template="foo">' +
+    //             '<select>' +
+    //                 '<option value="1">one</option>' +
+    //                 '<option value="2">two</option>' +
+    //             '</select>' +
+    //         '</div>' +
+    //         '<div data-template="example-wrapper" class="{{ tmpl }}">' +
+    //             '<template-call template="{{ tmpl }}"></template-call>' +
+    //         '</div>' +
+    //         '<div data-template="main">' +
+    //             '<example-wrapper data-if="show" oninput="input(event)" tmpl="{{ tmpl1 }}"></example-wrapper>' +
+    //             '<example-wrapper onchange="change(event)" tmpl="{{ tmpl2 }}"></example-wrapper>' +
+    //          '</div>'
+    //     );
+    //     var data = {
+    //         show: true,
+    //         tmpl1: 'bar',
+    //         tmpl2: 'foo'
+    //     };
+    //     var changes = 0;
+    //     var inputs = 0;
+    //     // event should trigger caller not callee handlers
+    //     templates['main'].bind({
+    //         input: function (event) {
+    //             inputs++;
+    //         },
+    //         change: function (event) {
+    //             changes++;
+    //         }
+    //     });
+    //     Magery.patch(templates, 'main', data, container);
+    //     input(child(container, 1, 0, 0), '1');
+    //     change(child(container, 1, 0, 0), '1');
+    //     assert.equal(changes, 1);
+    //     assert.equal(inputs, 0);
+    //     data.show = false;
+    //     Magery.patch(templates, 'main', data, container);
+    //     input(child(container, 0, 0, 0), '2');
+    //     change(child(container, 0, 0, 0), '2');
+    //     assert.equal(changes, 2);
+    //     assert.equal(inputs, 0);
+    // });
 
 });

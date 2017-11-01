@@ -56,23 +56,24 @@ suite('Patch', function () {
     };
 
     test('flat children', function () {
-        var div = makeElement(
-            '<div data-bind="foo">' +
+        var target = makeElement(
+            '<test-foo>' +
                 '<i>asdf</i>' +
                 '<em>baz</em>' +
-                '</div>'
+            '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<i>foo</i>' +
                 '<b>bar</b>' +
                 '<em>baz</em>' +
-                '</div>');
+            '</template>'
+        );
         transform_log = [];
         var data = {};
-        var patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', data);
-        assert.equal(div.innerHTML, '<i>foo</i><b>bar</b><em>baz</em>');
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(target.innerHTML, '<i>foo</i><b>bar</b><em>baz</em>');
         assert.deepEqual(transform_log, [
             'replaceText',
             'insertElement',
@@ -81,27 +82,28 @@ suite('Patch', function () {
     });
 
     test('nested children', function () {
-        var div = makeElement(
-            '<div data-bind="foo">' +
+        var target = makeElement(
+            '<test-foo>' +
                 '<i>foo</i>' +
                 '<p>' +
-                '<em>qux</em>' +
+                    '<em>qux</em>' +
                 '</p>' +
-                '</div>'
+            '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<i>foo</i>' +
                 '<p>' +
-                '<b>bar</b>' +
-                '<em>baz</em>' +
+                    '<b>bar</b>' +
+                    '<em>baz</em>' +
                 '</p>' +
-                '</div>');
+            '</template>'
+        );
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
+        var patcher = new patch.Patcher(target, test_transforms);
         var data = {};
-        patcher.render(templates, 'foo', data);
-        assert.equal(div.innerHTML, '<i>foo</i><p><b>bar</b><em>baz</em></p>');
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(target.innerHTML, '<i>foo</i><p><b>bar</b><em>baz</em></p>');
         assert.deepEqual(transform_log, [
             'insertElement',
             'insertTextNode',
@@ -110,20 +112,21 @@ suite('Patch', function () {
     });
 
     test('single span vs div', function () {
-        var div = makeElement(
-            '<div data-bind="foo">' +
+        var target = makeElement(
+            '<test-foo>' +
                 '<span>Hello</span>' +
-                '</div>'
+            '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<b>Hello</b>' +
-                '</div>');
+            '</template>'
+        );
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
+        var patcher = new patch.Patcher(target, test_transforms);
         var data = {};
-        patcher.render(templates, 'foo', data);
-        assert.equal(div.innerHTML, '<b>Hello</b>');
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(target.innerHTML, '<b>Hello</b>');
         assert.deepEqual(transform_log, [
             'insertElement',
             'insertTextNode',
@@ -132,22 +135,23 @@ suite('Patch', function () {
     });
 
     test('comment nodes in DOM', function () {
-        var div = makeElement(
-            '<div data-bind="foo">' +
+        var target = makeElement(
+            '<test-foo>' +
                 '<!-- comment -->' +
                 '<span>Hello</span>' +
                 '<!-- comment2 -->' +
-                '</div>'
+            '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<b>Hello</b>' +
-                '</div>');
+            '</template>'
+        );
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
+        var patcher = new patch.Patcher(target, test_transforms);
         var data = {};
-        patcher.render(templates, 'foo', data);
-        assert.equal(div.innerHTML, '<b>Hello</b>');
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(target.innerHTML, '<b>Hello</b>');
         assert.deepEqual(transform_log, [
             'insertElement',
             'insertTextNode',
@@ -158,18 +162,19 @@ suite('Patch', function () {
     });
 
     test('same outer element, different inner', function () {
-        var div = makeElement(
-            '<div data-bind="foo"><div><b>Hello</b></div></div>'
+        var target = makeElement(
+            '<test-foo><div><b>Hello</b></div></test-foo>'
         );
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<div><i>Hello</i></div>' +
-                '</div>');
+            '</template>'
+        );
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
+        var patcher = new patch.Patcher(target, test_transforms);
         var data = {};
-        patcher.render(templates, 'foo', data);
-        assert.equal(div.innerHTML, '<div><i>Hello</i></div>');
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(target.innerHTML, '<div><i>Hello</i></div>');
         assert.deepEqual(transform_log, [
             'insertElement',
             'insertTextNode',
@@ -178,60 +183,63 @@ suite('Patch', function () {
     });
 
     test('different inner text', function () {
-        var div = makeElement(
-            '<div data-bind="foo">' +
+        var target = makeElement(
+            '<test-foo>' +
                 '<b>Hello</b>' +
-                '</div>'
+            '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<b>Hi</b>' +
-                '</div>');
+            '</template>'
+        );
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
+        var patcher = new patch.Patcher(target, test_transforms);
         var data = {};
-        patcher.render(templates, 'foo', data);
-        assert.equal(div.innerHTML, '<b>Hi</b>');
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(target.innerHTML, '<b>Hi</b>');
         assert.deepEqual(transform_log, [
             'replaceText'
         ]);
     });
 
     test('different element class', function () {
-        var div = makeElement(
-            '<div data-bind="foo">' +
+        var target = makeElement(
+            '<test-foo>' +
                 '<b class="one">Hello</b>' +
-                '</div>'
+            '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<b class="two">Hello</b>' +
-                '</div>');
+            '</template>'
+        );
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
+        var patcher = new patch.Patcher(target, test_transforms);
         var data = {};
-        patcher.render(templates, 'foo', data);
-        assert.equal(div.innerHTML, '<b class="two">Hello</b>');
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(target.innerHTML, '<b class="two">Hello</b>');
         assert.deepEqual(transform_log, [
             'setAttribute'
         ]);
     });
 
     test('remove attributes not rendered', function () {
-        var div = makeElement(
-            '<div data-bind="foo">' +
+        var target = makeElement(
+            '<test-foo>' +
                 '<a class="btn" href="#" rel="me">test</a>' +
-                '</div>'
+            '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<a href="http://example.com">test</a>' +
-                '</div>');
+            '</template>'
+        );
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
+        var patcher = new patch.Patcher(target, test_transforms);
         var data = {};
-        patcher.render(templates, 'foo', data);
-        assert.equal(div.innerHTML, '<a href="http://example.com">test</a>');
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(target.innerHTML, '<a href="http://example.com">test</a>');
         assert.deepEqual(transform_log, [
             'setAttribute',
             'removeAttribute',
@@ -240,30 +248,31 @@ suite('Patch', function () {
     });
 
     test('managing attributes across multiple renders', function () {
-        var div = makeElement(
-            '<div data-bind="foo">' +
+        var target = makeElement(
+            '<test-foo>' +
                 '<a class="btn" href="#" rel="me">test</a>' +
-                '</div>'
+            '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<a data-if="me" class="btn" href="#" rel="me">test</a>' +
                 '<a data-unless="me" class="btn" href="#">test</a>' +
-                '</div>');
+            '</template>'
+        );
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {me: true});
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {me: true});
         assert.equal(
-            div.innerHTML,
+            target.innerHTML,
             '<a class="btn" href="#" rel="me">test</a>'
         );
         assert.deepEqual(transform_log, [
         ]);
         transform_log = [];
-        patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {me: false});
+        patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {me: false});
         assert.equal(
-            div.innerHTML,
+            target.innerHTML,
             '<a class="btn" href="#">test</a>'
         );
         assert.deepEqual(transform_log, [
@@ -272,44 +281,44 @@ suite('Patch', function () {
     });
 
     test('same DOM means no change', function () {
-        var div = makeElement(
-            '<div data-bind="foo">' +
+        var target = makeElement(
+            '<test-foo>' +
                 '<b class="one">test</b>' +
-                '</div>'
+            '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<b class="one">{{name}}</b>' +
-                '</div>'
+            '</template>'
         );
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {name: 'test'});
-        assert.equal(div.innerHTML, '<b class="one">test</b>');
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {name: 'test'});
+        assert.equal(target.innerHTML, '<b class="one">test</b>');
         assert.deepEqual(transform_log, [
         ]);
     });
 
     test('multiple siblings', function () {
-        var div = makeElement(
-            '<div data-bind="foo">' +
+        var target = makeElement(
+            '<test-foo>' +
                 '<b>one</b>' +
                 '<i>two</i>' +
                 '<em>three</em>' +
-                '</div>'
+                '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<b>one</b>' +
                 '<i class="test">two</i>' +
                 '<em>three</em>' +
-                '</div>');
+                '</template>');
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
+        var patcher = new patch.Patcher(target, test_transforms);
         var data = {};
-        patcher.render(templates, 'foo', data);
+        patcher.render(templates, 'test-foo', data);
         assert.equal(
-            div.innerHTML,
+            target.innerHTML,
             '<b>one</b><i class="test">two</i><em>three</em>'
         );
         assert.deepEqual(transform_log, [
@@ -318,21 +327,22 @@ suite('Patch', function () {
     });
 
     test('append sibling', function () {
-        var div = makeElement(
-            '<div data-bind="foo">' +
+        var target = makeElement(
+            '<test-foo>' +
                 '<b>one</b>' +
-                '</div>'
+            '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<b>one</b>' +
                 '<i>two</i>' +
-                '</div>');
+            '</template>'
+        );
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
+        var patcher = new patch.Patcher(target, test_transforms);
         var data = {};
-        patcher.render(templates, 'foo', data);
-        assert.equal(div.innerHTML, '<b>one</b><i>two</i>');
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(target.innerHTML, '<b>one</b><i>two</i>');
         assert.deepEqual(transform_log, [
             'insertElement',
             'insertTextNode'
@@ -340,44 +350,45 @@ suite('Patch', function () {
     });
 
     test('remove sibling from end', function () {
-        var div = makeElement(
-            '<div data-bind="foo">' +
+        var target = makeElement(
+            '<test-foo>' +
                 '<b>one</b>' +
                 '<i>two</i>' +
-                '</div>'
+            '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<b>one</b>' +
-                '</div>');
-        
+            '</template>'
+        );
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
+        var patcher = new patch.Patcher(target, test_transforms);
         var data = {};
-        patcher.render(templates, 'foo', data);
-        assert.equal(div.innerHTML, '<b>one</b>');
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(target.innerHTML, '<b>one</b>');
         assert.deepEqual(transform_log, [
             'removeChild'
         ]);
     });
  
     test('replace node, keep sibling', function () {
-        var div = makeElement(
-            '<div data-bind="foo">' +
+        var target = makeElement(
+            '<test-foo>' +
                 '<b>one</b>' +
                 '<b>two</b>' +
-                '</div>'
+            '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<i>one</i>' +
                 '<b>two</b>' +
-                '</div>');
+            '</template>'
+        );
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
+        var patcher = new patch.Patcher(target, test_transforms);
         var data = {};
-        patcher.render(templates, 'foo', data);
-        assert.equal(div.innerHTML, '<i>one</i><b>two</b>');
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(target.innerHTML, '<i>one</i><b>two</b>');
         assert.deepEqual(transform_log, [
             'insertElement',
             'insertTextNode',
@@ -387,22 +398,23 @@ suite('Patch', function () {
     });
 
     test('replace all siblings', function () {
-        var div = makeElement(
-            '<div data-bind="foo">' +
+        var target = makeElement(
+            '<test-foo>' +
                 '<b>one</b>' +
                 '<b>two</b>' +
-                '</div>'
+            '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<i>one</i>' +
                 '<i>two</i>' +
-                '</div>');
+            '</template>'
+        );
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
+        var patcher = new patch.Patcher(target, test_transforms);
         var data = {};
-        patcher.render(templates, 'foo', data);
-        assert.equal(div.innerHTML, '<i>one</i><i>two</i>');
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(target.innerHTML, '<i>one</i><i>two</i>');
         assert.deepEqual(transform_log, [
             'insertElement',
             'insertTextNode',
@@ -414,23 +426,24 @@ suite('Patch', function () {
     });
 
     test('insert middle sibling', function () {
-        var div = makeElement(
-            '<div data-bind="foo">' +
+        var target = makeElement(
+            '<test-foo>' +
                 '<b>one</b>' +
                 '<em>three</em>' +
-                '</div>'
+            '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<b>one</b>' +
                 '<i>two</i>' +
                 '<em>three</em>' +
-                '</div>');
+            '</template>'
+        );
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
+        var patcher = new patch.Patcher(target, test_transforms);
         var data = {};
-        patcher.render(templates, 'foo', data);
-        assert.equal(div.innerHTML, '<b>one</b><i>two</i><em>three</em>');
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(target.innerHTML, '<b>one</b><i>two</i><em>three</em>');
         assert.deepEqual(transform_log, [
             'insertElement',
             'insertTextNode'
@@ -438,19 +451,24 @@ suite('Patch', function () {
     });
 
     test('remove sibling with keys', function () {
-        var div = makeElement(
-            '<ul data-bind="foo">' +
-              '<li>one</li>' +
-              '<li>two</li>' +
-              '<li>three</li>' +
-            '</ul>'
+        var target = makeElement(
+            '<test-foo>' +
+              '<ul>' +
+                '<li>one</li>' +
+                '<li>two</li>' +
+                '<li>three</li>' +
+              '</ul>' +
+            '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<ul data-template="foo">' +
+            '<template data-tag="test-foo">' +
+              '<ul>' +
                 '<li data-each="item in items" data-key="{{item.id}}">' +
-                '{{item.id}}' +
+                  '{{item.id}}' +
                 '</li>' +
-                '</ul>');
+              '</ul>' +
+            '</template>'
+        );
         var data = {items: [
             {id: 'one'},
             {id: 'two'},
@@ -458,44 +476,48 @@ suite('Patch', function () {
         ]};
         // first render sets up keymaps
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', data);
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', data);
         // second render using keys
         transform_log = [];
-        patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {
+        patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {
             items: [
                 data.items[1],
                 data.items[2]
             ]
         });
         assert.equal(
-            div.outerHTML,
-            '<ul data-bind="foo">' +
+            target.innerHTML,
+            '<ul>' +
               '<li>two</li>' +
               '<li>three</li>' +
             '</ul>'
         );
-        window.div = div;
         assert.deepEqual(transform_log, [
             'replaceChild'
         ]);
     });
 
     test('re-order siblings with keys', function () {
-        var div = makeElement(
-            '<ul data-bind="foo">' +
-              '<li>one</li>' +
-              '<li>two</li>' +
-              '<li>three</li>' +
-            '</ul>'
+        var target = makeElement(
+            '<test-foo>' +
+              '<ul>' +
+                '<li>one</li>' +
+                '<li>two</li>' +
+                '<li>three</li>' +
+              '</ul>' +
+            '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<ul data-template="foo">' +
+            '<template data-tag="test-foo">' +
+              '<ul>' +
                 '<li data-each="item in items" data-key="{{item.id}}">' +
-                '{{item.id}}' +
+                  '{{item.id}}' +
                 '</li>' +
-                '</ul>');
+              '</ul>' +
+            '</template>'
+        );
         var data = {items: [
             {id: 'one'},
             {id: 'two'},
@@ -503,12 +525,12 @@ suite('Patch', function () {
         ]};
         // first render sets up keymaps
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', data);
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', data);
         // second render using keys
         transform_log = [];
-        patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {
+        patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {
             items: [
                 data.items[2],
                 data.items[0],
@@ -516,14 +538,13 @@ suite('Patch', function () {
             ]
         });
         assert.equal(
-            div.outerHTML,
-            '<ul data-bind="foo">' +
+            target.innerHTML,
+            '<ul>' +
               '<li>three</li>' +
               '<li>one</li>' +
               '<li>two</li>' +
             '</ul>'
         );
-        window.div = div;
         assert.deepEqual(transform_log, [
             'replaceChild',
             'replaceChild',
@@ -532,19 +553,24 @@ suite('Patch', function () {
     });
 
     test('prepend sibling with keys', function () {
-        var div = makeElement(
-            '<ul data-bind="foo">' +
-              '<li>one</li>' +
-              '<li>two</li>' +
-              '<li>three</li>' +
-            '</ul>'
+        var target = makeElement(
+            '<test-foo>' +
+              '<ul>' +
+                '<li>one</li>' +
+                '<li>two</li>' +
+                '<li>three</li>' +
+              '</ul>' +
+            '</template>'
         );
         var templates = createTemplateNode(
-            '<ul data-template="foo">' +
+            '<template data-tag="test-foo">' +
+              '<ul>' +
                 '<li data-each="item in items" data-key="{{item.id}}">' +
-                '{{item.id}}' +
+                  '{{item.id}}' +
                 '</li>' +
-                '</ul>');
+              '</ul>' +
+            '</template>'
+        );
         var data = {items: [
             {id: 'one'},
             {id: 'two'},
@@ -552,12 +578,12 @@ suite('Patch', function () {
         ]};
         // first render sets up keymaps
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', data);
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', data);
         // second render using keys
         transform_log = [];
-        patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {
+        patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {
             items: [
                 {id: 'zero'},
                 data.items[0],
@@ -566,15 +592,14 @@ suite('Patch', function () {
             ]
         });
         assert.equal(
-            div.outerHTML,
-            '<ul data-bind="foo">' +
+            target.innerHTML,
+            '<ul>' +
               '<li>zero</li>' +
               '<li>one</li>' +
               '<li>two</li>' +
               '<li>three</li>' +
             '</ul>'
         );
-        window.div = div;
         assert.deepEqual(transform_log, [
             'insertElement',
             'insertTextNode'
@@ -582,19 +607,24 @@ suite('Patch', function () {
     });
 
     test('append sibling with keys', function () {
-        var div = makeElement(
-            '<ul data-bind="foo">' +
-              '<li>one</li>' +
-              '<li>two</li>' +
-              '<li>three</li>' +
-            '</ul>'
+        var target = makeElement(
+            '<test-foo>' +
+              '<ul>' +
+                '<li>one</li>' +
+                '<li>two</li>' +
+                '<li>three</li>' +
+              '</ul>' +
+            '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<ul data-template="foo">' +
+            '<template data-tag="test-foo">' +
+              '<ul>' +
                 '<li data-each="item in items" data-key="{{item.id}}">' +
-                '{{item.id}}' +
+                  '{{item.id}}' +
                 '</li>' +
-                '</ul>');
+              '</ul>' +
+            '</template>'
+        );
         var data = {items: [
             {id: 'one'},
             {id: 'two'},
@@ -602,12 +632,12 @@ suite('Patch', function () {
         ]};
         // first render sets up keymaps
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', data);
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', data);
         // second render using keys
         transform_log = [];
-        patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {
+        patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {
             items: [
                 data.items[0],
                 data.items[1],
@@ -616,8 +646,8 @@ suite('Patch', function () {
             ]
         });
         assert.equal(
-            div.outerHTML,
-            '<ul data-bind="foo">' +
+            target.innerHTML,
+            '<ul>' +
               '<li>one</li>' +
               '<li>two</li>' +
               '<li>three</li>' +
@@ -631,19 +661,24 @@ suite('Patch', function () {
     });
 
     test('insert middle sibling with keys', function () {
-        var div = makeElement(
-            '<ul data-bind="foo">' +
-              '<li>one</li>' +
-              '<li>two</li>' +
-              '<li>three</li>' +
-            '</ul>'
+        var target = makeElement(
+            '<test-foo>' +
+              '<ul>' +
+                '<li>one</li>' +
+                '<li>two</li>' +
+                '<li>three</li>' +
+              '</ul>' +
+            '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<ul data-template="foo">' +
+            '<template data-tag="test-foo">' +
+              '<ul>' +
                 '<li data-each="item in items" data-key="{{item.id}}">' +
-                '{{item.id}}' +
+                  '{{item.id}}' +
                 '</li>' +
-                '</ul>');
+              '</ul>' +
+            '</template>'
+        );
         var data = {items: [
             {id: 'one'},
             {id: 'two'},
@@ -651,12 +686,12 @@ suite('Patch', function () {
         ]};
         // first render sets up keymaps
         transform_log = [];
-        var patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', data);
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', data);
         // second render using keys
         transform_log = [];
-        patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {
+        patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {
             items: [
                 data.items[0],
                 data.items[1],
@@ -665,8 +700,8 @@ suite('Patch', function () {
             ]
         });
         assert.equal(
-            div.outerHTML,
-            '<ul data-bind="foo">' +
+            target.innerHTML,
+            '<ul>' +
               '<li>one</li>' +
               '<li>two</li>' +
               '<li>2.5</li>' +
@@ -680,66 +715,69 @@ suite('Patch', function () {
     });
 
     test('escaped var', function () {
-        var div = document.createElement('div');
+        var target = document.createElement('test-foo');
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<span>Hello, {{name}}!</span>' +
-                '</div>');
-        var patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {
+             '</template>'
+        );
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {
             name: 'world'
         });
-        assert.equal(div.childNodes[0].innerHTML, 'Hello, world!');
-        patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {
+        assert.equal(target.childNodes[0].innerHTML, 'Hello, world!');
+        patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {
             name: '<script>alert("bad stuff");</script>'
         });
         assert.equal(
-            div.childNodes[0].innerHTML,
+            target.childNodes[0].innerHTML,
             'Hello, &lt;script&gt;alert("bad stuff");&lt;/script&gt;!'
         );
     });
 
     test('escaped var with whitespace', function () {
-        var div = document.createElement('div');
+        var target = document.createElement('test-foo');
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<span>Hello, {{ name }}!</span>' +
-                '</div>');
-        var patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {
+            '</template>'
+        );
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {
             name: 'world'
         });
-        assert.equal(div.childNodes[0].innerHTML, 'Hello, world!');
-        patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {
+        assert.equal(target.childNodes[0].innerHTML, 'Hello, world!');
+        patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {
             name: '<script>alert("bad stuff");</script>'
         });
         assert.equal(
-            div.childNodes[0].innerHTML,
+            target.childNodes[0].innerHTML,
             'Hello, &lt;script&gt;alert("bad stuff");&lt;/script&gt;!'
         );
     });
 
     test('escaped attribute', function () {
-        var div = document.createElement('div');
+        var target = document.createElement('test-foo');
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<span class="{{type}}">foo</span>' +
-                '</div>');
-        var patcher = new patch.Patcher(div, test_transforms);
+            '</template>'
+        );
+        var patcher = new patch.Patcher(target, test_transforms);
         var data = {type: 'test" onclick="throw new Error(\'fail\');'};
-        patcher.render(templates, 'foo', data);
+        patcher.render(templates, 'test-foo', data);
         assert.equal(
-            div.childNodes[0].className,
+            target.childNodes[0].className,
             'test" onclick="throw new Error(\'fail\');'
         );
         assert.equal(
-            div.innerHTML,
+            target.innerHTML,
             '<span class="test&quot; onclick=&quot;throw new Error(\'fail\');">foo</span>'
         );
         // this should not trigger an error
-        click(div.childNodes[0]);
+        click(target.childNodes[0]);
     });
 
     // test('patch using body from render of complete html document', function () {
@@ -822,50 +860,52 @@ suite('Patch', function () {
     // });
 
     test('checked property using template conditional', function () {
-        var div = document.createElement('div');
+        var target = document.createElement('test-foo');
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<input data-if="complete" type="checkbox" checked />' +
                 '<input data-unless="complete" type="checkbox" />' +
-                '</div>');
-        var patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {
+            '</template>'
+        );
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {
             complete: false
         });
-        assert.strictEqual(child(div, 0).checked, false, 'one');
-        patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {
+        assert.strictEqual(child(target, 0).checked, false, 'one');
+        patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {
             complete: true
         });
-        assert.strictEqual(child(div, 0).checked, true, 'two');
-        patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {
+        assert.strictEqual(child(target, 0).checked, true, 'two');
+        patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {
             complete: false
         });
-        assert.strictEqual(child(div, 0).checked, false, 'three');
+        assert.strictEqual(child(target, 0).checked, false, 'three');
     });
 
     test('value property', function () {
-        var div = document.createElement('div');
+        var target = document.createElement('test-foo');
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<input type="text" value="{{message}}" />' +
-                '</div>');
-        var patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {
+            '</template>'
+        );
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {
             message: ''
         });
-        assert.strictEqual(child(div, 0).value, "");
-        patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {
+        assert.strictEqual(child(target, 0).value, "");
+        patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {
             message: 'testing'
         });
-        assert.strictEqual(child(div, 0).value, "testing");
-        patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {
+        assert.strictEqual(child(target, 0).value, "testing");
+        patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {
             message: 'asdf'
         });
-        assert.strictEqual(child(div, 0).value, "asdf");
+        assert.strictEqual(child(target, 0).value, "asdf");
     });
 
     // test('autofocus on conditional causes focus', function () {
@@ -967,21 +1007,22 @@ suite('Patch', function () {
     // });
 
     test('textarea text nodes set as value', function () {
-        var div = document.createElement('div');
+        var target = document.createElement('test-foo');
         var templates = createTemplateNode(
-            '<div data-template="foo">' +
+            '<template data-tag="test-foo">' +
                 '<textarea><b>Hello, {{name}}!</b></textarea>' +
-                '</div>');
-        var patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {
+            '</template>'
+        );
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {
             name: 'world'
         });
-        assert.strictEqual(child(div, 0).value, "<b>Hello, world!</b>");
-        patcher = new patch.Patcher(div, test_transforms);
-        patcher.render(templates, 'foo', {
+        assert.strictEqual(child(target, 0).value, "<b>Hello, world!</b>");
+        patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', {
             name: 'testing'
         });
-        assert.strictEqual(child(div, 0).value, "<b>Hello, testing!</b>");
+        assert.strictEqual(child(target, 0).value, "<b>Hello, testing!</b>");
     });
     
 });

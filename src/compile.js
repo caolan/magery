@@ -1,31 +1,10 @@
 var utils = require('./utils');
 var html = require('./html');
-var Template = require('./template');
+var make_template = require('./template').make_template;
 
-
-// these tags are assumed to be normal HTML, all other tags are
-// assumed to be template references
-var HTML_TAGS = [
-    'A', 'ABBR', 'ACRONYM', 'ADDRESS', 'APPLET', 'AREA', 'ARTICLE', 'ASIDE',
-    'AUDIO', 'B', 'BASE', 'BASEFONT', 'BDI', 'BDO', 'BGSOUND', 'BIG', 'BLINK',
-    'BLOCKQUOTE', 'BODY', 'BR', 'BUTTON', 'CANVAS', 'CAPTION', 'CENTER', 'CITE',
-    'CODE', 'COL', 'COLGROUP', 'COMMAND', 'CONTENT', 'DATA', 'DATALIST', 'DD',
-    'DEL', 'DETAILS', 'DFN', 'DIALOG', 'DIR', 'DIV', 'DL', 'DT', 'ELEMENT',
-    'EM', 'EMBED', 'FIELDSET', 'FIGCAPTION', 'FIGURE', 'FONT', 'FOOTER', 'FORM',
-    'FRAME', 'FRAMESET', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'HEAD', 'HEADER',
-    'HGROUP', 'HR', 'HTML', 'I', 'IFRAME', 'IMAGE', 'IMG', 'INPUT', 'INS',
-    'ISINDEX', 'KBD', 'KEYGEN', 'LABEL', 'LEGEND', 'LI', 'LINK', 'LISTING',
-    'MAIN', 'MAP', 'MARK', 'MARQUEE', 'MENU', 'MENUITEM', 'META', 'METER',
-    'MULTICOL', 'NAV', 'NOBR', 'NOEMBED', 'NOFRAMES', 'NOSCRIPT', 'OBJECT',
-    'OL', 'OPTGROUP', 'OPTION', 'OUTPUT', 'P', 'PARAM', 'PICTURE', 'PLAINTEXT',
-    'PRE', 'PROGRESS', 'Q', 'RP', 'RT', 'RTC', 'RUBY', 'S', 'SAMP', 'SCRIPT',
-    'SECTION', 'SELECT', 'SHADOW', 'SLOT', 'SMALL', 'SOURCE', 'SPACER', 'SPAN',
-    'STRIKE', 'STRONG', 'STYLE', 'SUB', 'SUMMARY', 'SUP', 'TABLE', 'TBODY',
-    'TD', 'TEMPLATE', 'TEXTAREA', 'TFOOT', 'TH', 'THEAD', 'TIME', 'TITLE', 'TR',
-    'TRACK', 'TT', 'U', 'UL', 'VAR', 'VIDEO', 'WBR', 'XMP'
-];
 
 var IGNORED_ATTRS = [
+    'data-tag',
     'data-each',
     'data-if',
     'data-unless',
@@ -66,9 +45,9 @@ function compileListener(event_name, value) {
     }
     return 'p.eventListener(' +
         JSON.stringify(event_name) + ', ' +
-        JSON.stringify(handler_name) + ', ' +
+        JSON.stringify(handler_name.split('.')) + ', ' +
         '[' + args.join(', ') + '], ' +
-        'template);\n';
+        'handlers);\n';
 }
 
 function compileExtraAttrs(node) {
@@ -92,11 +71,10 @@ function compileElement(node, queue, write, is_root) {
         write('inner();\n');
         return;
     }
-    if (!is_root && node.dataset.template) {
+    if (!is_root && node.tagName === 'TEMPLATE' && node.dataset.tag) {
         // compile this template later
         queue.push(node);
-        // but also expand the template here
-        write('p.render(templates, ' + JSON.stringify(node.dataset.template) + ', data);\n');
+        // TODO validate node.dataset.tag includes hyphen
         return;
     }
     if (node.dataset.each) {
@@ -124,41 +102,47 @@ function compileElement(node, queue, write, is_root) {
               'templates' +
               ', ' + compileExpandVariables(node.getAttribute('template')) +
               ', ' + compileTemplateContext(node) +
+              ', handlers' +
               ', ' + (node.dataset.key ? compileExpandVariables(node.dataset.key) : 'null') +
               ', function () {' + compileExtraAttrs(node) + '}' +
               (node.childNodes.length ? ', function () {' : ');') + '\n');
         is_html = false;
     }
-    else if (HTML_TAGS.indexOf(node.tagName) === -1) {
+    else if (node.tagName.indexOf('-') !== -1) {
         // not a known HTML tag, assume template reference
         write('p.render(' +
               'templates' +
               ', ' + JSON.stringify(node.tagName.toLowerCase()) +
               ', ' + compileTemplateContext(node) +
+              ', handlers' +
               ', ' + (node.dataset.key ? compileExpandVariables(node.dataset.key) : 'null') +
               ', function () {' + compileExtraAttrs(node) + '}' +
               (node.childNodes.length ? ', function () {' : ');') + '\n');
         is_html = false;
     }
     else {
+        var tag = node.tagName;
+        if (tag === 'TEMPLATE' && node.dataset.tag) {
+            tag = node.dataset.tag.toUpperCase();
+        }
         if (is_root) {
             // check if a key was passed into this template by caller
             if (node.dataset.key) {
                 write('p.enterTag(' +
-                      JSON.stringify(node.tagName) + ', ' +
+                      JSON.stringify(tag) + ', ' +
                       'root_key || ' + compileExpandVariables(node.dataset.key) + ');\n');
             }
             else {
-                write('p.enterTag(' + JSON.stringify(node.tagName) + ', root_key || null);\n');
+                write('p.enterTag(' + JSON.stringify(tag) + ', root_key || null);\n');
             }
         }
         else if (node.dataset.key) {
             write('p.enterTag(' +
-                  JSON.stringify(node.tagName) + ', ' +
+                  JSON.stringify(tag) + ', ' +
                   compileExpandVariables(node.dataset.key) + ');\n');
         }
         else {
-            write('p.enterTag(' + JSON.stringify(node.tagName) + ', null);\n');
+            write('p.enterTag(' + JSON.stringify(tag) + ', null);\n');
         }
         utils.eachAttribute(node, function (name, value) {
             if (name === 'data-template') {
@@ -194,13 +178,17 @@ function compileElement(node, queue, write, is_root) {
             write('if (extra_attrs) { extra_attrs(); }\n');
         }
     }
-    utils.eachNode(node.childNodes, function (node) {
+    var children = (node.tagName == 'TEMPLATE') ?
+            node.content.childNodes:
+            node.childNodes;
+    
+    utils.eachNode(children, function (node) {
         compileNode(node, queue, write, false);
     });
     if (is_html) {
         write('p.exitTag();\n');
     }
-    else if (node.childNodes.length) {
+    else if (children.length) {
         // end inner function of template call
         write('});\n');
     }
@@ -278,16 +266,20 @@ exports.compile = function (node, write) {
         node,
         queue,
         ignore_output,
-        // if current node is not a data-template, ignore output until
-        // data-template nodes are found
-        !(node.dataset && node.dataset.hasOwnProperty('template'))
+        // if current node is not a template, ignore output until
+        // a template node is found
+        !(node.tagName == 'TEMPLATE' &&
+          node.dataset &&
+          node.dataset.hasOwnProperty('tag'))
     );
     write('({\n');
     while (queue.length) {
         node = queue.shift();
-        write(JSON.stringify(node.dataset.template) + ': ');
-        write('new Template(' +
-              'function (template, templates, p, data, root_key, extra_attrs, inner) {\n');
+        // TODO validate node.dataset.tag includes hyphen
+        write(JSON.stringify(node.dataset.tag) + ': ');
+        write('make_template(' +
+              'function (p, data, handlers, root_key, extra_attrs, inner) {\n');
+        write('var templates = this;\n');
         compileNode(node, queue, write, true);
         write('})' + (queue.length ? ',' : '') + '\n');
     }
@@ -295,7 +287,7 @@ exports.compile = function (node, write) {
 };
 
 exports.compileToString = function (node) {
-    var result = '(function (Template) { return ';
+    var result = '(function (make_template) { return ';
     exports.compile(node, function (str) {
         result += str;
     });
@@ -303,5 +295,6 @@ exports.compileToString = function (node) {
 };
 
 exports.eval = function (node) {
-    return eval(exports.compileToString(node))(Template);
+    // console.log(exports.compileToString(node));
+    return eval(exports.compileToString(node))(make_template);
 };
