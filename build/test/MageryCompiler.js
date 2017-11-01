@@ -45,7 +45,7 @@ var MageryCompiler =
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(7);
+	module.exports = __webpack_require__(6);
 
 
 /***/ }),
@@ -172,11 +172,10 @@ var MageryCompiler =
 
 
 /***/ }),
-/* 6 */,
-/* 7 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	exports.compileToString = __webpack_require__(8).compileToString;
+	exports.compileToString = __webpack_require__(7).compileToString;
 
 	exports.compile = function (target, templates, runtime) {
 	    runtime = runtime || window.Magery;
@@ -194,7 +193,7 @@ var MageryCompiler =
 
 
 /***/ }),
-/* 8 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var utils = __webpack_require__(5);

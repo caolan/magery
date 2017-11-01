@@ -45,7 +45,7 @@ var compile =
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(8);
+	module.exports = __webpack_require__(7);
 
 
 /***/ }),
@@ -173,8 +173,7 @@ var compile =
 
 /***/ }),
 /* 6 */,
-/* 7 */,
-/* 8 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var utils = __webpack_require__(5);

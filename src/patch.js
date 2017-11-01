@@ -8,7 +8,6 @@
 var transforms = require('./transforms');
 var utils = require('./utils');
 var html = require('./html');
-var Set = require('./set-polyfill');
 
 var ELEMENT_NODE = 1;
 var TEXT_NODE = 3;
@@ -46,7 +45,7 @@ function deleteUnvisitedAttributes(transforms, node) {
     var i, len;
     for (i = 0, len = attrs.length; i < len; i++) {
         var attr = attrs[i];
-        if (!node.visited_attributes.has(attr.name)) {
+        if (!node.visited_attributes.hasOwnProperty(attr.name)) {
             remove.push(attr.name);
         }
     }
@@ -61,7 +60,7 @@ function deleteUnvisitedEvents(transforms, node) {
         return;
     }
     for (var type in node.bound_events) {
-        if (!node.visited_events.has(type)) {
+        if (!node.visited_events.hasOwnProperty(type)) {
             transforms.removeEventListener(node, type, node.bound_events[type].fn);
             delete node.bound_events[type];
         }
@@ -83,18 +82,8 @@ Patcher.prototype.reset = function () {
 };
 
 Patcher.prototype.stepInto = function (node) {
-    if (node.visited_attributes) {
-        node.visited_attributes.clear();
-    }
-    else {
-        node.visited_attributes = new Set();
-    }
-    if (node.visited_events) {
-        node.visited_events.clear();
-    }
-    else {
-        node.visited_events = new Set();
-    }
+    node.visited_attributes = {};
+    node.visited_events = {};
     this.parent = node;
     this.current = node.firstChild;
 };
@@ -156,7 +145,7 @@ function setListener(node, type) {
         node.bound_events[type] = {fn: fn};
         transforms.addEventListener(node, type, fn);
     }
-    node.visited_events.add(type);
+    node.visited_events[type] = null;
 }
 
 Patcher.prototype.eventListener = function (type, handler_path, args, handlers) {
@@ -193,7 +182,7 @@ Patcher.prototype.attribute = function (name, value) {
     if (node.getAttribute(name) !== value) {
         this.transforms.setAttribute(node, name, value);
     }
-    node.visited_attributes.add(name);
+    node.visited_attributes[name] = null;
 };
 
 Patcher.prototype.text = function (text) {

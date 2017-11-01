@@ -78,7 +78,6 @@ var Magery =
 	var transforms = __webpack_require__(3);
 	var utils = __webpack_require__(5);
 	var html = __webpack_require__(4);
-	var Set = __webpack_require__(6);
 
 	var ELEMENT_NODE = 1;
 	var TEXT_NODE = 3;
@@ -116,7 +115,7 @@ var Magery =
 	    var i, len;
 	    for (i = 0, len = attrs.length; i < len; i++) {
 	        var attr = attrs[i];
-	        if (!node.visited_attributes.has(attr.name)) {
+	        if (!node.visited_attributes.hasOwnProperty(attr.name)) {
 	            remove.push(attr.name);
 	        }
 	    }
@@ -131,7 +130,7 @@ var Magery =
 	        return;
 	    }
 	    for (var type in node.bound_events) {
-	        if (!node.visited_events.has(type)) {
+	        if (!node.visited_events.hasOwnProperty(type)) {
 	            transforms.removeEventListener(node, type, node.bound_events[type].fn);
 	            delete node.bound_events[type];
 	        }
@@ -153,18 +152,8 @@ var Magery =
 	};
 
 	Patcher.prototype.stepInto = function (node) {
-	    if (node.visited_attributes) {
-	        node.visited_attributes.clear();
-	    }
-	    else {
-	        node.visited_attributes = new Set();
-	    }
-	    if (node.visited_events) {
-	        node.visited_events.clear();
-	    }
-	    else {
-	        node.visited_events = new Set();
-	    }
+	    node.visited_attributes = {};
+	    node.visited_events = {};
 	    this.parent = node;
 	    this.current = node.firstChild;
 	};
@@ -226,7 +215,7 @@ var Magery =
 	        node.bound_events[type] = {fn: fn};
 	        transforms.addEventListener(node, type, fn);
 	    }
-	    node.visited_events.add(type);
+	    node.visited_events[type] = null;
 	}
 
 	Patcher.prototype.eventListener = function (type, handler_path, args, handlers) {
@@ -263,7 +252,7 @@ var Magery =
 	    if (node.getAttribute(name) !== value) {
 	        this.transforms.setAttribute(node, name, value);
 	    }
-	    node.visited_attributes.add(name);
+	    node.visited_attributes[name] = null;
 	};
 
 	Patcher.prototype.text = function (text) {
@@ -548,36 +537,6 @@ var Magery =
 	        f(node.attributes[i].name, node.attributes[i].value);
 	    }
 	};
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports) {
-
-	// use built in Set() if available
-	if (typeof Set === 'undefined') {
-
-	function SetPolyfill() {
-	    this.values = [];
-	}
-
-	SetPolyfill.prototype.add = function (x) {
-	    this.values.push(x);
-	};
-
-	SetPolyfill.prototype.has = function (x) {
-	    return this.values.indexOf(x) !== -1;
-	};
-
-	SetPolyfill.prototype.clear = function () {
-	    this.values = [];
-	};
-
-	    module.exports = SetPolyfill;
-	}
-	else {
-		module.exports = Set;
-	}
 
 
 /***/ })
