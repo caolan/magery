@@ -1822,6 +1822,17 @@ suite('Compile', function () {
         assert.equal(patcher_calls.length, 4);
     });
 
-    // TODO: test for custom tag without hyphen
+    test('custom tag without hyphens is an error', function () {
+        assert.doesNotThrow(function () {
+            createTemplateNode(
+                '<template data-tagname="my-app"></template>'
+            );
+        });
+        assert.throws(function () {
+            createTemplateNode(
+                '<template data-tagname="myapp"></template>'
+            );
+        }, /data-tagname must include a hyphen/);
+    });
 
 });

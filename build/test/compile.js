@@ -830,6 +830,12 @@ var compile =
 	    write('({\n');
 	    while (queue.length) {
 	        node = queue.shift();
+	        if (node.dataset.tagname.indexOf('-') === -1) {
+	            throw new Error(
+	                "Error compiling template '" + node.dataset.tagname +
+	                    "': data-tagname must include a hyphen"
+	            );
+	        }
 	        // TODO validate node.dataset.tagname includes hyphen
 	        write(JSON.stringify(node.dataset.tagname) + ': ');
 	        write('make_template(' +
