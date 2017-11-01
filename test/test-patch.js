@@ -63,7 +63,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<i>foo</i>' +
                 '<b>bar</b>' +
                 '<em>baz</em>' +
@@ -91,7 +91,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<i>foo</i>' +
                 '<p>' +
                     '<b>bar</b>' +
@@ -118,7 +118,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<b>Hello</b>' +
             '</template>'
         );
@@ -143,7 +143,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<b>Hello</b>' +
             '</template>'
         );
@@ -166,7 +166,7 @@ suite('Patch', function () {
             '<test-foo><div><b>Hello</b></div></test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<div><i>Hello</i></div>' +
             '</template>'
         );
@@ -189,7 +189,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<b>Hi</b>' +
             '</template>'
         );
@@ -210,7 +210,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<b class="two">Hello</b>' +
             '</template>'
         );
@@ -231,7 +231,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<a href="http://example.com">test</a>' +
             '</template>'
         );
@@ -254,7 +254,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<a data-if="me" class="btn" href="#" rel="me">test</a>' +
                 '<a data-unless="me" class="btn" href="#">test</a>' +
             '</template>'
@@ -287,7 +287,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<b class="one">{{name}}</b>' +
             '</template>'
         );
@@ -308,7 +308,7 @@ suite('Patch', function () {
                 '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<b>one</b>' +
                 '<i class="test">two</i>' +
                 '<em>three</em>' +
@@ -333,7 +333,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<b>one</b>' +
                 '<i>two</i>' +
             '</template>'
@@ -357,7 +357,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<b>one</b>' +
             '</template>'
         );
@@ -379,7 +379,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<i>one</i>' +
                 '<b>two</b>' +
             '</template>'
@@ -405,7 +405,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<i>one</i>' +
                 '<i>two</i>' +
             '</template>'
@@ -433,7 +433,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<b>one</b>' +
                 '<i>two</i>' +
                 '<em>three</em>' +
@@ -461,7 +461,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
               '<ul>' +
                 '<li data-each="item in items" data-key="{{item.id}}">' +
                   '{{item.id}}' +
@@ -510,7 +510,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
               '<ul>' +
                 '<li data-each="item in items" data-key="{{item.id}}">' +
                   '{{item.id}}' +
@@ -563,7 +563,7 @@ suite('Patch', function () {
             '</template>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
               '<ul>' +
                 '<li data-each="item in items" data-key="{{item.id}}">' +
                   '{{item.id}}' +
@@ -617,7 +617,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
               '<ul>' +
                 '<li data-each="item in items" data-key="{{item.id}}">' +
                   '{{item.id}}' +
@@ -671,7 +671,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
               '<ul>' +
                 '<li data-each="item in items" data-key="{{item.id}}">' +
                   '{{item.id}}' +
@@ -717,7 +717,7 @@ suite('Patch', function () {
     test('escaped var', function () {
         var target = document.createElement('test-foo');
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<span>Hello, {{name}}!</span>' +
              '</template>'
         );
@@ -739,7 +739,7 @@ suite('Patch', function () {
     test('escaped var with whitespace', function () {
         var target = document.createElement('test-foo');
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<span>Hello, {{ name }}!</span>' +
             '</template>'
         );
@@ -761,7 +761,7 @@ suite('Patch', function () {
     test('escaped attribute', function () {
         var target = document.createElement('test-foo');
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<span class="{{type}}">foo</span>' +
             '</template>'
         );
@@ -862,7 +862,7 @@ suite('Patch', function () {
     test('checked property using template conditional', function () {
         var target = document.createElement('test-foo');
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<input data-if="complete" type="checkbox" checked />' +
                 '<input data-unless="complete" type="checkbox" />' +
             '</template>'
@@ -887,7 +887,7 @@ suite('Patch', function () {
     test('value property', function () {
         var target = document.createElement('test-foo');
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<input type="text" value="{{message}}" />' +
             '</template>'
         );
@@ -1009,7 +1009,7 @@ suite('Patch', function () {
     test('textarea text nodes set as value', function () {
         var target = document.createElement('test-foo');
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<textarea><b>Hello, {{name}}!</b></textarea>' +
             '</template>'
         );
@@ -1033,7 +1033,7 @@ suite('Patch', function () {
             '</test-foo>'
         );
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<h1>hello</h1>' +
                 '<my-custom-tag message="{{ msg }}"></my-custom-tag>' +
             '</template>'

@@ -54,7 +54,7 @@ suite('Events', function () {
     test('click event to dispatch', function (done) {
         var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<template data-tag="test-main">' +
+            '<template data-tagname="test-main">' +
                 '<button onclick="clicked(event)">click me</button>' +
             '</template>'
         );
@@ -72,7 +72,7 @@ suite('Events', function () {
     test('click event with context data', function (done) {
         var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<template data-tag="test-main">' +
+            '<template data-tagname="test-main">' +
                 '<button onclick="clicked(user)">click me</button>' +
             '</template>'
         );
@@ -90,7 +90,7 @@ suite('Events', function () {
     test('click event with event and context data', function (done) {
         var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<template data-tag="test-main">' +
+            '<template data-tagname="test-main">' +
                 '<button onclick="clicked(event, user)">click me</button>' +
             '</template>'
         );
@@ -109,7 +109,7 @@ suite('Events', function () {
     test('reference named item in loop', function () {
         var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<template data-tag="test-main">' +
+            '<template data-tagname="test-main">' +
                 '<button data-each="item in items" onclick="test(item)">test</button>' +
             '</template>'
         );
@@ -130,7 +130,7 @@ suite('Events', function () {
     test('render html tags back into input', function () {
         var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<template data-tag="test-main">' +
+            '<template data-tagname="test-main">' +
                 '<input type="text" value="{{user.name}}" oninput="updateID(user, event)">' +
             '</template>'
         );
@@ -150,7 +150,7 @@ suite('Events', function () {
     test('update input value via dispatch + patch', function () {
         var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<template data-tag="test-main">' +
+            '<template data-tagname="test-main">' +
                 '<input type="text" value="{{name}}" oninput="updateInput()">' +
             '</template>'
         );
@@ -175,7 +175,7 @@ suite('Events', function () {
     test('update select box value onchange', function (done) {
         var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<template data-tag="test-main">' +
+            '<template data-tagname="test-main">' +
               '<select onchange="update(event)">' +
                 '<option data-each="option in options" value="{{option.value}}" selected="{{option.selected}}">' +
                   '{{option.label}}' +
@@ -221,7 +221,7 @@ suite('Events', function () {
     test('update checkbox via dispatch', function (done) {
         var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<template data-tag="test-main">' +
+            '<template data-tagname="test-main">' +
                 '<input data-if="checked" type="checkbox" onclick="toggle()" checked>' +
                 '<input data-unless="checked" type="checkbox" onclick="toggle()">' +
             '</template>'
@@ -251,7 +251,7 @@ suite('Events', function () {
     test('update radio via event handler', function (done) {
         var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<template data-tag="test-main">' +
+            '<template data-tagname="test-main">' +
               '<form method="GET" action="">' +
                 '<div data-each="option in options">' +
                     '<input data-if="option.checked" type="radio" onclick="pick(option.value)" name="example" value="{{option.value}}" checked>' +
@@ -303,7 +303,7 @@ suite('Events', function () {
     test('bind handlers on nested template definition', function (done) {
         var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<template data-tag="test-main">' +
+            '<template data-tagname="test-main">' +
                 '<div data-template="entry">' +
                     '<p>{{ item_one.name }}: {{ item_one.count }}</p>' +
                     '<button onclick="entry.incrementCount()">Add one</button>' +
@@ -350,11 +350,11 @@ suite('Events', function () {
     test('bind handlers on components', function (done) {
         var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<template data-tag="test-entry">' +
+            '<template data-tagname="test-entry">' +
                 '<p>{{ item.name }}: {{ item.count }}</p>' +
                 '<button onclick="testEntry.incrementCount()">Add one</button>' +
             '</template>' +
-            '<template data-tag="test-main">' +
+            '<template data-tagname="test-main">' +
                 '<test-entry item="item_one"></test-entry>' +
                 '<button onclick="testMain.incrementCount()">Add one</button>' +
             '</template>'
@@ -398,12 +398,12 @@ suite('Events', function () {
     test('bind handlers inside template-children', function (done) {
         var target = document.createElement('test-main');
         var templates = createTemplateNode(
-            '<template data-tag="test-entry">' +
+            '<template data-tagname="test-entry">' +
                 '<p>{{ item.name }}: {{ item.count }}</p>' +
                 '<button onclick="entry.incrementCount()">Add one</button>' +
                 '<template-children></template-children>' +
             '</template>' +
-            '<template data-tag="test-main">' +
+            '<template data-tagname="test-main">' +
                 '<test-entry item="item_one">' +
                     '<button onclick="main.incrementCount()">Add one</button>' +
                 '</test-entry>' +

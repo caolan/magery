@@ -593,7 +593,7 @@ var Magery =
 
 
 	var IGNORED_ATTRS = [
-	    'data-tag',
+	    'data-tagname',
 	    'data-each',
 	    'data-if',
 	    'data-unless',
@@ -660,10 +660,10 @@ var Magery =
 	        write('inner();\n');
 	        return;
 	    }
-	    if (!is_root && node.tagName === 'TEMPLATE' && node.dataset.tag) {
+	    if (!is_root && node.tagName === 'TEMPLATE' && node.dataset.tagname) {
 	        // compile this template later
 	        queue.push(node);
-	        // TODO validate node.dataset.tag includes hyphen
+	        // TODO validate node.dataset.tagname includes hyphen
 	        return;
 	    }
 	    if (node.dataset.each) {
@@ -711,8 +711,8 @@ var Magery =
 	    }
 	    else {
 	        var tag = node.tagName;
-	        if (tag === 'TEMPLATE' && node.dataset.tag) {
-	            tag = node.dataset.tag.toUpperCase();
+	        if (tag === 'TEMPLATE' && node.dataset.tagname) {
+	            tag = node.dataset.tagname.toUpperCase();
 	        }
 	        if (is_root) {
 	            // check if a key was passed into this template by caller
@@ -859,13 +859,13 @@ var Magery =
 	        // a template node is found
 	        !(node.tagName == 'TEMPLATE' &&
 	          node.dataset &&
-	          node.dataset.hasOwnProperty('tag'))
+	          node.dataset.hasOwnProperty('tagname'))
 	    );
 	    write('({\n');
 	    while (queue.length) {
 	        node = queue.shift();
-	        // TODO validate node.dataset.tag includes hyphen
-	        write(JSON.stringify(node.dataset.tag) + ': ');
+	        // TODO validate node.dataset.tagname includes hyphen
+	        write(JSON.stringify(node.dataset.tagname) + ': ');
 	        write('make_template(' +
 	              'function (p, data, handlers, root_key, extra_attrs, inner) {\n');
 	        write('var templates = this;\n');

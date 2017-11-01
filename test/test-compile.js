@@ -43,7 +43,7 @@ suite('Compile', function () {
  
     test('flat children', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<i>foo</i>' +
                 '<b>bar</b>' +
                 '<em>baz</em>' +
@@ -66,7 +66,7 @@ suite('Compile', function () {
 
     test('nested children', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<i>foo</i>\n' +
                 '<p>\n' +
                 '  <b>bar</b>\n' +
@@ -98,7 +98,7 @@ suite('Compile', function () {
 
     test('variable substitution - text', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">Hello, {{name}}!</template>'
+            '<template data-tagname="my-app">Hello, {{name}}!</template>'
         );
         var patcher_calls = _patch(templates, 'my-app', {name: 'world'});
         assert.deepEqual(patcher_calls[0], ['enterTag', 'MY-APP', null]);
@@ -109,7 +109,7 @@ suite('Compile', function () {
 
     test('variable substitution - array', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">{{names}}</template>'
+            '<template data-tagname="my-app">{{names}}</template>'
         );
         var patcher_calls = _patch(templates, 'my-app', {names: ['foo', 'bar', 'baz']});
         assert.deepEqual(patcher_calls[0], ['enterTag', 'MY-APP', null]);
@@ -120,7 +120,7 @@ suite('Compile', function () {
  
     test('variable substitution - undefined', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">Hello, {{name}}</template>'
+            '<template data-tagname="my-app">Hello, {{name}}</template>'
         );
         var patcher_calls = _patch(templates, 'my-app', {});
         assert.deepEqual(patcher_calls[0], ['enterTag', 'MY-APP', null]);
@@ -131,7 +131,7 @@ suite('Compile', function () {
 
     test('variable substitution - null', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">Hello, {{name}}</template>'
+            '<template data-tagname="my-app">Hello, {{name}}</template>'
         );
         var patcher_calls = _patch(templates, 'my-app', {name: null});
         assert.deepEqual(patcher_calls[0], ['enterTag', 'MY-APP', null]);
@@ -142,7 +142,7 @@ suite('Compile', function () {
 
     test('variable substitution - true', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">Hello, {{name}}</template>'
+            '<template data-tagname="my-app">Hello, {{name}}</template>'
         );
         var patcher_calls = _patch(templates, 'my-app', {name: true});
         assert.deepEqual(patcher_calls[0], ['enterTag', 'MY-APP', null]);
@@ -153,7 +153,7 @@ suite('Compile', function () {
 
     test('variable substitution - false', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">Hello, {{name}}</template>'
+            '<template data-tagname="my-app">Hello, {{name}}</template>'
         );
         var patcher_calls = _patch(templates, 'my-app', {name: false});
         assert.deepEqual(patcher_calls[0], ['enterTag', 'MY-APP', null]);
@@ -164,7 +164,7 @@ suite('Compile', function () {
 
     test('variable substitution - object', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">Hello, {{name}}</template>'
+            '<template data-tagname="my-app">Hello, {{name}}</template>'
         );
         var patcher_calls = _patch(templates, 'my-app', {name: {first: 'a', last: 'b'}});
         assert.deepEqual(patcher_calls[0], ['enterTag', 'MY-APP', null]);
@@ -174,7 +174,7 @@ suite('Compile', function () {
     });
 
     test('variable substitution - length property', function () {
-        var templates = createTemplateNode('<template data-tag="my-app">Total: {{ items.length }}</template>');
+        var templates = createTemplateNode('<template data-tagname="my-app">Total: {{ items.length }}</template>');
         var patcher_calls = _patch(templates, 'my-app', {items: ['a', 'b', 'c']});
         assert.deepEqual(patcher_calls[0], ['enterTag', 'MY-APP', null]);
         assert.deepEqual(patcher_calls[1], ['text', 'Total: 3']);
@@ -184,7 +184,7 @@ suite('Compile', function () {
 
     test('data-each', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<h1>title</h1>' +
                 '<section data-each="item in items">item</section>' +
             '</template>'
@@ -210,7 +210,7 @@ suite('Compile', function () {
 
     test('data-each introduces new context variable', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<h1>title</h1>' +
                 '<ul>' +
                     '<li data-each="item in items">' +
@@ -242,7 +242,7 @@ suite('Compile', function () {
 
     test('data-each with data-key', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<h1>title</h1>' +
                 '<section data-each="item in items" data-key="{{item.name}}">' +
                     'item' +
@@ -274,7 +274,7 @@ suite('Compile', function () {
 
     test('data-if - true', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<h1>title</h1>' +
                 '<b data-if="published">published</b>' +
             '</template>'
@@ -294,7 +294,7 @@ suite('Compile', function () {
     
     test('data-if - false', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<h1>title</h1>' +
                 '<b data-if="published">published</b>' +
             '</template>'
@@ -311,7 +311,7 @@ suite('Compile', function () {
 
     test('data-if - empty array', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<h1>title</h1>' +
                 '<b data-if="published">published</b>' +
             '</template>'
@@ -329,7 +329,7 @@ suite('Compile', function () {
     
     test('data-if - empty string', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<h1>title</h1>' +
                 '<b data-if="published">published</b>' +
             '</template>'
@@ -347,7 +347,7 @@ suite('Compile', function () {
     
     test('data-if - zero', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<h1>title</h1>' +
                 '<b data-if="published">published</b>' +
             '</template>'
@@ -365,7 +365,7 @@ suite('Compile', function () {
     
     test('data-if - null', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<h1>title</h1>' +
                 '<b data-if="published">published</b>' +
             '</template>'
@@ -383,7 +383,7 @@ suite('Compile', function () {
 
     test('data-if - undefined', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<h1>title</h1>' +
                 '<b data-if="published">published</b>' +
             '</template>'
@@ -401,7 +401,7 @@ suite('Compile', function () {
     
     test('data-unless - true', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<h1>title</h1>' +
                 '<b data-unless="published">draft</b>' +
             '</template>'
@@ -418,7 +418,7 @@ suite('Compile', function () {
     
     test('data-unless - false', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<h1>title</h1>' +
                 '<b data-unless="published">draft</b>' +
             '</template>'
@@ -438,7 +438,7 @@ suite('Compile', function () {
 
     test('data-unless - empty array', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<h1>title</h1>' +
                 '<b data-unless="published">draft</b>' +
             '</template>'
@@ -459,7 +459,7 @@ suite('Compile', function () {
     
     test('data-unless - empty string', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<h1>title</h1>' +
                 '<b data-unless="published">draft</b>' +
             '</template>'
@@ -480,7 +480,7 @@ suite('Compile', function () {
     
     test('data-unless - zero', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<h1>title</h1>' +
                 '<b data-unless="published">draft</b>' +
             '</template>'
@@ -501,7 +501,7 @@ suite('Compile', function () {
     
     test('data-unless - null', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<h1>title</h1>' +
                 '<b data-unless="published">draft</b>' +
             '</template>'
@@ -522,7 +522,7 @@ suite('Compile', function () {
 
     test('data-unless - undefined', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<h1>title</h1>' +
                 '<b data-unless="published">draft</b>' +
             '</template>'
@@ -543,8 +543,8 @@ suite('Compile', function () {
 
     test('call another template block statically', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-bar">{{meta.year}}</template>' +
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-bar">{{meta.year}}</template>' +
+            '<template data-tagname="test-foo">' +
                 '<h1>title</h1>' +
                 '<test-bar meta="{{ article.meta }}"></test-bar>' +
             '</template>');
@@ -569,8 +569,8 @@ suite('Compile', function () {
 
     test('call another template block dynamically via template-call', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-bar">{{meta.year}}</template>' +
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-bar">{{meta.year}}</template>' +
+            '<template data-tagname="test-foo">' +
                 '<h1>title</h1>' +
                 '<template-call template="{{ tmpl }}" meta="{{ article.meta }}">' +
                 '</template-call>' +
@@ -597,8 +597,8 @@ suite('Compile', function () {
 
     test('call another template block with multiple args', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-bar">{{ author }} ({{ year }})</template>' +
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-bar">{{ author }} ({{ year }})</template>' +
+            '<template data-tagname="test-foo">' +
                 '<h1>title</h1>' +
                 '<test-bar author="{{ article.author }}" year="{{ article.year }}"></test-bar>' +
             '</template>');
@@ -622,8 +622,8 @@ suite('Compile', function () {
 
     test('call another template with fixed string values', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-bar">{{ msg }}</template>' +
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-bar">{{ msg }}</template>' +
+            '<template data-tagname="test-foo">' +
                 '<h1>title</h1>' +
                 '<test-bar msg="test"></test-bar>' +
             '</template>');
@@ -642,8 +642,8 @@ suite('Compile', function () {
 
     test('call another template with interpolated string values', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-bar">{{ msg }}</template>' +
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-bar">{{ msg }}</template>' +
+            '<template data-tagname="test-foo">' +
                 '<h1>title</h1>' +
                 '<test-bar msg="test-{{ name }}-asdf"></test-bar>' +
             '</template>');
@@ -664,13 +664,13 @@ suite('Compile', function () {
 
     test('call another template block with child expansion', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<h1>title</h1>' +
                 '<test-bar article="{{ article }}">' +
                     '<i>inner</i>' +
                 '</test-bar>' +
             '</template>' +
-            '<template data-tag="test-bar">' +
+            '<template data-tagname="test-bar">' +
                 '<b>{{article.title}}</b>' +
                 '<template-children />' +
             '</template>');
@@ -701,13 +701,13 @@ suite('Compile', function () {
 
     test('nested expansions', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-root">' +
+            '<template data-tagname="test-root">' +
                 '<test-one article="{{ article }}">' +
                     '<i>root</i>' +
                 '</test-one>' +
             '</template>' +
                 
-            '<template data-tag="test-one">' +
+            '<template data-tagname="test-one">' +
                 '<h1>title</h1>' +
                 '<test-two meta="{{ article.meta }}">' +
                     '<i>one.1</i>' +
@@ -718,12 +718,12 @@ suite('Compile', function () {
                 '</test-two>' +
             '</template>' +
 
-            '<template data-tag="test-two">' +
+            '<template data-tagname="test-two">' +
                 '<b>{{meta.year}}</b>' +
                 '<template-children></template-children>' +
             '</template>' +
                 
-            '<template data-tag="test-three">' +
+            '<template data-tagname="test-three">' +
                 '<b>three</b>' +
                 '<template-children></template-children>' +
             '</template>'
@@ -767,7 +767,7 @@ suite('Compile', function () {
 
     test('skip comment nodes in template', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<i>foo</i>' +
                 '<!-- this is a comment -->' +
                 '<b>bar</b>' +
@@ -792,7 +792,7 @@ suite('Compile', function () {
 
     test('component attributes', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo" href="#" class="btn">foo</template>'
+            '<template data-tagname="test-foo" href="#" class="btn">foo</template>'
         );
         var data = {};
         var patcher_calls = _patch(templates, 'test-foo', data);
@@ -809,7 +809,7 @@ suite('Compile', function () {
 
     test('expand variables in template attributes', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo" href="{{url}}" class="btn">foo</template>'
+            '<template data-tagname="test-foo" href="{{url}}" class="btn">foo</template>'
         );
         var data = {url: 'http://example.com'};
         var patcher_calls = _patch(templates, 'test-foo', data);
@@ -826,7 +826,7 @@ suite('Compile', function () {
 
     test('boolean attributes - allowfullscreen', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<iframe allowfullscreen="{{a}}"></iframe>' +
                 '<iframe allowfullscreen="{{b}}"></iframe>' +
                 '<iframe allowfullscreen="{{c}}"></iframe>' +
@@ -855,7 +855,7 @@ suite('Compile', function () {
 
     test('boolean attributes - async', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<script src="blank.js" async="{{a}}"></script>' +
                 '<script src="blank.js" async="{{b}}"></script>' +
                 '<script src="blank.js" async="{{c}}"></script>' +
@@ -892,7 +892,7 @@ suite('Compile', function () {
 
     test('boolean attributes - autofocus', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<input type="text" autofocus="{{a}}">' +
                 '<input type="text" autofocus="{{b}}">' +
                 '<input type="text" autofocus="{{c}}">' +
@@ -929,7 +929,7 @@ suite('Compile', function () {
 
     test('boolean attributes - autoplay', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<video autoplay="{{a}}"></video>' +
                 '<video autoplay="{{b}}"></video>' +
                 '<video autoplay="{{c}}"></video>' +
@@ -958,7 +958,7 @@ suite('Compile', function () {
 
     test('boolean attributes - capture', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<input type="file" capture="{{a}}">' +
                 '<input type="file" capture="{{b}}">' +
                 '<input type="file" capture="{{c}}">' +
@@ -995,7 +995,7 @@ suite('Compile', function () {
     
     test('boolean attributes - checked', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<input type="checkbox" checked="{{a}}">' +
                 '<input type="checkbox" checked="{{b}}">' +
                 '<input type="checkbox" checked="{{c}}">' +
@@ -1032,7 +1032,7 @@ suite('Compile', function () {
 
     test('boolean attributes - controls', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<video controls="{{a}}"></video>' +
                 '<video controls="{{b}}"></video>' +
                 '<video controls="{{c}}"></video>' +
@@ -1061,7 +1061,7 @@ suite('Compile', function () {
     
     test('boolean attributes - default', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<audio><track src="test.vtt" default="{{a}}"></audio>' +
                 '<audio><track src="test.vtt" default="{{b}}"></audio>' +
                 '<audio><track src="test.vtt" default="{{c}}"></audio>' +
@@ -1106,7 +1106,7 @@ suite('Compile', function () {
 
     test('boolean attributes - defer', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<script src="blank.js" defer="{{a}}"></script>' +
                 '<script src="blank.js" defer="{{b}}"></script>' +
                 '<script src="blank.js" defer="{{c}}"></script>' +
@@ -1143,7 +1143,7 @@ suite('Compile', function () {
 
     test('boolean attributes - disabled', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<input type="text" disabled="{{a}}">' +
                 '<input type="text" disabled="{{b}}">' +
                 '<input type="text" disabled="{{c}}">' +
@@ -1180,7 +1180,7 @@ suite('Compile', function () {
 
     test('boolean attributes - formvalidate', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<button formnovalidate="{{a}}">Test</button>' +
                 '<button formnovalidate="{{b}}">Test</button>' +
                 '<button formnovalidate="{{c}}">Test</button>' +
@@ -1213,7 +1213,7 @@ suite('Compile', function () {
 
     test('boolean attributes - hidden', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<p hidden="{{a}}">Test</p>' +
                 '<p hidden="{{b}}">Test</p>' +
                 '<p hidden="{{c}}">Test</p>' +
@@ -1246,7 +1246,7 @@ suite('Compile', function () {
 
     test('boolean attributes - itemscope', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<div itemscope="{{a}}">Test</div>' +
                 '<div itemscope="{{b}}">Test</div>' +
                 '<div itemscope="{{c}}">Test</div>' +
@@ -1279,7 +1279,7 @@ suite('Compile', function () {
 
     test('boolean attributes - loop', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<audio loop="{{a}}"></audio>' +
                 '<audio loop="{{b}}"></audio>' +
                 '<audio loop="{{c}}"></audio>' +
@@ -1308,7 +1308,7 @@ suite('Compile', function () {
 
     test('boolean attributes - multiple', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<select multiple="{{a}}"></select>' +
                 '<select multiple="{{b}}"></select>' +
                 '<select multiple="{{c}}"></select>' +
@@ -1337,7 +1337,7 @@ suite('Compile', function () {
 
     test('boolean attributes - muted', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<video muted="{{a}}"></video>' +
                 '<video muted="{{b}}"></video>' +
                 '<video muted="{{c}}"></video>' +
@@ -1366,7 +1366,7 @@ suite('Compile', function () {
 
     test('boolean attributes - novalidate', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<form novalidate="{{a}}"></form>' +
                 '<form novalidate="{{b}}"></form>' +
                 '<form novalidate="{{c}}"></form>' +
@@ -1396,7 +1396,7 @@ suite('Compile', function () {
 
     test('boolean attributes - open', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<details open="{{a}}"><summary>Test</summary></details>' +
                 '<details open="{{b}}"><summary>Test</summary></details>' +
                 '<details open="{{c}}"><summary>Test</summary></details>' +
@@ -1437,7 +1437,7 @@ suite('Compile', function () {
 
     test('boolean attributes - readonly', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<input type="text" readonly="{{a}}">' +
                 '<input type="text" readonly="{{b}}">' +
                 '<input type="text" readonly="{{c}}">' +
@@ -1474,7 +1474,7 @@ suite('Compile', function () {
 
     test('boolean attributes - required', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<input type="text" required="{{a}}">' +
                 '<input type="text" required="{{b}}">' +
                 '<input type="text" required="{{c}}">' +
@@ -1511,7 +1511,7 @@ suite('Compile', function () {
 
     test('boolean attributes - reversed', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<ol reversed="{{a}}"></ol>' +
                 '<ol reversed="{{b}}"></ol>' +
                 '<ol reversed="{{c}}"></ol>' +
@@ -1558,7 +1558,7 @@ suite('Compile', function () {
 
     test('render missing variables in text block', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">Hello, {{user.name}}!</template>'
+            '<template data-tagname="test-foo">Hello, {{user.name}}!</template>'
         );
         var data = {};
         var patcher_calls = _patch(templates, 'test-foo', data);
@@ -1570,7 +1570,7 @@ suite('Compile', function () {
 
     test('render missing variables in text attributes', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo" href="{{url}}">link</template>'
+            '<template data-tagname="test-foo" href="{{url}}">link</template>'
         );
         var data = {};
         var patcher_calls = _patch(templates, 'test-foo', data);
@@ -1583,7 +1583,7 @@ suite('Compile', function () {
 
     test('template tags inside select element', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<select>' +
                     '<option data-each="opt in options" value="{{opt.value}}">{{opt.label}}</option>' +
                 '</select>' +
@@ -1618,7 +1618,7 @@ suite('Compile', function () {
 
     test('data-each processed before data-if', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<p data-each="item in items" data-if="item.published">' +
                     '{{ item.name }}' +
                 '</p>' +
@@ -1643,7 +1643,7 @@ suite('Compile', function () {
 
     test('data-each processed before data-unless', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<p data-each="item in items" data-unless="item.hidden">' +
                     '{{ item.name }}' +
                 '</p>' +
@@ -1668,8 +1668,8 @@ suite('Compile', function () {
 
     test('data-each on template call', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-entry">{{ name }}</template>' +
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-entry">{{ name }}</template>' +
+            '<template data-tagname="test-foo">' +
                 '<test-entry data-each="item in items" name="{{ item.name }}"></test-entry>' +
             '</template>'
         );
@@ -1695,8 +1695,8 @@ suite('Compile', function () {
     
     test('data-key on template call', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-entry">{{ name }}</template>' +
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-entry">{{ name }}</template>' +
+            '<template data-tagname="test-foo">' +
                 '<test-entry data-each="item in items" data-key="key{{ item.id }}" name="{{ item.name }}"></test-entry>' +
             '</template>'
         );
@@ -1722,8 +1722,8 @@ suite('Compile', function () {
 
     test('data-if on template call', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-greeting">Hello, {{ name }}!</template>' +
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-greeting">Hello, {{ name }}!</template>' +
+            '<template data-tagname="test-foo">' +
                 '<test-greeting data-if="greet" name="{{ name }}"></test-greeting>' +
             '</template>'
         );
@@ -1744,8 +1744,8 @@ suite('Compile', function () {
 
     test('data-unless on template call', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-greeting">Hello, {{ name }}!</template>' +
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-greeting">Hello, {{ name }}!</template>' +
+            '<template data-tagname="test-foo">' +
                 '<test-greeting data-unless="quiet" name="{{ name }}"></test-greeting>' +
             '</template>'
         );
@@ -1766,8 +1766,8 @@ suite('Compile', function () {
     
     test('data-each on caller with data-if on callee template', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-entry" data-if="public">{{ name }}</template>' +
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-entry" data-if="public">{{ name }}</template>' +
+            '<template data-tagname="test-foo">' +
                 '<test-entry data-each="item in items" public="{{ item.public }}" name="{{ item.name }}"></test-entry>' +
             '</template>'
         );
@@ -1790,11 +1790,11 @@ suite('Compile', function () {
 
     test('ignore template-embed tags', function () {
         var templates = createTemplateNode(
-            '<template data-tag="test-foo">' +
+            '<template data-tagname="test-foo">' +
                 '<h1>{{ title }}</h1>' +
                 '<template-embed name="test-bar"></template-embed>' +
             '</template>' +
-            '<template data-tag="test-bar">Test</template>'
+            '<template data-tagname="test-bar">Test</template>'
         );
         var data = {
             title: 'test'
@@ -1810,7 +1810,7 @@ suite('Compile', function () {
 
     test('unknown custom tags render without attrs or children', function () {
         var templates = createTemplateNode(
-            '<template data-tag="my-app">' +
+            '<template data-tagname="my-app">' +
                 '<foo-bar name="test">asdf</foo-bar>' +
             '</template>'
         );
