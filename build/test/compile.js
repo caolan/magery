@@ -321,9 +321,25 @@ var compile =
 	    }
 	    else {
 	        this.enterTag(name.toUpperCase(), null);
-	        template(this.parent, data, handlers);
+	        template(this.parent, data, handlers, inner);
 	        this.exitTag();
 	    }
+	};
+
+
+	Patcher.prototype.wrapChildren = function (fn) {
+	    var self = this;
+	    return function (parent) {
+	        if (parent) {
+	            var p = new Patcher(parent);
+	            p.parent = parent;
+	            p.current = parent.firstChild;
+	            fn(p);
+	        }
+	        else {
+	            fn(self);
+	        }
+	    };
 	};
 
 
@@ -650,6 +666,10 @@ var compile =
 	        var predicate2_path = utils.propertyPath(node.dataset.unless);
 	        write('if (!p.isTruthy(' + compileLookup(predicate2_path) + ')) {\n');
 	    }
+	    var children = (node.tagName == 'TEMPLATE') ?
+	            node.content.childNodes:
+	            node.childNodes;
+
 	    var is_html = true;
 	    if (node.tagName == 'TEMPLATE-CALL') {
 	        // not a known HTML tag, assume template reference
@@ -660,7 +680,7 @@ var compile =
 	              ', handlers' +
 	              ', ' + (node.dataset.key ? compileExpandVariables(node.dataset.key) : 'null') +
 	              ', function () {' + compileExtraAttrs(node) + '}' +
-	              (node.childNodes.length ? ', function () {' : ');') + '\n');
+	              (children.length ? ', p.wrapChildren(function (p) {' : ');') + '\n');
 	        is_html = false;
 	    }
 	    else if (node.tagName.indexOf('-') !== -1) {
@@ -672,7 +692,7 @@ var compile =
 	              ', handlers' +
 	              ', ' + (node.dataset.key ? compileExpandVariables(node.dataset.key) : 'null') +
 	              ', function () {' + compileExtraAttrs(node) + '}' +
-	              (node.childNodes.length ? ', function () {' : ');') + '\n');
+	              (children.length ? ', p.wrapChildren(function (p) {' : ');') + '\n');
 	        is_html = false;
 	    }
 	    else {
@@ -733,10 +753,6 @@ var compile =
 	            write('if (extra_attrs) { extra_attrs(); }\n');
 	        }
 	    }
-	    var children = (node.tagName == 'TEMPLATE') ?
-	            node.content.childNodes:
-	            node.childNodes;
-	    
 	    utils.eachNode(children, function (node) {
 	        compileNode(node, queue, write, false);
 	    });
@@ -745,7 +761,7 @@ var compile =
 	    }
 	    else if (children.length) {
 	        // end inner function of template call
-	        write('});\n');
+	        write('}));\n');
 	    }
 	    if (node.dataset.unless) {
 	        write('}\n');

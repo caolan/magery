@@ -14,9 +14,6 @@ exports.compile = function (target, templates) {
         }
         return templates;
     }
-    if (target.tagName === 'TEMPLATE' && target.content) {
-        return exports.compile(target.content, templates);
-    }
     var compiled = evalTemplates(target);
     for (var k in compiled) {
         templates[k] = compiled[k];

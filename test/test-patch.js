@@ -1028,8 +1028,7 @@ suite('Patch', function () {
     test('call custom tag function during render', function () {
         var target = makeElement(
             '<test-foo>' +
-                '<i>asdf</i>' +
-                '<em>baz</em>' +
+                '<h1>hello</h1>' +
             '</test-foo>'
         );
         var templates = createTemplateNode(
@@ -1049,5 +1048,62 @@ suite('Patch', function () {
             '<h1>hello</h1><my-custom-tag><p>Testing</p></my-custom-tag>'
         );
     });
-    
+
+    test('expand template children in custom render function', function () {
+        var target = makeElement(
+            '<test-foo>' +
+                '<h1>hello</h1>' +
+            '</test-foo>'
+        );
+        var templates = createTemplateNode(
+            '<template data-tagname="test-foo">' +
+                '<h1>hello</h1>' +
+                '<my-custom-tag message="{{ msg }}">' +
+                    '<p>{{ name }}</p>' +
+                    '<i>bar</i>' +
+                '</my-custom-tag>' +
+            '</template>'
+        );
+        templates['my-custom-tag'] = function (node, data, handlers, children) {
+            var div = document.createElement('div');
+            node.appendChild(div);
+            children(div);
+        };
+        var data = {
+            msg: 'Testing',
+            name: 'foo'
+        };
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(
+            target.innerHTML,
+            '<h1>hello</h1>' +
+                '<my-custom-tag>' +
+                  '<div><p>foo</p><i>bar</i></div>' +
+                '</my-custom-tag>'
+        );
+    });
+
+    test('expand children directly in custom tag', function () {
+        var target = makeElement(
+            '<test-foo>' +
+            '</test-foo>'
+        );
+        var templates = createTemplateNode(
+            '<template data-tagname="test-foo">' +
+                '<my-custom-tag>test</my-custom-tag>' +
+            '</template>'
+        );
+        templates['my-custom-tag'] = function (node, data, handlers, children) {
+            children(node);
+        };
+        var data = {};
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(
+            target.innerHTML,
+            '<my-custom-tag>test</my-custom-tag>'
+        );
+    });
+
 });

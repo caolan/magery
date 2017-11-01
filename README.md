@@ -5,7 +5,6 @@
 Easy-to-use JavaScript templates that can work with server-side
 rendering in any language.
 
-- [Why use Magery?](#why-use-magery)
 - [Aims](#aims)
 - [Download](#download)
 - [Example](#example)
@@ -34,24 +33,11 @@ rendering in any language.
 - [Benchmarks](#benchmarks)
 - [Live editor](#live-editor)
 
-## Why use Magery?
-
-- Because you need traditional web pages:
-  - For reliability
-  - For accessibility
-  - For compatibility with as many clients as possible
-- But you also want fancy JavaScript enhancements:
-  - For responsiveness
-  - For ease-of-use
-  - For engagement
-
-If the above points are important to your project, Magery is worth
-considering.
-
 ## Aims
 
 - To make enhancing your *multi-page* website with JavaScript easier
 - To work with your choice of back end language
+- To integrate with existing components when necessary
 - To be [relatively small](#file-size) so you can use it for little
   (and large) enhancements
 
@@ -84,8 +70,25 @@ A comparison with some popular minified production builds:
 
 ## Example
 
-A basic 'Hello, world!' example which demonstrates compiling templates
-and patching the DOM:
+Components in Magery use custom HTML5 tags defined by templates:
+
+``` html
+<template data-tagname="my-greeting">
+  Hello, {{ name }}!
+</template>
+```
+
+These templates can be rendered by your server, or compiled with JavaScript and used to dynamically update the page:
+
+``` javascript
+var components = Magery.compile('template');
+
+components['my-greeting](target, {
+    name: 'world'
+});
+```
+
+Here's a full example:
 
 ``` html
 <!DOCTYPE html>
@@ -96,26 +99,23 @@ and patching the DOM:
   </head>
   <body>
     <!-- target -->
-    <h1 id="hello"></h1>
+    <my-greeting></my-greeting>
 
     <!-- templates -->
-    <template id="myTemplates">
-
-      <h1 data-template="greeting">
-        Hello, {{ name }}!
-      </h1>
-
+    <template data-tagname="my-greeting">
+      Hello, {{ name }}!
     </template>
 
     <!-- javascript -->
     <script src="../build/magery.min.js"></script>
     <script>
     
-      var templates = Magery.compile('#myTemplates');
-      var target = document.getElementById('hello');
+      var components = Magery.compile('template');
+      console.log(components);
+      var target = document.getElementsByTagName('my-greeting')[0];
       var data = {"name": "world"};
 
-      Magery.patch(templates, 'greeting', data, target);
+      components['my-greeting'](target, data);
       
     </script>
   </body>

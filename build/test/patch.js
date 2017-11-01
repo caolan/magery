@@ -321,9 +321,25 @@ var patch =
 	    }
 	    else {
 	        this.enterTag(name.toUpperCase(), null);
-	        template(this.parent, data, handlers);
+	        template(this.parent, data, handlers, inner);
 	        this.exitTag();
 	    }
+	};
+
+
+	Patcher.prototype.wrapChildren = function (fn) {
+	    var self = this;
+	    return function (parent) {
+	        if (parent) {
+	            var p = new Patcher(parent);
+	            p.parent = parent;
+	            p.current = parent.firstChild;
+	            fn(p);
+	        }
+	        else {
+	            fn(self);
+	        }
+	    };
 	};
 
 
