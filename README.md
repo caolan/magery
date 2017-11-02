@@ -124,6 +124,10 @@ Here's a full example:
 You also can [view this example in the browser](https://caolan.github.io/magery/examples/example.html), or see the [other
 examples](examples).
 
+Future calls of `components['my-greeting'](target, data)` will not
+wipe and replace the target element but incrementally update the page
+as the data changes.
+
 ## Template syntax
 
 ### Variables
@@ -418,7 +422,7 @@ Data:
 
 ``` javascript
 {
-  "title": "Example, 
+  "title": "Example", 
   "tags": ["foo", "bar"]
 }
 ```
@@ -448,7 +452,7 @@ following template:
 </template>
 ```
 
-Could be rendered elsewhere using the tag \`<my-greeting>\`:
+Could be rendered elsewhere using the tag `<my-greeting>`:
 
 ``` html
 <my-greeting name="{{ user.name }}"></my-greeting>
@@ -456,7 +460,7 @@ Could be rendered elsewhere using the tag \`<my-greeting>\`:
 
 By adding attributes to your custom tag, you can pass data to the
 sub-template. In the above example the context property `user.name` is
-bound to `name` inside the `hello` template.
+bound to `name` inside the `my-greeting` template.
     
 It is also possible to provide literal string values as context data:
 
@@ -540,6 +544,9 @@ patching the page.
 [View this in your browser](https://caolan.github.io/magery/examples/events.html),
 or see the [examples](examples) directory for other ways to use
 events.
+
+Handler functions can also be nested in order to namespace handlers
+for specific components e.g. `myApp.sayHello(name)`.
 
 ## API
 
