@@ -52,7 +52,7 @@ suite('Patch', function () {
     function makeElement(html) {
         var el = document.createElement('div');
         el.innerHTML = html;
-        return el.childNodes[0];
+        return el.children[0];
     };
 
     test('flat children', function () {
@@ -1046,6 +1046,43 @@ suite('Patch', function () {
         assert.equal(
             target.innerHTML,
             '<h1>hello</h1><my-custom-tag><p>Testing</p></my-custom-tag>'
+        );
+    });
+
+    test('custom render should not be cleaned up on tag exit', function () {
+        var target = makeElement(
+            '<test-foo>' +
+                '<h1>hello</h1>' +
+            '</test-foo>'
+        );
+        var templates = createTemplateNode(
+            '<template data-tagname="test-foo">' +
+                '<h1>hello</h1>' +
+                '<my-custom-tag></my-custom-tag>' +
+            '</template>'
+        );
+        templates['my-custom-tag'] = function (node, data, handlers) {
+            if (!node.p) {
+                var p = document.createElement('p');
+                p.textContent = 'Testing';
+                node.appendChild(p);
+                node.p = p;
+            }
+        };
+        var data = {msg: 'Testing'};
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(
+            target.innerHTML,
+            '<h1>hello</h1><my-custom-tag><p>Testing</p></my-custom-tag>',
+            'first patch'
+        );
+        patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(
+            target.innerHTML,
+            '<h1>hello</h1><my-custom-tag><p>Testing</p></my-custom-tag>',
+            'second patch'
         );
     });
 

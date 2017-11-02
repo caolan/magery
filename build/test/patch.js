@@ -303,15 +303,20 @@ var patch =
 	    }
 	    var template = templates[name];
 	    if (template._render) {
+	        // it's a compiled magery template
 	        var tmp = this.template_root;
 	        this.template_root = null;
 	        template._render.call(templates, this, data, handlers, root_key, root_attrs, inner);
 	        this.template_root = tmp;
 	    }
 	    else {
+	        // it's a custom template function
 	        this.enterTag(name.toUpperCase(), null);
 	        template(this.parent, data, handlers, inner);
-	        this.exitTag();
+	        // do exitTag *without* cleaning up unvisited nodes/attributes/etc
+	        var node = this.parent;
+	        this.parent = node.parentNode;
+	        this.current = node.nextSibling;
 	    }
 	};
 
