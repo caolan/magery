@@ -327,6 +327,8 @@ var Magery =
 	    else {
 	        // it's a custom template function
 	        this.enterTag(name.toUpperCase(), null);
+	        // bind any event handlers added to custom tag call:
+	        root_attrs();
 	        template(this.parent, data, handlers, inner);
 	        // do exitTag *without* cleaning up unvisited nodes/attributes/etc
 	        var node = this.parent;

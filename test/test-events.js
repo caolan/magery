@@ -445,6 +445,45 @@ suite('Events', function () {
         done();
     });
 
+    test('bind handler to tag with custom render function', function () {
+        var target = document.createElement('test-main');
+        var templates = createTemplateNode(
+            '<template data-tagname="test-main">' +
+                '<my-custom-tag onclick="clicked(event)" onupdate="updated(event)">' +
+                '</my-custom-tag>' +
+            '</template>'
+        );
+        var data = {};
+        var clicks = 0;
+        var updates = 0;
+        var handlers = {
+            clicked: function (event) {
+                clicks++;
+            },
+            updated: function (event) {
+                updates++;
+            }
+        };
+        templates['my-custom-tag'] = function (node, data, handlers) {
+            var btn = document.createElement('button');
+            node.appendChild(btn);
+            btn.addEventListener('click', function (event) {
+                var ev = new Event('update', {bubbles: true});
+                node.dispatchEvent(ev);
+            });
+        };
+        templates['test-main'](target, data, handlers);
+        var btn = child(target, 0, 0);
+        assert.equal(clicks, 0, 'clicks 1');
+        assert.equal(updates, 0, 'updates 1');
+        click(btn);
+        assert.equal(clicks, 1, 'clicks 2');
+        assert.equal(updates, 1, 'updates 2');
+        click(child(target, 0));
+        assert.equal(clicks, 2, 'clicks 3');
+        assert.equal(updates, 1, 'updates 3');
+    });
+
     // test('Inside handlers, \'this\' is bound to top-most rendered element of template', function (done) {
     //     var element = document.createElement('div');
     //     var templates = createTemplateNode(
