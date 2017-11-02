@@ -195,8 +195,10 @@ var compile =
 	function compileTemplateContext(node) {
 	    var result = [];
 	    utils.eachAttribute(node, function (name, value) {
-	        if (IGNORED_ATTRS.indexOf(name) === -1) {
-	            result.push(JSON.stringify(name) + ": " + compileExpandVariables(value));
+	        if (IGNORED_ATTRS.indexOf(name) === -1 && name.substr(0, 2) !== 'on') {
+	            result.push(
+	                JSON.stringify(name) + ": " + compileExpandVariables(value)
+	            );
 	        }
 	    });
 	    return '{' + result.join(', ') + '}';

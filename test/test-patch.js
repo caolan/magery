@@ -1086,6 +1086,27 @@ suite('Patch', function () {
         );
     });
 
+    test('custom tag function should not receive on* handlers as data', function (done) {
+        var target = makeElement(
+            '<test-foo>' +
+                '<h1>hello</h1>' +
+            '</test-foo>'
+        );
+        var templates = createTemplateNode(
+            '<template data-tagname="test-foo">' +
+                '<h1>hello</h1>' +
+                '<my-custom-tag message="{{msg}}" onmessage="doThing()"></my-custom-tag>' +
+            '</template>'
+        );
+        templates['my-custom-tag'] = function (node, data, handlers) {
+            assert.deepEqual(data, {message: 'Testing'});
+            done();
+        };
+        var data = {msg: 'Testing'};
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', data);
+    });
+
     test('expand template children in custom render function', function () {
         var target = makeElement(
             '<test-foo>' +
