@@ -111,7 +111,7 @@ Here's a full example:
     <script>
          
       var components = MageryCompiler.compile('template');
-      var target = document.getElementsByTagName('my-greeting')[0];
+      var target = document.querySelector('my-greeting');
       var data = {"name": "world"};
          
       components['my-greeting'](target, data);
@@ -520,7 +520,7 @@ patching the page.
     <script>
 
       var components = MageryCompiler.compile('template');
-      var target = document.getElementsByTagName('say-hello')[0];
+      var target = document.querySelector('say-hello');
 
       var data = {
         name: 'testing'
@@ -630,7 +630,7 @@ Here's an example using [Redux.js](http://redux.js.org/):
            }
        });
        
-       var target = document.getElementsByTagName('my-counter')[0];
+       var target = document.querySelector('my-counter');
        var handlers = {};
        
        function render() {

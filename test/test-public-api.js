@@ -104,6 +104,26 @@ suite('Public API', function () {
         assert.deepEqual(keys.sort(), ['my-asdf', 'my-foo', 'my-bar', 'my-quux'].sort());
         assert.equal(templates1['my-asdf'], 123);
     });
+    
+    test('MageryCompiler.compile(selector) with custom runtime', function () {
+        var runtime = window.Magery;
+        window.Magery = null;
+        
+        var container = document.createElement('div');
+        container.innerHTML = '<template id="custom-runtime-test">' +
+            '<template data-tagname="my-foo">foo</template>' +
+            '<template data-tagname="my-bar">bar</template>' +
+            '</template>';
+        document.body.appendChild(container);
+        
+        var components = {};
+        MageryCompiler.compile('#custom-runtime-test', components, runtime);
+        var keys = Object.keys(components);
+        assert.deepEqual(keys.sort(), ['my-foo', 'my-bar'].sort());
+
+        document.body.removeChild(container);
+        window.Magery = runtime;
+    });
 
     // test('MageryCompiler.patch()', function () {
     // });

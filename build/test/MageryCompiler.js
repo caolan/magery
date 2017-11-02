@@ -181,7 +181,7 @@ var MageryCompiler =
 	    runtime = runtime || window.Magery;
 	    templates = templates || {};
 	    if (typeof(target) === 'string') {
-	        return exports.compile(document.querySelectorAll(target), templates);
+	        return exports.compile(document.querySelectorAll(target), templates, runtime);
 	    }
 	    var compiled = eval(exports.compileToString(target))(runtime);
 	    for (var k in compiled) {

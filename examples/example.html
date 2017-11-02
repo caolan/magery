@@ -19,7 +19,7 @@
         <script>
          
          var components = MageryCompiler.compile('template');
-         var target = document.getElementsByTagName('my-greeting')[0];
+         var target = document.querySelector('my-greeting');
          var data = {"name": "world"};
          
          components['my-greeting'](target, data);
