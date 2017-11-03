@@ -174,12 +174,10 @@ var patch =
 	    return function (event) {
 	        var handler = node.bound_events[type];
 	        if (handler.path) {
-	            var args = handler.args.map(function (arg) {
-	                if (arg === Patcher.prototype.EVENT) {
-	                    return event;
-	                }
-	                return arg;
-	            });
+	            var context = Object.assign({}, handler.data, {event: event});
+	            with (context) {
+	                var args = eval(handler.args);
+	            }
 	            var fn = utils.lookup(node.handlers, handler.path);
 	            if (!fn) {
 	                throw new Error(
@@ -203,7 +201,7 @@ var patch =
 	    node.visited_events[type] = null;
 	}
 
-	Patcher.prototype.eventListener = function (type, handler_path, args, handlers) {
+	Patcher.prototype.eventListener = function (type, handler_path, args, data, handlers) {
 	    var node = this.parent;
 	    if (node.handlers !== handlers) {
 	        node.handlers = handlers;
@@ -212,6 +210,7 @@ var patch =
 	    var event = node.bound_events[type];
 	    event.path = handler_path;
 	    event.args = args;
+	    event.data = data;
 	    event.template_root = this.template_root;
 	};
 

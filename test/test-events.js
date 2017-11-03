@@ -654,4 +654,81 @@ suite('Events', function () {
     //     assert.equal(inputs, 0);
     // });
 
+    test('provide string literals to event handlers (single quotes)', function (done) {
+        var target = document.createElement('test-main');
+        var templates = createTemplateNode(
+            '<template data-tagname="test-main">' +
+                '<button onclick="clicked(\'foo\')">click me</button>' +
+            '</template>'
+        );
+        var data = {};
+        var handlers = {
+            clicked: function (user) {
+                assert.equal(user, 'foo');
+                done();
+            }
+        };
+        templates['test-main'](target, data, handlers);
+        click(child(target, 0));
+    });
+
+    test('provide string literals to event handlers (&quot;)', function (done) {
+        var target = document.createElement('test-main');
+        var templates = createTemplateNode(
+            '<template data-tagname="test-main">' +
+                '<button onclick="clicked(&quot;foo&quot;)">click me</button>' +
+            '</template>'
+        );
+        var data = {};
+        var handlers = {
+            clicked: function (user) {
+                assert.equal(user, 'foo');
+                done();
+            }
+        };
+        templates['test-main'](target, data, handlers);
+        click(child(target, 0));
+    });
+    
+    test('provide literal bool, number, etc. to handler', function (done) {
+        var target = document.createElement('test-main');
+        var templates = createTemplateNode(
+            '<template data-tagname="test-main">' +
+                '<button onclick="clicked(123, true, false, null, [], {test: \'yes\'})">click me</button>' +
+            '</template>'
+        );
+        var data = {};
+        var handlers = {
+            clicked: function (a, b, c, d, e, f) {
+                assert.strictEqual(a, 123);
+                assert.strictEqual(b, true);
+                assert.strictEqual(c, false);
+                assert.strictEqual(d, null);
+                assert.deepEqual(e, []);
+                assert.deepEqual(f, {test: 'yes'});
+                done();
+            }
+        };
+        templates['test-main'](target, data, handlers);
+        click(child(target, 0));
+    });
+    
+    test('pass properties of event object to handler', function (done) {
+        var target = document.createElement('test-main');
+        var templates = createTemplateNode(
+            '<template data-tagname="test-main">' +
+                '<button value="asdf" onclick="clicked(event.target.value)">click me</button>' +
+            '</template>'
+        );
+        var data = {};
+        var handlers = {
+            clicked: function (user) {
+                assert.equal(user, 'asdf');
+                done();
+            }
+        };
+        templates['test-main'](target, data, handlers);
+        click(child(target, 0));
+    });
+
 });

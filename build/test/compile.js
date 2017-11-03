@@ -208,24 +208,12 @@ var compile =
 	    var start = value.indexOf('(');
 	    var end = value.lastIndexOf(')');
 	    var handler_name = value.substring(0, start);
-	    var parts = value.substring(start + 1, end).split(',');
-	    var args = [];
-	    for (var i = 0, len = parts.length; i < len; i++) {
-	        var part = utils.trim(parts[i]);
-	        if (!part) {
-	            continue;
-	        }
-	        if (part === 'event') {
-	            args.push('p.EVENT');
-	        }
-	        else {
-	            args.push(compileLookup(utils.propertyPath(part)));
-	        }
-	    }
+	    var args_raw = value.substring(start + 1, end);
 	    return 'p.eventListener(' +
 	        JSON.stringify(event_name) + ', ' +
 	        JSON.stringify(handler_name.split('.')) + ', ' +
-	        '[' + args.join(', ') + '], ' +
+	        JSON.stringify('[' + args_raw + ']') + ', ' +
+	        'data, ' +
 	        'handlers);\n';
 	}
 
