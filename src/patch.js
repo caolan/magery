@@ -119,7 +119,8 @@ function makeHandler(node, type) {
     return function (event) {
         var handler = node.bound_events[type];
         if (handler.path) {
-            var context = Object.assign({}, handler.data, {event: event});
+            var context = utils.shallowClone(handler.data);
+            context.event = event;
             with (context) {
                 var args = eval(handler.args);
             }
