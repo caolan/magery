@@ -1,6 +1,6 @@
 {
   "name": "magery",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "description": "Templates for progressive enhancement",
   "devDependencies": {
     "slimerjs": "^0.10.3",
