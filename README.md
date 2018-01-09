@@ -666,6 +666,7 @@ your library passes the tests, you can send a pull request to include
 it here.
 
 - [python-magery](https://github.com/caolan/python-magery)
+- [groovy-magery](https://github.com/benzen/groovy-magery)
 
 ## Tests
 
