@@ -222,13 +222,22 @@ function compileExpandVariables(str, boolean) {
 }
 
 function compileText(node, write) {
-    var arg = compileExpandVariables(node.textContent);
-    if (arg[0] === '"') {
-        write('p.text(' + arg + ');\n');
+    var txt = compileExpandVariables(node.textContent);
+    if (txt[0] !== '"') {
+        // coerce to string
+        txt = '""+' + txt;
+    }
+    if (node.parentNode.tagName === 'TEXTAREA') {
+        // TODO: this could potentially overwrite previous text if its
+        // possible for a textarea to contain multiple text nodes -
+        // however, I've not seen any markup inside a textarea parsed
+        // into separate text nodes yet.
+        
+        // if we're inside a textarea, use the value property instead
+        write('p.attribute("value", ' + txt + ');\n');
     }
     else {
-        // coerce to string
-        write('p.text("" + ' + arg + ');\n');
+        write('p.text(' + txt + ');\n');
     }
 }
 

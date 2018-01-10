@@ -1164,4 +1164,34 @@ suite('Patch', function () {
         );
     });
 
+    test('setting textarea value after user modification', function () {
+        var target = makeElement(
+            '<test-foo>' +
+            '</test-foo>'
+        );
+        var templates = createTemplateNode(
+            '<template data-tagname="test-foo">' +
+                '<textarea>{{ msg }}</textarea>' +
+            '</template>'
+        );
+        
+        var data = {msg: 'Hello, world!'};
+        var patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(target.firstChild.value, 'Hello, world!');
+        
+        data.msg = 'Hello, galaxy!';
+        patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(target.firstChild.value, 'Hello, galaxy!');
+        
+        target.firstChild.value = 'asdf';
+        assert.equal(target.firstChild.value, 'asdf');
+
+        data.msg = 'Hello, universe!';
+        patcher = new patch.Patcher(target, test_transforms);
+        patcher.render(templates, 'test-foo', data);
+        assert.equal(target.firstChild.value, 'Hello, universe!');
+    });
+
 });

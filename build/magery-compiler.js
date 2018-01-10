@@ -290,13 +290,17 @@ var MageryCompiler =
 	}
 
 	function compileText(node, write) {
-	    var arg = compileExpandVariables(node.textContent);
-	    if (arg[0] === '"') {
-	        write('p.text(' + arg + ');\n');
+	    var txt = compileExpandVariables(node.textContent);
+	    if (txt[0] !== '"') {
+	        // coerce to string
+	        txt = '""+' + txt;
+	    }
+	    if (node.parentNode.tagName === 'TEXTAREA') {
+	        // if we're inside a textarea, use the value property instead
+	        write('p.attribute("value", ' + txt + ');\n');
 	    }
 	    else {
-	        // coerce to string
-	        write('p.text("" + ' + arg + ');\n');
+	        write('p.text(' + txt + ');\n');
 	    }
 	}
 
