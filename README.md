@@ -564,12 +564,12 @@ name (taken from their `data-template` attributes).
 #### Example
 
 ``` javascript
-var templates = Magery.compile('.magery-templates');
-var templates = Magery.compile('#myTemplates');
-var templates = Magery.compile('template');
+var templates = MageryCompiler.compile('.magery-templates');
+var templates = MageryCompiler.compile('#myTemplates');
+var templates = MageryCompiler.compile('template');
 
 var node = document.getElementById('#myTemplates'));
-var templates = Magery.compile(node);
+var templates = MageryCompiler.compile(node);
         
 // access the returned Template() objects using template[name]
 ```
