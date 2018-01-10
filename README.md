@@ -12,7 +12,6 @@ rendering in any language.
   - [Variables](#variables)
   - [Booleans](#booleans)
   - [Attributes](#attributes)
-    - [data-template](#data-template)
     - [data-each](#data-each)
     - [data-key](#data-key)
     - [data-if](#data-if)
