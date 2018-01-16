@@ -1,7 +1,7 @@
 suite('Patch', function () {
 
     var assert = chai.assert;
-    
+
     function createTemplateNode(src) {
         var el = document.getElementById('test-templates');
         if (!el) {
@@ -370,7 +370,7 @@ suite('Patch', function () {
             'removeChild'
         ]);
     });
- 
+
     test('replace node, keep sibling', function () {
         var target = makeElement(
             '<test-foo>' +
@@ -975,7 +975,7 @@ suite('Patch', function () {
     //     var patcher = new patch.Patcher(div, test_transforms);
     //     var renderer = new render.Renderer(patcher, templates, true);
     //     renderer.render('app', next_data, prev_data);
-    //     div2.innerHTML = 
+    //     div2.innerHTML =
     //         '<div id="container">' +
     //           '<div id="unmanaged">test</div>' +
     //           '<div id="managed">test</div>' +
@@ -1099,7 +1099,7 @@ suite('Patch', function () {
             '</template>'
         );
         templates['my-custom-tag'] = function (node, data, handlers) {
-            assert.deepEqual(data, {message: 'Testing'});
+            assert.deepEqual(data, {message: 'Testing', msg: 'Testing'});
             done();
         };
         var data = {msg: 'Testing'};
@@ -1174,17 +1174,17 @@ suite('Patch', function () {
                 '<textarea>{{ msg }}</textarea>' +
             '</template>'
         );
-        
+
         var data = {msg: 'Hello, world!'};
         var patcher = new patch.Patcher(target, test_transforms);
         patcher.render(templates, 'test-foo', data);
         assert.equal(target.firstChild.value, 'Hello, world!');
-        
+
         data.msg = 'Hello, galaxy!';
         patcher = new patch.Patcher(target, test_transforms);
         patcher.render(templates, 'test-foo', data);
         assert.equal(target.firstChild.value, 'Hello, galaxy!');
-        
+
         target.firstChild.value = 'asdf';
         assert.equal(target.firstChild.value, 'asdf');
 

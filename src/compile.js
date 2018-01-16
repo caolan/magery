@@ -93,7 +93,7 @@ function compileElement(node, queue, write, is_root) {
         write('p.render(' +
               'templates' +
               ', ' + compileExpandVariables(node.getAttribute('template')) +
-              ', ' + compileTemplateContext(node) +
+              ', ' + "Object.assign( {}, data," + compileTemplateContext(node) + ")" +
               ', handlers' +
               ', ' + (node.dataset.key ? compileExpandVariables(node.dataset.key) : 'null') +
               ', function () {' + compileExtraAttrs(node) + '}' +
@@ -105,7 +105,7 @@ function compileElement(node, queue, write, is_root) {
         write('p.render(' +
               'templates' +
               ', ' + JSON.stringify(node.tagName.toLowerCase()) +
-              ', ' + compileTemplateContext(node) +
+              ', ' + "Object.assign( {}, data," + compileTemplateContext(node) + ")" +
               ', handlers' +
               ', ' + (node.dataset.key ? compileExpandVariables(node.dataset.key) : 'null') +
               ', function () {' + compileExtraAttrs(node) + '}' +
@@ -232,7 +232,7 @@ function compileText(node, write) {
         // possible for a textarea to contain multiple text nodes -
         // however, I've not seen any markup inside a textarea parsed
         // into separate text nodes yet.
-        
+
         // if we're inside a textarea, use the value property instead
         write('p.attribute("value", ' + txt + ');\n');
     }
