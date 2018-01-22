@@ -2,41 +2,41 @@ var MageryCompiler =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
-
+/******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
-
+/******/
 /******/ 		// Check if module is in cache
 /******/ 		if(installedModules[moduleId])
 /******/ 			return installedModules[moduleId].exports;
-
+/******/
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
 /******/ 			exports: {},
 /******/ 			id: moduleId,
 /******/ 			loaded: false
 /******/ 		};
-
+/******/
 /******/ 		// Execute the module function
 /******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-
+/******/
 /******/ 		// Flag the module as loaded
 /******/ 		module.loaded = true;
-
+/******/
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-
-
+/******/
+/******/
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
-
+/******/
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
-
+/******/
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
-
+/******/
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(0);
 /******/ })
@@ -46,7 +46,7 @@ var MageryCompiler =
 /***/ (function(module, exports, __webpack_require__) {
 
 	exports.compileToString = __webpack_require__(1).compileToString;
-
+	
 	exports.compile = function (target, templates, runtime) {
 	    runtime = runtime || window.Magery;
 	    templates = templates || {};
@@ -59,7 +59,7 @@ var MageryCompiler =
 	    }
 	    return templates;
 	};
-
+	
 
 
 /***/ }),
@@ -68,8 +68,8 @@ var MageryCompiler =
 
 	var utils = __webpack_require__(2);
 	var html = __webpack_require__(3);
-
-
+	
+	
 	var IGNORED_ATTRS = [
 	    'data-tagname',
 	    'data-each',
@@ -77,11 +77,11 @@ var MageryCompiler =
 	    'data-unless',
 	    'data-key'
 	];
-
+	
 	function compileLookup(path) {
 	    return 'p.lookup(data, ' + JSON.stringify(path) + ')';
 	}
-
+	
 	function compileTemplateContext(node) {
 	    var result = [];
 	    utils.eachAttribute(node, function (name, value) {
@@ -93,7 +93,7 @@ var MageryCompiler =
 	    });
 	    return '{' + result.join(', ') + '}';
 	}
-
+	
 	function compileListener(event_name, value) {
 	    var start = value.indexOf('(');
 	    var end = value.lastIndexOf(')');
@@ -106,7 +106,7 @@ var MageryCompiler =
 	        'data, ' +
 	        'handlers);\n';
 	}
-
+	
 	function compileExtraAttrs(node) {
 	    var extra_attrs = '';
 	    utils.eachAttribute(node, function (name, value) {
@@ -117,7 +117,7 @@ var MageryCompiler =
 	    });
 	    return extra_attrs;
 	}
-
+	
 	// TODO: split out into compileTemplateCall, compileInner, compileHTMLElement etc. ?
 	function compileElement(node, queue, write, is_root) {
 	    if (node.tagName === 'TEMPLATE-EMBED') {
@@ -154,7 +154,7 @@ var MageryCompiler =
 	    var children = (node.tagName == 'TEMPLATE') ?
 	            node.content.childNodes:
 	            node.childNodes;
-
+	
 	    var is_html = true;
 	    if (node.tagName == 'TEMPLATE-CALL') {
 	        // not a known HTML tag, assume template reference
@@ -258,7 +258,7 @@ var MageryCompiler =
 	        write('});\n');
 	    }
 	}
-
+	
 	function compileExpandVariables(str, boolean) {
 	    var parts = str.split(/{{\s*|\s*}}/);
 	    var length = parts.length;
@@ -288,7 +288,7 @@ var MageryCompiler =
 	    }
 	    return result_parts.join(' + ');
 	}
-
+	
 	function compileText(node, write) {
 	    var txt = compileExpandVariables(node.textContent);
 	    if (txt[0] !== '"') {
@@ -296,6 +296,11 @@ var MageryCompiler =
 	        txt = '""+' + txt;
 	    }
 	    if (node.parentNode.tagName === 'TEXTAREA') {
+	        // TODO: this could potentially overwrite previous text if its
+	        // possible for a textarea to contain multiple text nodes -
+	        // however, I've not seen any markup inside a textarea parsed
+	        // into separate text nodes yet.
+	        
 	        // if we're inside a textarea, use the value property instead
 	        write('p.attribute("value", ' + txt + ');\n');
 	    }
@@ -303,13 +308,13 @@ var MageryCompiler =
 	        write('p.text(' + txt + ');\n');
 	    }
 	}
-
+	
 	function compileDocumentFragment(fragment, queue, write) {
 	    utils.eachNode(fragment.childNodes, function (node) {
 	        compileNode(node, queue, write, false);
 	    });
 	}
-
+	
 	function compileNode(node, queue, write, is_root) {
 	    switch (node.nodeType) {
 	    case 1: compileElement(node, queue, write, is_root); break;
@@ -317,9 +322,9 @@ var MageryCompiler =
 	    case 11: compileDocumentFragment(node, queue, write); break;
 	    }
 	}
-
+	
 	function ignore_output(str) {}
-
+	
 	exports.compile = function (nodes, write) {
 	    var queue = [];
 	    if (!(nodes instanceof NodeList)) {
@@ -356,7 +361,7 @@ var MageryCompiler =
 	    }
 	    write('})\n');
 	};
-
+	
 	exports.compileToString = function (node) {
 	    var result = '(function (Magery) { return ';
 	    exports.compile(node, function (str) {
@@ -373,19 +378,19 @@ var MageryCompiler =
 	var ELEMENT_NODE = 1;
 	var TEXT_NODE = 3;
 	var DOCUMENT_FRAGMENT = 11;
-
+	
 	exports.isDocumentFragment = function (node) {
 	    return node.nodeType === DOCUMENT_FRAGMENT;
 	};
-
+	
 	exports.isElementNode = function (node) {
 	    return node.nodeType === ELEMENT_NODE;
 	};
-
+	
 	exports.isTextNode = function (node) {
 	    return node.nodeType === TEXT_NODE;
 	};
-
+	
 	exports.eachNode = function (nodelist, f) {
 	    var i = 0;
 	    var node = nodelist[0];
@@ -397,7 +402,7 @@ var MageryCompiler =
 	        f(tmp, i++, nodelist);
 	    }
 	};
-
+	
 	exports.mapNodes = function (nodelist, f) {
 	    var results = [];
 	    exports.eachNode(nodelist, function (node, i) {
@@ -405,17 +410,17 @@ var MageryCompiler =
 	    });
 	    return results;
 	};
-
+	
 	exports.trim = function (str) {
 	    return str.replace(/^\s+|\s+$/g, '');
 	};
-
+	
 	exports.propertyPath = function (str) {
 	    return str.split('.').filter(function (x) {
 	        return x;
 	    });
 	};
-
+	
 	// finds property path array (e.g. ['foo', 'bar']) in data object
 	exports.lookup = function (data, props) {
 	    var value = data;
@@ -427,12 +432,12 @@ var MageryCompiler =
 	    }
 	    return (value === undefined || value === null) ? '' : value;
 	};
-
+	
 	exports.templateTagName = function (node) {
 	    var m = /^TEMPLATE-([^\s/>]+)/.exec(node.tagName);
 	    return m && m[1].toLowerCase();
 	};
-
+	
 	exports.shallowClone = function (obj) {
 	    var result = {};
 	    for (var k in obj) {
@@ -441,7 +446,7 @@ var MageryCompiler =
 	    return result;
 	    // return Object.assign({}, obj);
 	};
-
+	
 	exports.eachAttribute = function (node, f) {
 	    var attrs = node.attributes;
 	    for (var i = 0, len = node.attributes.length; i < len; i++) {
@@ -457,7 +462,7 @@ var MageryCompiler =
 	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
 	var USE_PROPERTY = exports.USE_PROPERTY = 2;
 	var USE_STRING = exports.USE_STRING = 4;
-
+	
 	exports.attributes = {
 	    'allowfullscreen': BOOLEAN_ATTRIBUTE,
 	    'async': BOOLEAN_ATTRIBUTE,
@@ -483,8 +488,9 @@ var MageryCompiler =
 	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
 	    'value': USE_PROPERTY | USE_STRING
 	};
-
+	
 
 
 /***/ })
 /******/ ]);
+//# sourceMappingURL=magery-compiler.js.map
