@@ -459,6 +459,9 @@ By adding attributes to your custom tag, you can pass data to the
 sub-template. In the above example the context property `user.name` is
 bound to `name` inside the `my-greeting` template.
     
+The attribute names can only be lower-cased. If you want use multi-word attribute name,
+you should use dash of underscore.
+
 It is also possible to provide literal string values as context data:
 
 ``` html
