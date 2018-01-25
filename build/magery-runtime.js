@@ -2,41 +2,41 @@ var Magery =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
-
+/******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
-
+/******/
 /******/ 		// Check if module is in cache
 /******/ 		if(installedModules[moduleId])
 /******/ 			return installedModules[moduleId].exports;
-
+/******/
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
 /******/ 			exports: {},
 /******/ 			id: moduleId,
 /******/ 			loaded: false
 /******/ 		};
-
+/******/
 /******/ 		// Execute the module function
 /******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-
+/******/
 /******/ 		// Flag the module as loaded
 /******/ 		module.loaded = true;
-
+/******/
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-
-
+/******/
+/******/
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
-
+/******/
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
-
+/******/
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
-
+/******/
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(0);
 /******/ })
@@ -46,7 +46,7 @@ var Magery =
 /***/ (function(module, exports, __webpack_require__) {
 
 	var Patcher = __webpack_require__(1).Patcher;
-
+	
 	exports._template = function (render) {
 	    var f = function (node, data, handlers) {
 	        var patcher = new Patcher(node);
@@ -67,22 +67,22 @@ var Magery =
 	 * called to reconcile the differences. The Patcher code should only _read_ the
 	 * DOM, performing DOM mutation only through transform calls.
 	 */
-
+	
 	var transforms = __webpack_require__(2);
 	var utils = __webpack_require__(4);
 	var html = __webpack_require__(3);
-
+	
 	var ELEMENT_NODE = 1;
 	var TEXT_NODE = 3;
-
-
+	
+	
 	function matches(node, tag, key) {
 	    return (
 	        node.tagName === tag ||
 	        node.nodeType === TEXT_NODE && tag === '#text'
 	    ) && node.key == key;
 	};
-
+	
 	function align(parent, node, tag, key) {
 	    if (node && matches(node, tag, key)) {
 	        return node;
@@ -92,7 +92,7 @@ var Magery =
 	    }
 	    return null;
 	};
-
+	
 	// deletes all children in parent starting from node (inclusive)
 	function deleteChildren(transforms, parent, node) {
 	    while (node) {
@@ -101,7 +101,7 @@ var Magery =
 	        transforms.removeChild(parent, tmp);
 	    }
 	}
-
+	
 	function deleteUnvisitedAttributes(transforms, node) {
 	    var attrs = node.attributes;
 	    var remove = [];
@@ -116,7 +116,7 @@ var Magery =
 	        transforms.removeAttribute(node, remove[i]);
 	    }
 	};
-
+	
 	// deletes children not marked as visited during patch
 	function deleteUnvisitedEvents(transforms, node) {
 	    if (!node.bound_events) {
@@ -129,28 +129,28 @@ var Magery =
 	        }
 	    }
 	};
-
-
+	
+	
 	function Patcher(element, custom_transforms) {
 	    this.transforms = custom_transforms || transforms;
 	    this.root = element;
 	    this.reset();
 	};
-
+	
 	exports.Patcher = Patcher;
-
+	
 	Patcher.prototype.reset = function () {
 	    this.parent = this.root.parentNode;
 	    this.current = this.root;
 	};
-
+	
 	Patcher.prototype.stepInto = function (node) {
 	    node.visited_attributes = {};
 	    node.visited_events = {};
 	    this.parent = node;
 	    this.current = node.firstChild;
 	};
-
+	
 	Patcher.prototype.enterTag = function (tag, key) {
 	    var node = align(this.parent, this.current, tag, key);
 	    if (!node) {
@@ -174,10 +174,10 @@ var Magery =
 	    }
 	    this.stepInto(node);
 	};
-
+	
 	// specific value for referncing an event inside handler arguments
 	Patcher.prototype.EVENT = {};
-
+	
 	function makeHandler(node, type) {
 	    return function (event) {
 	        var handler = node.bound_events[type];
@@ -197,7 +197,7 @@ var Magery =
 	        }
 	    };
 	}
-
+	
 	function setListener(node, type) {
 	    if (!node.bound_events) {
 	        node.bound_events = {};
@@ -209,7 +209,7 @@ var Magery =
 	    }
 	    node.visited_events[type] = null;
 	}
-
+	
 	Patcher.prototype.eventListener = function (type, handler_path, args, data, handlers) {
 	    var node = this.parent;
 	    if (node.handlers !== handlers) {
@@ -222,7 +222,7 @@ var Magery =
 	    event.data = data;
 	    event.template_root = this.template_root;
 	};
-
+	
 	// Patcher.prototype.attribute = function (name, value) {
 	//     var node = this.parent;
 	//     console.log(['attribute', name, node.getAttribute(name), value, node.value]);
@@ -247,7 +247,7 @@ var Magery =
 	    }
 	    node.visited_attributes[name] = null;
 	};
-
+	
 	Patcher.prototype.text = function (text) {
 	    var node = align(this.parent, this.current, '#text', null);
 	    if (!node) {
@@ -258,13 +258,13 @@ var Magery =
 	    }
 	    this.current = node.nextSibling;
 	};
-
+	
 	function getListener(node, type) {
 	    return node.bound_events &&
 	        node.bound_events[type] &&
 	        node.bound_events[type].fn;
 	}
-
+	
 	Patcher.prototype.exitTag = function () {
 	    // delete unvisited child nodes
 	    deleteChildren(this.transforms, this.parent, this.current);
@@ -274,7 +274,7 @@ var Magery =
 	    deleteUnvisitedAttributes(this.transforms, node);
 	    deleteUnvisitedEvents(this.transforms, node);
 	};
-
+	
 	Patcher.prototype.skip = function (tag, key) {
 	    var node = align(this.parent, this.current, tag, key);
 	    if (!this.current) {
@@ -285,16 +285,16 @@ var Magery =
 	    }
 	    this.current = node.nextSibling;
 	};
-
+	
 	Patcher.prototype.lookup = utils.lookup;
-
+	
 	Patcher.prototype.isTruthy = function (x) {
 	    if (Array.isArray(x)) {
 	        return x.length > 0;
 	    }
 	    return x;
 	};
-
+	
 	Patcher.prototype.each = function (data, name, iterable, f) {
 	    for (var i = 0, len = iterable.length; i < len; i++) {
 	        var data2 = utils.shallowClone(data);
@@ -302,7 +302,7 @@ var Magery =
 	        f(data2);
 	    }
 	};
-
+	
 	Patcher.prototype.render = function (templates, name, data, handlers, root_key, root_attrs, inner) {
 	    if (!templates[name]) {
 	        this.enterTag(name.toUpperCase(), null);
@@ -329,8 +329,8 @@ var Magery =
 	        this.current = node.nextSibling;
 	    }
 	};
-
-
+	
+	
 	Patcher.prototype.wrapChildren = function (fn) {
 	    var self = this;
 	    return function (parent) {
@@ -356,42 +356,42 @@ var Magery =
 	 * a cleaner API for our purposes and a place to intercept and
 	 * monitor mutations during testing.
 	 */
-
+	
 	var html = __webpack_require__(3);
-
-
+	
+	
 	exports.insertTextNode = function (parent, before, str) {
 	    var node = document.createTextNode(str);
 	    parent.insertBefore(node, before);
 	    return node;
 	};
-
+	
 	exports.replaceText = function (node, str) {
 	    node.textContent = str;
 	    return node;
 	};
-
+	
 	exports.replaceChild = function (parent, node, old) {
 	    parent.replaceChild(node, old);
 	    return node;
 	};
-
+	
 	exports.appendChild = function (parent, node) {
 	    parent.appendChild(node);
 	    return node;
 	};
-
+	
 	exports.insertElement = function (parent, before, tag) {
 	    var node = document.createElement(tag);
 	    parent.insertBefore(node, before);
 	    return node;
 	};
-
+	
 	exports.removeChild = function (parent, node) {
 	    parent.removeChild(node);
 	    return node;
 	};
-
+	
 	exports.setAttribute = function (node, name, value) {
 	    if (html.attributes[name] & html.USE_PROPERTY) {
 	        node[name] = value;
@@ -399,7 +399,7 @@ var Magery =
 	    node.setAttribute(name, value);
 	    return node;
 	};
-
+	
 	exports.removeAttribute = function (node, name) {
 	    if (html.attributes[name] & html.USE_PROPERTY) {
 	        node[name] = false;
@@ -407,12 +407,12 @@ var Magery =
 	    node.removeAttribute(name);
 	    return node;
 	};
-
+	
 	exports.addEventListener = function (node, name, handler) {
 	    node.addEventListener(name, handler, false);
 	    return node;
 	};
-
+	
 	exports.removeEventListener = function (node, name, handler) {
 	    node.removeEventListener(name, handler);
 	    return node;
@@ -426,7 +426,7 @@ var Magery =
 	var BOOLEAN_ATTRIBUTE = exports.BOOLEAN_ATTRIBUTE = 1;
 	var USE_PROPERTY = exports.USE_PROPERTY = 2;
 	var USE_STRING = exports.USE_STRING = 4;
-
+	
 	exports.attributes = {
 	    'allowfullscreen': BOOLEAN_ATTRIBUTE,
 	    'async': BOOLEAN_ATTRIBUTE,
@@ -452,7 +452,7 @@ var Magery =
 	    'selected': BOOLEAN_ATTRIBUTE | USE_PROPERTY,
 	    'value': USE_PROPERTY | USE_STRING
 	};
-
+	
 
 
 /***/ }),
@@ -462,19 +462,19 @@ var Magery =
 	var ELEMENT_NODE = 1;
 	var TEXT_NODE = 3;
 	var DOCUMENT_FRAGMENT = 11;
-
+	
 	exports.isDocumentFragment = function (node) {
 	    return node.nodeType === DOCUMENT_FRAGMENT;
 	};
-
+	
 	exports.isElementNode = function (node) {
 	    return node.nodeType === ELEMENT_NODE;
 	};
-
+	
 	exports.isTextNode = function (node) {
 	    return node.nodeType === TEXT_NODE;
 	};
-
+	
 	exports.eachNode = function (nodelist, f) {
 	    var i = 0;
 	    var node = nodelist[0];
@@ -486,7 +486,7 @@ var Magery =
 	        f(tmp, i++, nodelist);
 	    }
 	};
-
+	
 	exports.mapNodes = function (nodelist, f) {
 	    var results = [];
 	    exports.eachNode(nodelist, function (node, i) {
@@ -494,17 +494,17 @@ var Magery =
 	    });
 	    return results;
 	};
-
+	
 	exports.trim = function (str) {
 	    return str.replace(/^\s+|\s+$/g, '');
 	};
-
+	
 	exports.propertyPath = function (str) {
 	    return str.split('.').filter(function (x) {
 	        return x;
 	    });
 	};
-
+	
 	// finds property path array (e.g. ['foo', 'bar']) in data object
 	exports.lookup = function (data, props) {
 	    var value = data;
@@ -516,12 +516,12 @@ var Magery =
 	    }
 	    return (value === undefined || value === null) ? '' : value;
 	};
-
+	
 	exports.templateTagName = function (node) {
 	    var m = /^TEMPLATE-([^\s/>]+)/.exec(node.tagName);
 	    return m && m[1].toLowerCase();
 	};
-
+	
 	exports.shallowClone = function (obj) {
 	    var result = {};
 	    for (var k in obj) {
@@ -530,7 +530,7 @@ var Magery =
 	    return result;
 	    // return Object.assign({}, obj);
 	};
-
+	
 	exports.eachAttribute = function (node, f) {
 	    var attrs = node.attributes;
 	    for (var i = 0, len = node.attributes.length; i < len; i++) {
@@ -541,3 +541,4 @@ var Magery =
 
 /***/ })
 /******/ ]);
+//# sourceMappingURL=magery-runtime.js.map
