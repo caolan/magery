@@ -6,6 +6,10 @@
     </head>
     <body>
         <div class="editor-container">
+            <div class="editor">
+              <h2 style=>Sharing url</h2>
+              <div id="url"></div>
+            </div>
             <div class="editor open">
                 <h2 onclick="toggleEditor">Templates (<a href="https://github.com/caolan/magery#template-syntax">syntax</a>)</h2>
                 <div id="templates">&lt;template data-tagname=&quot;my-app&quot;&gt;
@@ -21,10 +25,12 @@
         </div>
         <div class="result-container">
             <my-app></my-app>
+            
         </div>
+        
         <div style="display:none" id="active-templates"></div>
-        <script src="../build/magery-compiler.min.js"></script>
-        <script src="../build/magery-runtime.min.js"></script>
+        <script src="../build/magery-compiler.js"></script>
+        <script src="../build/magery-runtime.js"></script>
         <script src="ace/ace.js"></script>
         <script src="app.js"></script>
     </body>
