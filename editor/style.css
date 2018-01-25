@@ -16,23 +16,6 @@ body {
     flex: 1 1 auto;
     position: relative;
 }
-/*
-.editor.closed {
-    flex-grow: 0;
-}
-.editor > h2::before {
-    content: "\25BC";
-    margin-right: 5px;
-    position: relative;
-    top: -2px;
-}
-.editor.closed > h2::before {
-    content: "\25BA";
-    position: relative;
-    top: -2px;
-    margin-right: 5px;
-}
-*/
 .editor > h2 {
     cursor: pointer;
     text-transform: uppercase;
@@ -44,6 +27,13 @@ body {
     background-color: #839496;
     color: #839496;
     background-color: #eee8d5;
+}
+.editor > #url {
+  background-color: #FDF6E3; 
+  color: #586E75; 
+  padding: 10px 0px; 
+  height: inherit; 
+  word-wrap: break-word;
 }
 .editor > div {
     width: 100%;

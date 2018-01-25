@@ -96,15 +96,25 @@ function updateJSON() {
 templates_editor.getSession().on('change', function () {
     if (updateTemplates()) {
         patch();
+        updateUrl();
     }
 });
 
 json_editor.getSession().on('change', function () {
     if (updateJSON()) {
         patch();
+        updateUrl();
     }
 });
 
+function updateUrl(){
+  var json = window.escape(json_editor.getValue());
+  var template =  window.escape(templates_editor.getValue());
+  var url = window.location.href.replace(/\?.*/, "")+"?data="+json+"&templates="+template;
+  document.getElementById("url").innerText = "";
+  document.getElementById("url").innerText = url;
+  
+}
 // initial render
 updateTemplates();
 updateJSON();
