@@ -664,6 +664,8 @@ it here.
 
 - [python-magery](https://github.com/caolan/python-magery)
 - [groovy-magery](https://github.com/benzen/groovy-magery)
+- [ex_magery](https://github.com/mattschlobohm/ex_magery)
+- [chicken-magery](https://github.com/caolan/chicken-magery)
 
 ## Tests
 
