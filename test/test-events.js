@@ -2,6 +2,18 @@ suite('Events', function () {
 
     var assert = chai.assert;
 
+    var CustomEvent = window.CustomEvent;
+    if (typeof window.CustomEvent !== 'function') {
+        // polyfill for IE
+        CustomEvent = function (event, params) {
+            params = params || { bubbles: false, cancelable: false, detail: undefined };
+            var evt = document.createEvent( 'CustomEvent' );
+            evt.initCustomEvent( event, params.bubbles, params.cancelable, params.detail );
+            return evt;
+        };
+        CustomEvent.prototype = window.Event.prototype;
+    }
+
     function createTemplateNode(src) {
         var el = document.getElementById('test-templates');
         if (!el) {
@@ -468,7 +480,7 @@ suite('Events', function () {
             var btn = document.createElement('button');
             node.appendChild(btn);
             btn.addEventListener('click', function (event) {
-                var ev = new Event('update', {bubbles: true});
+                var ev = new CustomEvent('update', {bubbles: true});
                 node.dispatchEvent(ev);
             });
         };

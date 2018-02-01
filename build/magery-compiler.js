@@ -128,13 +128,13 @@ var MageryCompiler =
 	        write('inner();\n');
 	        return;
 	    }
-	    if (!is_root && node.tagName === 'TEMPLATE' && node.dataset.tagname) {
+	    if (!is_root && node.tagName === 'TEMPLATE' && node.getAttribute('data-tagname')) {
 	        // compile this template later
 	        queue.push(node);
 	        return;
 	    }
-	    if (node.dataset.each) {
-	        var parts = node.dataset.each.split(/\s+in\s+/);
+	    if (node.getAttribute('data-each')) {
+	        var parts = node.getAttribute('data-each').split(/\s+in\s+/);
 	        var name = parts[0];
 	        var iterable_path = utils.propertyPath(parts[1]);
 	        write('p.each(' +
@@ -143,15 +143,15 @@ var MageryCompiler =
 	              compileLookup(iterable_path) + ', ' +
 	              'function (data) {\n');
 	    }
-	    if (node.dataset.if) {
-	        var predicate1_path = utils.propertyPath(node.dataset.if);
+	    if (node.getAttribute('data-if')) {
+	        var predicate1_path = utils.propertyPath(node.getAttribute('data-if'));
 	        write('if (p.isTruthy(' + compileLookup(predicate1_path) + ')) {\n');
 	    }
-	    if (node.dataset.unless) {
-	        var predicate2_path = utils.propertyPath(node.dataset.unless);
+	    if (node.getAttribute('data-unless')) {
+	        var predicate2_path = utils.propertyPath(node.getAttribute('data-unless'));
 	        write('if (!p.isTruthy(' + compileLookup(predicate2_path) + ')) {\n');
 	    }
-	    var children = (node.tagName == 'TEMPLATE') ?
+	    var children = (node.tagName == 'TEMPLATE' && node.content) ?
 	            node.content.childNodes:
 	            node.childNodes;
 	
@@ -163,7 +163,7 @@ var MageryCompiler =
 	              ', ' + compileExpandVariables(node.getAttribute('template')) +
 	              ', ' + compileTemplateContext(node) +
 	              ', handlers' +
-	              ', ' + (node.dataset.key ? compileExpandVariables(node.dataset.key) : 'null') +
+	              ', ' + (node.getAttribute('data-key') ? compileExpandVariables(node.getAttribute('data-key')) : 'null') +
 	              ', function () {' + compileExtraAttrs(node) + '}' +
 	              (children.length ? ', p.wrapChildren(function (p) {' : ');') + '\n');
 	        is_html = false;
@@ -175,31 +175,31 @@ var MageryCompiler =
 	              ', ' + JSON.stringify(node.tagName.toLowerCase()) +
 	              ', ' + compileTemplateContext(node) +
 	              ', handlers' +
-	              ', ' + (node.dataset.key ? compileExpandVariables(node.dataset.key) : 'null') +
+	              ', ' + (node.getAttribute('data-key') ? compileExpandVariables(node.getAttribute('data-key')) : 'null') +
 	              ', function () {' + compileExtraAttrs(node) + '}' +
 	              (children.length ? ', p.wrapChildren(function (p) {' : ');') + '\n');
 	        is_html = false;
 	    }
 	    else {
 	        var tag = node.tagName;
-	        if (tag === 'TEMPLATE' && node.dataset.tagname) {
-	            tag = node.dataset.tagname.toUpperCase();
+	        if (tag === 'TEMPLATE' && node.getAttribute('data-tagname')) {
+	            tag = node.getAttribute('data-tagname').toUpperCase();
 	        }
 	        if (is_root) {
 	            // check if a key was passed into this template by caller
-	            if (node.dataset.key) {
+	            if (node.getAttribute('data-key')) {
 	                write('p.enterTag(' +
 	                      JSON.stringify(tag) + ', ' +
-	                      'root_key || ' + compileExpandVariables(node.dataset.key) + ');\n');
+	                      'root_key || ' + compileExpandVariables(node.getAttribute('data-key')) + ');\n');
 	            }
 	            else {
 	                write('p.enterTag(' + JSON.stringify(tag) + ', root_key || null);\n');
 	            }
 	        }
-	        else if (node.dataset.key) {
+	        else if (node.getAttribute('data-key')) {
 	            write('p.enterTag(' +
 	                  JSON.stringify(tag) + ', ' +
-	                  compileExpandVariables(node.dataset.key) + ');\n');
+	                  compileExpandVariables(node.getAttribute('data-key')) + ');\n');
 	        }
 	        else {
 	            write('p.enterTag(' + JSON.stringify(tag) + ', null);\n');
@@ -248,13 +248,13 @@ var MageryCompiler =
 	        // end inner function of template call
 	        write('}));\n');
 	    }
-	    if (node.dataset.unless) {
+	    if (node.getAttribute('data-unless')) {
 	        write('}\n');
 	    }
-	    if (node.dataset.if) {
+	    if (node.getAttribute('data-if')) {
 	        write('}\n');
 	    }
-	    if (node.dataset.each) {
+	    if (node.getAttribute('data-each')) {
 	        write('});\n');
 	    }
 	}
@@ -339,20 +339,19 @@ var MageryCompiler =
 	            // if current node is not a template, ignore output until
 	            // a template node is found
 	            !(node.tagName == 'TEMPLATE' &&
-	              node.dataset &&
-	              node.dataset.hasOwnProperty('tagname'))
+	              node.hasAttribute('data-tagname'))
 	        );
 	    }
 	    write('({\n');
 	    while (queue.length) {
 	        node = queue.shift();
-	        if (node.dataset.tagname.indexOf('-') === -1) {
+	        if (node.getAttribute('data-tagname').indexOf('-') === -1) {
 	            throw new Error(
-	                "Error compiling template '" + node.dataset.tagname +
+	                "Error compiling template '" + node.getAttribute('data-tagname') +
 	                    "': data-tagname must include a hyphen"
 	            );
 	        }
-	        write(JSON.stringify(node.dataset.tagname) + ': ');
+	        write(JSON.stringify(node.getAttribute('data-tagname')) + ': ');
 	        write('Magery._template(' +
 	              'function (p, data, handlers, root_key, extra_attrs, inner) {\n');
 	        write('var templates = this;\n');

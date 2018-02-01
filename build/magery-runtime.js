@@ -267,7 +267,9 @@ var Magery =
 	
 	Patcher.prototype.exitTag = function () {
 	    // delete unvisited child nodes
-	    deleteChildren(this.transforms, this.parent, this.current);
+	    if (this.parent.tagName !== 'TEXTAREA') {
+	        deleteChildren(this.transforms, this.parent, this.current);
+	    }
 	    var node = this.parent;
 	    this.parent = node.parentNode;
 	    this.current = node.nextSibling;
